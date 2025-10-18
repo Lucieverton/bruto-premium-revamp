@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import barbershopFront from '@/assets/barbershop-front.jpg';
+import barbershopFront from '@/assets/barbershop-front-nobg.png';
 import barbershopInterior from '@/assets/barbershop-interior.jpg';
 import { Card3DFlip } from './Card3DFlip';
 

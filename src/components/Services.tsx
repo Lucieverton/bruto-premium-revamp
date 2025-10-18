@@ -4,19 +4,19 @@ import { Button } from '@/components/ui/button';
 
 const services = [
   {
-    icon: Scissors,
+    imageName: 'cabelo1',
     title: 'Corte de Cabelo',
     description: 'Clássico ou moderno, cortes alinhados às tendências.',
     price: 'R$ 40,00',
   },
   {
-    icon: Sparkles,
+    imageName: 'barba1',
     title: 'Barba & Bigode',
     description: 'Design profissional para um visual impecável.',
     price: 'R$ 30,00',
   },
   {
-    icon: ShoppingBag,
+    imageName: 'produtos1',
     title: 'Produtos Premium',
     description: 'Minoxidil, Pomada modeladora e linhas exclusivas.',
     price: 'A partir de R$ 25,00',
@@ -75,9 +75,21 @@ export const Services = () => {
             <article 
               key={index}
               className="bg-card border border-border rounded-lg p-8 text-center transition-all duration-300 hover:-translate-y-2 hover:shadow-xl group"
+              style={{
+                animation: `fadeInUp 0.6s ease-out ${index * 0.2}s forwards`,
+                opacity: 0
+              }}
             >
-              <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-primary/10 group-hover:bg-primary/20 transition-colors duration-300 mb-6">
-                <service.icon className="w-10 h-10 text-primary" />
+              <div className="inline-flex items-center justify-center w-32 h-32 rounded-full bg-primary/10 group-hover:bg-primary/20 transition-colors duration-300 mb-6 overflow-hidden">
+                <img 
+                  src={`/src/assets/${service.imageName}.png`}
+                  alt={service.title}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    // Fallback para caso a imagem não exista ainda
+                    e.currentTarget.style.display = 'none';
+                  }}
+                />
               </div>
               
               <h3 className="font-display text-xl md:text-2xl mb-3 uppercase">
