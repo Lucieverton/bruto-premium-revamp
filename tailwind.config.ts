@@ -131,6 +131,14 @@ export default {
             transform: 'translateY(-12px)',
           },
         },
+        float: {
+          '0%, 100%': {
+            transform: 'translateY(0px)',
+          },
+          '50%': {
+            transform: 'translateY(-20px)',
+          },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -140,6 +148,12 @@ export default {
         'pulse': 'pulse 3s ease-in-out infinite',
         'glow': 'glow 2s ease-in-out infinite',
         'bounce': 'bounce 2s ease-in-out infinite',
+        'float': 'float 6s ease-in-out infinite',
+      },
+      perspective: {
+        '1000': '1000px',
+        '1500': '1500px',
+        '2000': '2000px',
       },
     },
   },

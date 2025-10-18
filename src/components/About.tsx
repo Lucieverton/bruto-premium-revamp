@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import barbershopFront from '@/assets/barbershop-front.jpg';
 import barbershopInterior from '@/assets/barbershop-interior.jpg';
+import { Card3DFlip } from './Card3DFlip';
 
 export const About = () => {
   const sectionRef = useRef<HTMLElement>(null);
@@ -37,15 +38,13 @@ export const About = () => {
         </h2>
         
         <div className="space-y-12">
-          {/* Foto da Fachada em Destaque */}
-          <figure className="relative overflow-hidden rounded-xl shadow-2xl hover:shadow-3xl transition-shadow duration-300">
-            <img 
-              src={barbershopFront}
-              alt="Fachada da Barbearia Brutos"
-              className="w-full h-auto rounded-xl animate-bounceIn"
-              loading="lazy"
-            />
-          </figure>
+          {/* Card 3D Flip */}
+          <Card3DFlip
+            frontImage={barbershopFront}
+            backImage={barbershopInterior}
+            frontAlt="Fachada da Barbearia Brutos"
+            backAlt="Interior da Barbearia Brutos"
+          />
           
           {/* Texto Principal */}
           <div className="space-y-6 text-center max-w-[800px] mx-auto px-4">
@@ -65,16 +64,6 @@ export const About = () => {
               Venha pra Brutos e sinta a diferença!
             </p>
           </div>
-          
-          {/* Foto Interna */}
-          <figure className="relative overflow-hidden rounded-xl shadow-2xl hover:shadow-3xl transition-shadow duration-300 max-w-[700px] mx-auto">
-            <img 
-              src={barbershopInterior}
-              alt="Interior da Barbearia Brutos"
-              className="w-full h-auto rounded-xl animate-bounceIn"
-              loading="lazy"
-            />
-          </figure>
         </div>
       </div>
     </section>
