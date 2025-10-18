@@ -15,18 +15,34 @@ Isso criará uma pasta `dist` com todos os arquivos otimizados.
 
 ### 3. Upload para Hostgator
 
-#### Opção A - Via cPanel File Manager:
-1. Acesse o cPanel da Hostgator
-2. Abra o "Gerenciador de Arquivos"
-3. Navegue até a pasta `public_html` (ou a pasta do seu domínio)
-4. Faça upload de TODOS os arquivos da pasta `dist`
-5. Certifique-se que o arquivo `.htaccess` foi enviado
+**IMPORTANTE**: Não tente compactar ou extrair arquivos no servidor. Envie os arquivos SOLTOS da pasta `dist`.
 
-#### Opção B - Via FTP:
-1. Use um cliente FTP (FileZilla, por exemplo)
-2. Conecte-se ao servidor da Hostgator
-3. Navegue até `public_html`
-4. Envie todos os arquivos da pasta `dist`
+#### Opção A - Via cPanel File Manager (RECOMENDADO):
+1. Acesse o cPanel da Hostgator
+2. Abra o "Gerenciador de Arquivos" (File Manager)
+3. Navegue até a pasta `public_html` (ou a pasta do seu domínio)
+4. **DELETE todos os arquivos antigos** que estiverem lá (se houver)
+5. Abra a pasta `dist` no seu computador
+6. **Selecione TODOS os arquivos DENTRO da pasta dist** (não a pasta dist em si)
+7. Arraste e solte os arquivos direto no File Manager, ou use o botão "Upload"
+8. Aguarde o upload completar
+9. Verifique se os arquivos estão na raiz de `public_html`:
+   - index.html
+   - .htaccess
+   - pasta assets/
+   - robots.txt
+
+**NÃO FAÇA**: Não envie a pasta `dist` compactada (.zip ou .rar). O File Manager pode não conseguir extrair.
+
+#### Opção B - Via FTP (Mais confiável para muitos arquivos):
+1. Baixe e instale o FileZilla (https://filezilla-project.org/)
+2. Conecte-se ao servidor FTP da Hostgator (use as credenciais do cPanel)
+3. No lado esquerdo (local), navegue até a pasta `dist` do projeto
+4. No lado direito (servidor), navegue até `public_html`
+5. **DELETE todos os arquivos antigos** que estiverem em `public_html`
+6. Selecione TODOS os arquivos DENTRO de `dist` (não a pasta dist)
+7. Arraste para `public_html`
+8. Aguarde a transferência completar
 
 ### 4. Verificar o .htaccess
 - O arquivo `.htaccess` é essencial para o funcionamento das rotas
