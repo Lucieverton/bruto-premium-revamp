@@ -11,12 +11,12 @@ export const Card3DFlip = ({ frontImage, backImage, frontAlt, backAlt }: Card3DF
   const [isFlipped, setIsFlipped] = useState(false);
 
   return (
-    <div className="relative w-full max-w-[700px] mx-auto perspective-[1500px] group">
+    <div className="relative w-full max-w-[550px] mx-auto perspective-[1500px] group">
       {/* Floating animation wrapper */}
       <div className="animate-float">
         {/* 3D Card Container */}
         <div
-          className={`relative w-full h-[400px] md:h-[500px] transition-all duration-700 cursor-pointer transform-style-3d ${
+          className={`relative w-full h-[350px] md:h-[420px] transition-all duration-700 cursor-pointer transform-style-3d hover:scale-[1.02] ${
             isFlipped ? '[transform:rotateY(180deg)]' : ''
           }`}
           onClick={() => setIsFlipped(!isFlipped)}

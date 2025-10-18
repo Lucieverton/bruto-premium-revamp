@@ -39,32 +39,35 @@ export const Navbar = () => {
 
   return (
     <nav 
-      className={`fixed top-0 w-full z-50 transition-all duration-300 ${
-        isScrolled ? 'bg-black/95 backdrop-blur-lg shadow-lg' : 'bg-black/80 backdrop-blur-md'
+      className={`fixed top-0 w-full z-50 transition-all duration-500 animate-slideDown ${
+        isScrolled 
+          ? 'bg-black/95 backdrop-blur-lg shadow-2xl border-b border-primary/30' 
+          : 'bg-black/80 backdrop-blur-md'
       }`}
     >
       <div className="max-w-[1200px] mx-auto px-5 md:px-8">
-        <div className="flex items-center justify-between h-20">
+        <div className="flex items-center justify-between h-24 md:h-28">
           {/* Logo */}
-          <a href="#" className="flex-shrink-0">
+          <a href="#" className="flex-shrink-0 group">
             <img 
               src={logo} 
               alt="Logo Barbearia Brutos" 
-              className="h-14 md:h-16 w-auto transition-transform duration-300 hover:scale-105"
+              className="h-16 md:h-20 lg:h-24 w-auto transition-all duration-500 hover:scale-110 animate-breathe hover:drop-shadow-[0_0_15px_rgba(212,175,55,0.6)]"
             />
           </a>
 
           {/* Menu Button - Visible on all screens */}
           <button
-            className="w-12 h-12 flex items-center justify-center transition-transform duration-300 hover:scale-110"
+            className="relative w-12 h-12 md:w-14 md:h-14 flex items-center justify-center transition-all duration-300 hover:scale-110 group rounded-lg hover:bg-gradient-to-br hover:from-primary/20 hover:to-primary/5"
             onClick={() => setIsOpen(!isOpen)}
             aria-label={isOpen ? 'Fechar menu' : 'Abrir menu'}
           >
             <img 
               src={isOpen ? closeIcon : menuIcon} 
               alt={isOpen ? 'Fechar menu' : 'Abrir menu'}
-              className={`w-10 h-10 object-contain transition-all duration-300 ${isOpen ? 'rotate-180' : ''}`}
+              className={`w-12 h-12 md:w-14 md:h-14 object-contain transition-all duration-500 group-hover:drop-shadow-[0_0_12px_rgba(212,175,55,0.8)] ${isOpen ? 'rotate-180' : ''}`}
             />
+            <div className="absolute inset-0 bg-primary/20 blur-xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10" />
           </button>
         </div>
       </div>
