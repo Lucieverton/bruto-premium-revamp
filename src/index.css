@@ -88,6 +88,11 @@ All colors MUST be HSL.
   }
 }
 
+/* Text shadow utility */
+.text-shadow-lg {
+  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.8);
+}
+
 /* Premium animations */
 @keyframes fadeInUp {
   from {

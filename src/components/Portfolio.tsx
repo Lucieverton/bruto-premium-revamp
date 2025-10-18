@@ -66,18 +66,24 @@ export const Portfolio = () => {
     };
   }, []);
 
-  const maxIndex = Math.max(0, Math.ceil(portfolioImages.length / itemsPerView) - 1);
+  const totalSlides = portfolioImages.length;
+  const maxIndex = Math.max(0, totalSlides - itemsPerView);
 
   const goToSlide = (index: number) => {
-    setCurrentIndex(Math.max(0, Math.min(index, maxIndex)));
+    const clampedIndex = Math.max(0, Math.min(index, maxIndex));
+    setCurrentIndex(clampedIndex);
   };
 
   const nextSlide = () => {
-    goToSlide(currentIndex + 1);
+    if (currentIndex < maxIndex) {
+      goToSlide(currentIndex + 1);
+    }
   };
 
   const prevSlide = () => {
-    goToSlide(currentIndex - 1);
+    if (currentIndex > 0) {
+      goToSlide(currentIndex - 1);
+    }
   };
 
   const openLightbox = (src: string) => {
@@ -105,15 +111,23 @@ export const Portfolio = () => {
         <div className="relative">
           <div className="overflow-hidden">
             <div 
-              className="flex gap-4 transition-transform duration-500 ease-out"
-              style={{ transform: `translateX(-${currentIndex * (100 / itemsPerView)}%)` }}
+              className="flex transition-transform duration-500 ease-out"
+              style={{ 
+                transform: `translateX(-${currentIndex * (100 / itemsPerView + (itemsPerView > 1 ? 1.6 : 0))}%)`,
+                gap: '1rem'
+              }}
             >
               {portfolioImages.map((image, index) => (
                 <button
                   key={index}
                   onClick={() => openLightbox(image.src)}
                   className="flex-shrink-0 cursor-pointer transition-transform duration-300 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-primary rounded-lg"
-                  style={{ width: `calc(${100 / itemsPerView}% - ${(itemsPerView - 1) * 16 / itemsPerView}px)` }}
+                  style={{ 
+                    width: itemsPerView === 1 
+                      ? '100%' 
+                      : `calc(${100 / itemsPerView}% - ${(itemsPerView - 1) / itemsPerView}rem)`,
+                    marginRight: index < portfolioImages.length - 1 ? '1rem' : '0'
+                  }}
                 >
                   <img 
                     src={image.src}
@@ -147,18 +161,20 @@ export const Portfolio = () => {
           </Button>
         </div>
 
-        <div className="flex justify-center gap-2 mt-6">
-          {Array.from({ length: maxIndex + 1 }).map((_, index) => (
-            <button
-              key={index}
-              onClick={() => goToSlide(index)}
-              className={`w-3 h-3 rounded-full transition-all duration-300 ${
-                index === currentIndex ? 'bg-primary w-8' : 'bg-muted-foreground/30'
-              }`}
-              aria-label={`Ir para slide ${index + 1}`}
-            />
-          ))}
-        </div>
+        {maxIndex > 0 && (
+          <div className="flex justify-center gap-2 mt-6">
+            {Array.from({ length: Math.min(maxIndex + 1, 7) }).map((_, index) => (
+              <button
+                key={index}
+                onClick={() => goToSlide(index)}
+                className={`w-3 h-3 rounded-full transition-all duration-300 ${
+                  index === currentIndex ? 'bg-primary w-8' : 'bg-muted-foreground/30'
+                }`}
+                aria-label={`Ir para slide ${index + 1}`}
+              />
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Lightbox */}
