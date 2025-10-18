@@ -74,8 +74,8 @@ export const Navbar = () => {
           </a>
 
           {/* Typing Message - Center - Responsive */}
-          <div className="hidden sm:block absolute left-1/2 -translate-x-1/2 max-w-[40%] md:max-w-none">
-            <p className="text-primary font-display text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl uppercase tracking-wide animate-fadeInUp whitespace-nowrap">
+          <div className="absolute left-1/2 -translate-x-1/2 max-w-[45%] sm:max-w-[40%] md:max-w-none">
+            <p className="text-primary font-display text-[0.6rem] xs:text-xs sm:text-base md:text-lg lg:text-xl xl:text-2xl uppercase tracking-wide animate-fadeInUp whitespace-nowrap">
               {displayedText}
               <span className="animate-blink">|</span>
             </p>
