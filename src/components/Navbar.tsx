@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import logo from '@/assets/logo.png';
+import menuIcon from '@/assets/menu-icon.png';
+import closeIcon from '@/assets/close-icon.png';
 
 export const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -49,7 +50,7 @@ export const Navbar = () => {
             <img 
               src={logo} 
               alt="Logo Barbearia Brutos" 
-              className="h-16 md:h-20 w-auto animate-pulse"
+              className="h-14 md:h-16 w-auto transition-transform duration-300 hover:scale-105"
             />
           </a>
 
@@ -69,31 +70,39 @@ export const Navbar = () => {
           </ul>
 
           {/* Mobile Menu Button */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="lg:hidden text-foreground hover:text-primary hover:bg-primary/10"
+          <button
+            className="lg:hidden w-12 h-12 flex items-center justify-center transition-transform duration-300 hover:scale-110"
             onClick={() => setIsOpen(!isOpen)}
             aria-label={isOpen ? 'Fechar menu' : 'Abrir menu'}
           >
-            {isOpen ? <X size={28} /> : <Menu size={28} />}
-          </Button>
+            <img 
+              src={isOpen ? closeIcon : menuIcon} 
+              alt={isOpen ? 'Fechar menu' : 'Abrir menu'}
+              className="w-10 h-10 object-contain transition-all duration-300"
+            />
+          </button>
         </div>
       </div>
 
       {/* Mobile Menu */}
       <div
-        className={`lg:hidden fixed top-20 right-0 h-[calc(100vh-5rem)] w-72 bg-black/98 backdrop-blur-xl border-l border-border shadow-2xl transition-transform duration-300 ${
-          isOpen ? 'translate-x-0' : 'translate-x-full'
+        className={`lg:hidden fixed top-20 right-0 h-[calc(100vh-5rem)] w-80 bg-black/98 backdrop-blur-xl border-l border-primary/20 shadow-2xl transition-all duration-500 ease-in-out ${
+          isOpen ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'
         }`}
       >
-        <ul className="flex flex-col p-6 space-y-4">
-          {navLinks.map((link) => (
-            <li key={link.href}>
+        <ul className="flex flex-col p-8 space-y-2">
+          {navLinks.map((link, index) => (
+            <li 
+              key={link.href}
+              style={{ 
+                animation: isOpen ? `slideInRight 0.3s ease-out ${index * 0.1}s forwards` : 'none',
+                opacity: isOpen ? 1 : 0 
+              }}
+            >
               <a
                 href={link.href}
                 onClick={handleLinkClick}
-                className="block text-foreground hover:text-primary transition-colors duration-300 text-lg font-medium py-3 px-4 rounded-lg hover:bg-primary/10"
+                className="block text-foreground hover:text-primary transition-all duration-300 text-lg font-medium py-4 px-5 rounded-lg hover:bg-primary/10 hover:translate-x-2 border-b border-border/30"
               >
                 {link.label}
               </a>
