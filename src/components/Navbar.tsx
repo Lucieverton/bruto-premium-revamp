@@ -78,7 +78,7 @@ export const Navbar = () => {
             <img 
               src={isOpen ? closeIcon : menuIcon} 
               alt={isOpen ? 'Fechar menu' : 'Abrir menu'}
-              className="w-10 h-10 object-contain transition-all duration-300"
+              className={`w-10 h-10 object-contain transition-all duration-300 ${isOpen ? '' : 'rotate-180'}`}
             />
           </button>
         </div>
