@@ -2,21 +2,25 @@ import { useEffect, useRef } from 'react';
 import { Scissors, Sparkles, ShoppingBag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
+import corte1 from '@/assets/corte1.png';
+import barba1 from '@/assets/barba1.png';
+import produtos1 from '@/assets/produtos1.png';
+
 const services = [
   {
-    imageName: 'cabelo1',
+    image: corte1,
     title: 'Corte de Cabelo',
     description: 'Clássico ou moderno, cortes alinhados às tendências.',
     price: 'R$ 40,00',
   },
   {
-    imageName: 'barba1',
+    image: barba1,
     title: 'Barba & Bigode',
     description: 'Design profissional para um visual impecável.',
     price: 'R$ 30,00',
   },
   {
-    imageName: 'produtos1',
+    image: produtos1,
     title: 'Produtos Premium',
     description: 'Minoxidil, Pomada modeladora e linhas exclusivas.',
     price: 'A partir de R$ 25,00',
@@ -82,13 +86,9 @@ export const Services = () => {
             >
               <div className="inline-flex items-center justify-center w-32 h-32 rounded-full bg-primary/10 group-hover:bg-primary/20 transition-colors duration-300 mb-6 overflow-hidden">
                 <img 
-                  src={`/src/assets/${service.imageName}.png`}
+                  src={service.image}
                   alt={service.title}
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    // Fallback para caso a imagem não exista ainda
-                    e.currentTarget.style.display = 'none';
-                  }}
+                  className="w-full h-full object-contain p-4"
                 />
               </div>
               

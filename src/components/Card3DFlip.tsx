@@ -10,33 +10,38 @@ interface Card3DFlipProps {
 export const Card3DFlip = ({ frontImage, backImage, frontAlt, backAlt }: Card3DFlipProps) => {
   const [isFlipped, setIsFlipped] = useState(false);
 
+  const handleFlip = () => {
+    setIsFlipped(!isFlipped);
+  };
+
   return (
     <div className="relative w-full max-w-[550px] mx-auto perspective-[1500px] group">
       {/* Floating animation wrapper */}
       <div className="animate-float">
         {/* 3D Card Container */}
         <div
-          className={`relative w-full h-[350px] md:h-[420px] transition-all duration-700 cursor-pointer transform-style-3d hover:scale-[1.02] ${
+          className={`relative w-full h-[350px] md:h-[420px] transition-all duration-700 transform-style-3d ${
             isFlipped ? '[transform:rotateY(180deg)]' : ''
           }`}
-          onClick={() => setIsFlipped(!isFlipped)}
           style={{ transformStyle: 'preserve-3d' }}
         >
           {/* Front Side */}
           <div
-            className="absolute inset-0 w-full h-full backface-hidden rounded-2xl shadow-2xl overflow-hidden"
+            className="absolute inset-0 w-full h-full backface-hidden rounded-2xl shadow-2xl overflow-hidden bg-background"
             style={{ backfaceVisibility: 'hidden' }}
           >
             <img
               src={frontImage}
               alt={frontAlt}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-contain"
               loading="lazy"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
-            <div className="absolute bottom-6 right-6 bg-primary/90 backdrop-blur-sm text-primary-foreground px-4 py-2 rounded-full text-sm font-semibold shadow-lg">
+            <button
+              onClick={handleFlip}
+              className="absolute bottom-6 right-6 bg-primary/90 backdrop-blur-sm text-primary-foreground px-4 py-2 rounded-full text-sm font-semibold shadow-lg hover:bg-primary transition-colors duration-300 cursor-pointer z-10"
+            >
               Clique para girar
-            </div>
+            </button>
           </div>
 
           {/* Back Side */}
@@ -51,9 +56,12 @@ export const Card3DFlip = ({ frontImage, backImage, frontAlt, backAlt }: Card3DF
               loading="lazy"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
-            <div className="absolute bottom-6 right-6 bg-primary/90 backdrop-blur-sm text-primary-foreground px-4 py-2 rounded-full text-sm font-semibold shadow-lg">
+            <button
+              onClick={handleFlip}
+              className="absolute bottom-6 right-6 bg-primary/90 backdrop-blur-sm text-primary-foreground px-4 py-2 rounded-full text-sm font-semibold shadow-lg hover:bg-primary transition-colors duration-300 cursor-pointer z-10"
+            >
               Clique novamente
-            </div>
+            </button>
           </div>
         </div>
 

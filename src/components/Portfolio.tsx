@@ -1,16 +1,22 @@
 import { useState, useEffect, useRef } from 'react';
 import { ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import portfolio1 from '@/assets/portfolio1.png';
+import portfolio2 from '@/assets/portfolio2.png';
+import portfolio3 from '@/assets/portfolio3.png';
+import portfolio4 from '@/assets/portfolio4.png';
+import portfolio5 from '@/assets/portfolio5.png';
+import portfolio6 from '@/assets/portfolio6.png';
+import portfolio7 from '@/assets/portfolio7.png';
 
 const portfolioImages = [
-  { src: 'https://images.unsplash.com/photo-1621605815971-fbc98d665033?w=400', alt: 'Corte clássico masculino' },
-  { src: 'https://images.unsplash.com/photo-1622287162716-f311baa1a2b8?w=400', alt: 'Barba desenhada com acabamento' },
-  { src: 'https://images.unsplash.com/photo-1605497788044-5a32c7078486?w=400', alt: 'Barba longa estilizada' },
-  { src: 'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=400', alt: 'Fade moderno' },
-  { src: 'https://images.unsplash.com/photo-1621607512214-68297480165e?w=400', alt: 'Corte texturizado' },
-  { src: 'https://images.unsplash.com/photo-1616394584738-fc6e612e71b9?w=400', alt: 'Estilo com topete' },
-  { src: 'https://images.unsplash.com/photo-1599351431202-1e0f0137899a?w=400', alt: 'Undercut' },
-  { src: 'https://images.unsplash.com/photo-1598133893875-8741a6dd1f3f?w=400', alt: 'Detalhes geométricos' },
+  { src: portfolio1, alt: 'Corte profissional com design' },
+  { src: portfolio2, alt: 'Trança estilizada com fade' },
+  { src: portfolio3, alt: 'Fade com design artístico' },
+  { src: portfolio4, alt: 'Corte platinado elegante' },
+  { src: portfolio5, alt: 'Corte infantil com degradê' },
+  { src: portfolio6, alt: 'Design criativo com degradê' },
+  { src: portfolio7, alt: 'Fade artístico com design' },
 ];
 
 export const Portfolio = () => {
