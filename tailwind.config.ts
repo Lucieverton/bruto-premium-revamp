@@ -63,6 +63,10 @@ export default {
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
       },
+      fontFamily: {
+        'display': ['Playfair Display', 'serif'],
+        'sans': ['Montserrat', 'sans-serif'],
+      },
       keyframes: {
         "accordion-down": {
           from: {
@@ -80,10 +84,62 @@ export default {
             height: "0",
           },
         },
+        fadeInUp: {
+          from: {
+            opacity: '0',
+            transform: 'translateY(30px)',
+          },
+          to: {
+            opacity: '1',
+            transform: 'translateY(0)',
+          },
+        },
+        bounceIn: {
+          '0%': {
+            opacity: '0',
+            transform: 'scale(0.85)',
+          },
+          '50%': {
+            opacity: '1',
+            transform: 'scale(1.05)',
+          },
+          '100%': {
+            transform: 'scale(1)',
+          },
+        },
+        pulse: {
+          '0%, 100%': {
+            transform: 'scale(1)',
+          },
+          '50%': {
+            transform: 'scale(1.05)',
+          },
+        },
+        glow: {
+          '0%, 100%': {
+            boxShadow: '0 0 8px rgba(255, 193, 7, 0.2)',
+          },
+          '50%': {
+            boxShadow: '0 0 24px rgba(255, 193, 7, 0.5)',
+          },
+        },
+        bounce: {
+          '0%, 100%': {
+            transform: 'translateY(0)',
+          },
+          '50%': {
+            transform: 'translateY(-12px)',
+          },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        'fadeInUp': 'fadeInUp 0.8s ease-out',
+        'bounceIn': 'bounceIn 1s ease-out',
+        'pulse': 'pulse 3s ease-in-out infinite',
+        'glow': 'glow 2s ease-in-out infinite',
+        'bounce': 'bounce 2s ease-in-out infinite',
       },
     },
   },

@@ -1,0 +1,182 @@
+import { useState, useEffect, useRef } from 'react';
+import { ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+
+const portfolioImages = [
+  { src: 'https://images.unsplash.com/photo-1621605815971-fbc98d665033?w=400', alt: 'Corte clássico masculino' },
+  { src: 'https://images.unsplash.com/photo-1622287162716-f311baa1a2b8?w=400', alt: 'Barba desenhada com acabamento' },
+  { src: 'https://images.unsplash.com/photo-1605497788044-5a32c7078486?w=400', alt: 'Barba longa estilizada' },
+  { src: 'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=400', alt: 'Fade moderno' },
+  { src: 'https://images.unsplash.com/photo-1621607512214-68297480165e?w=400', alt: 'Corte texturizado' },
+  { src: 'https://images.unsplash.com/photo-1616394584738-fc6e612e71b9?w=400', alt: 'Estilo com topete' },
+  { src: 'https://images.unsplash.com/photo-1599351431202-1e0f0137899a?w=400', alt: 'Undercut' },
+  { src: 'https://images.unsplash.com/photo-1598133893875-8741a6dd1f3f?w=400', alt: 'Detalhes geométricos' },
+];
+
+export const Portfolio = () => {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxImage, setLightboxImage] = useState('');
+  const [itemsPerView, setItemsPerView] = useState(1);
+  const sectionRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const calculateItemsPerView = () => {
+      const width = window.innerWidth;
+      if (width >= 1024) return 3;
+      if (width >= 640) return 2;
+      return 1;
+    };
+
+    const handleResize = () => {
+      setItemsPerView(calculateItemsPerView());
+    };
+
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('animate-fadeInUp');
+          }
+        });
+      },
+      { threshold: 0.1 }
+    );
+
+    if (sectionRef.current) {
+      observer.observe(sectionRef.current);
+    }
+
+    return () => {
+      if (sectionRef.current) {
+        observer.unobserve(sectionRef.current);
+      }
+    };
+  }, []);
+
+  const maxIndex = Math.max(0, Math.ceil(portfolioImages.length / itemsPerView) - 1);
+
+  const goToSlide = (index: number) => {
+    setCurrentIndex(Math.max(0, Math.min(index, maxIndex)));
+  };
+
+  const nextSlide = () => {
+    goToSlide(currentIndex + 1);
+  };
+
+  const prevSlide = () => {
+    goToSlide(currentIndex - 1);
+  };
+
+  const openLightbox = (src: string) => {
+    setLightboxImage(src);
+    setLightboxOpen(true);
+  };
+
+  const closeLightbox = () => {
+    setLightboxOpen(false);
+  };
+
+  return (
+    <section id="portfolio" ref={sectionRef} className="py-16 md:py-24 px-5 bg-card">
+      <div className="max-w-[1200px] mx-auto">
+        <div className="text-center mb-12">
+          <h2 className="font-display text-3xl md:text-4xl lg:text-5xl uppercase relative inline-block">
+            Nosso trabalho
+            <span className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-16 h-1 bg-primary rounded" />
+          </h2>
+          <p className="text-muted-foreground text-lg mt-6">
+            Veja os resultados que transformam nossos clientes
+          </p>
+        </div>
+
+        <div className="relative">
+          <div className="overflow-hidden">
+            <div 
+              className="flex gap-4 transition-transform duration-500 ease-out"
+              style={{ transform: `translateX(-${currentIndex * (100 / itemsPerView)}%)` }}
+            >
+              {portfolioImages.map((image, index) => (
+                <button
+                  key={index}
+                  onClick={() => openLightbox(image.src)}
+                  className="flex-shrink-0 cursor-pointer transition-transform duration-300 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-primary rounded-lg"
+                  style={{ width: `calc(${100 / itemsPerView}% - ${(itemsPerView - 1) * 16 / itemsPerView}px)` }}
+                >
+                  <img 
+                    src={image.src}
+                    alt={image.alt}
+                    className="w-full aspect-[4/5] object-cover rounded-lg shadow-md"
+                    loading="lazy"
+                  />
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={prevSlide}
+            disabled={currentIndex === 0}
+            className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black/80 text-white rounded-full disabled:opacity-30"
+          >
+            <ChevronLeft size={24} />
+          </Button>
+
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={nextSlide}
+            disabled={currentIndex >= maxIndex}
+            className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black/80 text-white rounded-full disabled:opacity-30"
+          >
+            <ChevronRight size={24} />
+          </Button>
+        </div>
+
+        <div className="flex justify-center gap-2 mt-6">
+          {Array.from({ length: maxIndex + 1 }).map((_, index) => (
+            <button
+              key={index}
+              onClick={() => goToSlide(index)}
+              className={`w-3 h-3 rounded-full transition-all duration-300 ${
+                index === currentIndex ? 'bg-primary w-8' : 'bg-muted-foreground/30'
+              }`}
+              aria-label={`Ir para slide ${index + 1}`}
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* Lightbox */}
+      {lightboxOpen && (
+        <div 
+          className="fixed inset-0 bg-black/95 z-50 flex items-center justify-center p-4"
+          onClick={closeLightbox}
+        >
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={closeLightbox}
+            className="absolute top-4 right-4 text-white hover:bg-white/10"
+          >
+            <X size={32} />
+          </Button>
+          <img 
+            src={lightboxImage}
+            alt="Imagem ampliada"
+            className="max-w-full max-h-[90vh] object-contain"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
+    </section>
+  );
+};
