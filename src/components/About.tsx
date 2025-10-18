@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
-import aboutImage from '@/assets/about-image.jpg';
+import barbershopFront from '@/assets/barbershop-front.jpg';
+import barbershopInterior from '@/assets/barbershop-interior.jpg';
 
 export const About = () => {
   const sectionRef = useRef<HTMLElement>(null);
@@ -36,14 +37,24 @@ export const About = () => {
         </h2>
         
         <div className="grid md:grid-cols-2 gap-8 lg:gap-12 items-center mt-16">
-          <figure className="relative overflow-hidden rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300">
-            <img 
-              src={aboutImage}
-              alt="Interior da Barbearia Brutos"
-              className="w-full h-auto rounded-lg animate-bounceIn"
-              loading="lazy"
-            />
-          </figure>
+          <div className="space-y-6">
+            <figure className="relative overflow-hidden rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300">
+              <img 
+                src={barbershopFront}
+                alt="Fachada da Barbearia Brutos"
+                className="w-full h-auto rounded-lg animate-bounceIn"
+                loading="lazy"
+              />
+            </figure>
+            <figure className="relative overflow-hidden rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300">
+              <img 
+                src={barbershopInterior}
+                alt="Interior da Barbearia Brutos"
+                className="w-full h-auto rounded-lg animate-bounceIn"
+                loading="lazy"
+              />
+            </figure>
+          </div>
           
           <div className="space-y-4 text-left">
             <p className="text-muted-foreground text-base md:text-lg leading-relaxed">
