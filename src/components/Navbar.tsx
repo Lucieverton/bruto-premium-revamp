@@ -54,39 +54,24 @@ export const Navbar = () => {
             />
           </a>
 
-          {/* Desktop Menu */}
-          <ul className="hidden lg:flex items-center space-x-8">
-            {navLinks.map((link) => (
-              <li key={link.href}>
-                <a
-                  href={link.href}
-                  className="text-foreground hover:text-primary transition-colors duration-300 text-base font-medium relative group"
-                >
-                  {link.label}
-                  <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all duration-300 group-hover:w-full" />
-                </a>
-              </li>
-            ))}
-          </ul>
-
-          {/* Mobile Menu Button */}
+          {/* Menu Button - Visible on all screens */}
           <button
-            className="lg:hidden w-12 h-12 flex items-center justify-center transition-transform duration-300 hover:scale-110"
+            className="w-12 h-12 flex items-center justify-center transition-transform duration-300 hover:scale-110"
             onClick={() => setIsOpen(!isOpen)}
             aria-label={isOpen ? 'Fechar menu' : 'Abrir menu'}
           >
             <img 
               src={isOpen ? closeIcon : menuIcon} 
               alt={isOpen ? 'Fechar menu' : 'Abrir menu'}
-              className={`w-10 h-10 object-contain transition-all duration-300 ${isOpen ? '' : 'rotate-180'}`}
+              className={`w-10 h-10 object-contain transition-all duration-300 ${isOpen ? 'rotate-180' : ''}`}
             />
           </button>
         </div>
       </div>
 
-      {/* Mobile Menu */}
+      {/* Sidebar Menu */}
       <div
-        className={`lg:hidden fixed top-20 right-0 h-[calc(100vh-5rem)] w-80 bg-black/98 backdrop-blur-xl border-l border-primary/20 shadow-2xl transition-all duration-500 ease-in-out ${
+        className={`fixed top-20 right-0 h-[calc(100vh-5rem)] w-80 bg-black/98 backdrop-blur-xl border-l border-primary/20 shadow-2xl transition-all duration-500 ease-in-out ${
           isOpen ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'
         }`}
       >
@@ -114,7 +99,7 @@ export const Navbar = () => {
       {/* Overlay */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[-1] lg:hidden"
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[-1]"
           onClick={() => setIsOpen(false)}
         />
       )}
