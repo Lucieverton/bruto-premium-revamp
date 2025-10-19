@@ -70,8 +70,44 @@ export const PriceTable = () => {
           </p>
         </div>
 
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse bg-background/50 rounded-lg overflow-hidden shadow-lg">
+            <thead>
+              <tr className="bg-primary/10 border-b-2 border-primary">
+                <th className="py-4 px-4 md:px-6 text-left text-sm md:text-base font-bold uppercase">
+                  Serviço
+                </th>
+                <th className="py-4 px-4 md:px-6 text-center text-sm md:text-base font-bold uppercase">
+                  Duração
+                </th>
+                <th className="py-4 px-4 md:px-6 text-right text-sm md:text-base font-bold uppercase">
+                  Valor
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {priceData.map((item, index) => (
+                <tr 
+                  key={index}
+                  className="border-b border-border hover:bg-primary/5 transition-colors duration-200"
+                >
+                  <td className="py-3 px-4 md:px-6 text-sm md:text-base text-muted-foreground">
+                    {item.service}
+                  </td>
+                  <td className="py-3 px-4 md:px-6 text-center text-sm md:text-base text-muted-foreground">
+                    {item.duration}
+                  </td>
+                  <td className="py-3 px-4 md:px-6 text-right text-sm md:text-base font-semibold text-primary">
+                    {item.price}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
         {/* Produtos Premium Card */}
-        <div className="mb-12 max-w-md mx-auto">
+        <div className="mt-12 max-w-md mx-auto">
           <article className="bg-card border border-border rounded-lg p-8 text-center transition-all duration-300 hover:-translate-y-2 hover:shadow-xl group">
             <div className="inline-flex items-center justify-center w-32 h-32 rounded-full bg-primary/10 group-hover:bg-primary/20 transition-colors duration-300 mb-6 overflow-hidden">
               <img 
@@ -108,42 +144,6 @@ export const PriceTable = () => {
               </a>
             </Button>
           </article>
-        </div>
-
-        <div className="overflow-x-auto mt-16">
-          <table className="w-full border-collapse bg-background/50 rounded-lg overflow-hidden shadow-lg">
-            <thead>
-              <tr className="bg-primary/10 border-b-2 border-primary">
-                <th className="py-4 px-4 md:px-6 text-left text-sm md:text-base font-bold uppercase">
-                  Serviço
-                </th>
-                <th className="py-4 px-4 md:px-6 text-center text-sm md:text-base font-bold uppercase">
-                  Duração
-                </th>
-                <th className="py-4 px-4 md:px-6 text-right text-sm md:text-base font-bold uppercase">
-                  Valor
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {priceData.map((item, index) => (
-                <tr 
-                  key={index}
-                  className="border-b border-border hover:bg-primary/5 transition-colors duration-200"
-                >
-                  <td className="py-3 px-4 md:px-6 text-sm md:text-base text-muted-foreground">
-                    {item.service}
-                  </td>
-                  <td className="py-3 px-4 md:px-6 text-center text-sm md:text-base text-muted-foreground">
-                    {item.duration}
-                  </td>
-                  <td className="py-3 px-4 md:px-6 text-right text-sm md:text-base font-semibold text-primary">
-                    {item.price}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
         </div>
       </div>
     </section>

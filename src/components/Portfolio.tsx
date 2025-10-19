@@ -28,6 +28,7 @@ export const Portfolio = () => {
   const [startX, setStartX] = useState(0);
   const [currentTranslate, setCurrentTranslate] = useState(0);
   const [prevTranslate, setPrevTranslate] = useState(0);
+  const [dragDistance, setDragDistance] = useState(0);
   
   const sectionRef = useRef<HTMLElement>(null);
   const carouselRef = useRef<HTMLDivElement>(null);
@@ -93,7 +94,8 @@ export const Portfolio = () => {
   };
 
   const openLightbox = (src: string) => {
-    if (!isDragging) {
+    // Só abre se não arrastou mais de 10px
+    if (Math.abs(dragDistance) < 10) {
       setLightboxImage(src);
       setLightboxOpen(true);
     }
@@ -108,6 +110,7 @@ export const Portfolio = () => {
     setIsDragging(true);
     setStartX(e.touches[0].clientX);
     setPrevTranslate(currentTranslate);
+    setDragDistance(0);
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
@@ -115,20 +118,26 @@ export const Portfolio = () => {
     const currentPosition = e.touches[0].clientX;
     const diff = currentPosition - startX;
     setCurrentTranslate(prevTranslate + diff);
+    setDragDistance(diff);
   };
 
   const handleTouchEnd = () => {
-    setIsDragging(false);
     const movedBy = currentTranslate - prevTranslate;
     
-    if (movedBy < -50 && currentIndex < maxIndex) {
-      nextSlide();
-    } else if (movedBy > 50 && currentIndex > 0) {
-      prevSlide();
+    if (Math.abs(movedBy) > 50) {
+      if (movedBy < 0 && currentIndex < maxIndex) {
+        nextSlide();
+      } else if (movedBy > 0 && currentIndex > 0) {
+        prevSlide();
+      }
     }
     
+    setIsDragging(false);
     setCurrentTranslate(0);
     setPrevTranslate(0);
+    
+    // Reset drag distance após um delay para permitir o clique
+    setTimeout(() => setDragDistance(0), 100);
   };
 
   // Mouse handlers for desktop drag
@@ -136,6 +145,7 @@ export const Portfolio = () => {
     setIsDragging(true);
     setStartX(e.clientX);
     setPrevTranslate(currentTranslate);
+    setDragDistance(0);
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
@@ -143,20 +153,26 @@ export const Portfolio = () => {
     const currentPosition = e.clientX;
     const diff = currentPosition - startX;
     setCurrentTranslate(prevTranslate + diff);
+    setDragDistance(diff);
   };
 
   const handleMouseUp = () => {
-    setIsDragging(false);
     const movedBy = currentTranslate - prevTranslate;
     
-    if (movedBy < -50 && currentIndex < maxIndex) {
-      nextSlide();
-    } else if (movedBy > 50 && currentIndex > 0) {
-      prevSlide();
+    if (Math.abs(movedBy) > 50) {
+      if (movedBy < 0 && currentIndex < maxIndex) {
+        nextSlide();
+      } else if (movedBy > 0 && currentIndex > 0) {
+        prevSlide();
+      }
     }
     
+    setIsDragging(false);
     setCurrentTranslate(0);
     setPrevTranslate(0);
+    
+    // Reset drag distance após um delay para permitir o clique
+    setTimeout(() => setDragDistance(0), 100);
   };
 
   const handleMouseLeave = () => {
