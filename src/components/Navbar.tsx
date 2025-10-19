@@ -27,7 +27,7 @@ export const Navbar = () => {
   }, [isOpen]);
 
   useEffect(() => {
-    const text = 'Bem vindos a barbearia!';
+    const text = 'Bem-vindos a barbearia!';
     let index = 0;
     
     const typingInterval = setInterval(() => {
