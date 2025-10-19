@@ -24,7 +24,13 @@ export const Portfolio = () => {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxImage, setLightboxImage] = useState('');
   const [itemsPerView, setItemsPerView] = useState(1);
+  const [isDragging, setIsDragging] = useState(false);
+  const [startX, setStartX] = useState(0);
+  const [currentTranslate, setCurrentTranslate] = useState(0);
+  const [prevTranslate, setPrevTranslate] = useState(0);
+  
   const sectionRef = useRef<HTMLElement>(null);
+  const carouselRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const calculateItemsPerView = () => {
@@ -87,12 +93,76 @@ export const Portfolio = () => {
   };
 
   const openLightbox = (src: string) => {
-    setLightboxImage(src);
-    setLightboxOpen(true);
+    if (!isDragging) {
+      setLightboxImage(src);
+      setLightboxOpen(true);
+    }
   };
 
   const closeLightbox = () => {
     setLightboxOpen(false);
+  };
+
+  // Touch handlers
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setIsDragging(true);
+    setStartX(e.touches[0].clientX);
+    setPrevTranslate(currentTranslate);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isDragging) return;
+    const currentPosition = e.touches[0].clientX;
+    const diff = currentPosition - startX;
+    setCurrentTranslate(prevTranslate + diff);
+  };
+
+  const handleTouchEnd = () => {
+    setIsDragging(false);
+    const movedBy = currentTranslate - prevTranslate;
+    
+    if (movedBy < -50 && currentIndex < maxIndex) {
+      nextSlide();
+    } else if (movedBy > 50 && currentIndex > 0) {
+      prevSlide();
+    }
+    
+    setCurrentTranslate(0);
+    setPrevTranslate(0);
+  };
+
+  // Mouse handlers for desktop drag
+  const handleMouseDown = (e: React.MouseEvent) => {
+    setIsDragging(true);
+    setStartX(e.clientX);
+    setPrevTranslate(currentTranslate);
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging) return;
+    const currentPosition = e.clientX;
+    const diff = currentPosition - startX;
+    setCurrentTranslate(prevTranslate + diff);
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+    const movedBy = currentTranslate - prevTranslate;
+    
+    if (movedBy < -50 && currentIndex < maxIndex) {
+      nextSlide();
+    } else if (movedBy > 50 && currentIndex > 0) {
+      prevSlide();
+    }
+    
+    setCurrentTranslate(0);
+    setPrevTranslate(0);
+  };
+
+  const handleMouseLeave = () => {
+    if (isDragging) {
+      handleMouseUp();
+    }
   };
 
   return (
@@ -109,11 +179,21 @@ export const Portfolio = () => {
         </div>
 
         <div className="relative">
-          <div className="overflow-hidden">
+          <div 
+            className="overflow-hidden cursor-grab active:cursor-grabbing"
+            ref={carouselRef}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+            onMouseLeave={handleMouseLeave}
+          >
             <div 
-              className="flex transition-transform duration-500 ease-out"
+              className={`flex ${isDragging ? '' : 'transition-transform duration-500 ease-out'}`}
               style={{ 
-                transform: `translateX(-${currentIndex * (100 / itemsPerView + (itemsPerView > 1 ? 1.6 : 0))}%)`,
+                transform: `translateX(calc(-${currentIndex * (100 / itemsPerView + (itemsPerView > 1 ? 1.6 : 0))}% + ${isDragging ? currentTranslate : 0}px))`,
                 gap: '1rem'
               }}
             >
@@ -121,7 +201,7 @@ export const Portfolio = () => {
                 <button
                   key={index}
                   onClick={() => openLightbox(image.src)}
-                  className="flex-shrink-0 cursor-pointer transition-transform duration-300 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-primary rounded-lg"
+                  className="flex-shrink-0 cursor-pointer transition-transform duration-300 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-primary rounded-lg select-none"
                   style={{ 
                     width: itemsPerView === 1 
                       ? '100%' 
@@ -132,8 +212,9 @@ export const Portfolio = () => {
                   <img 
                     src={image.src}
                     alt={image.alt}
-                    className="w-full aspect-[4/5] object-cover rounded-lg shadow-md"
+                    className="w-full aspect-[4/5] object-cover rounded-lg shadow-md pointer-events-none"
                     loading="lazy"
+                    draggable="false"
                   />
                 </button>
               ))}
@@ -145,7 +226,7 @@ export const Portfolio = () => {
             size="icon"
             onClick={prevSlide}
             disabled={currentIndex === 0}
-            className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black/80 text-white rounded-full disabled:opacity-30"
+            className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black/80 text-white rounded-full disabled:opacity-30 z-10"
           >
             <ChevronLeft size={24} />
           </Button>
@@ -155,7 +236,7 @@ export const Portfolio = () => {
             size="icon"
             onClick={nextSlide}
             disabled={currentIndex >= maxIndex}
-            className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black/80 text-white rounded-full disabled:opacity-30"
+            className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black/80 text-white rounded-full disabled:opacity-30 z-10"
           >
             <ChevronRight size={24} />
           </Button>

@@ -45,7 +45,6 @@ export const Navbar = () => {
   const navLinks = [
     { href: '#sobre', label: 'Sobre nós' },
     { href: '#portfolio', label: 'Nosso Trabalho' },
-    { href: '#servicos', label: 'Serviços' },
     { href: '#precos', label: 'Tabela de Preços' },
     { href: '#contato', label: 'Contato' },
   ];
@@ -74,8 +73,8 @@ export const Navbar = () => {
           </a>
 
           {/* Typing Message - Center - Responsive */}
-          <div className="absolute left-1/2 -translate-x-1/2 max-w-[45%] sm:max-w-[40%] md:max-w-none">
-            <p className="text-primary font-display text-[0.6rem] xs:text-xs sm:text-base md:text-lg lg:text-xl xl:text-2xl uppercase tracking-wide animate-fadeInUp whitespace-nowrap">
+          <div className="absolute left-1/2 -translate-x-1/2 max-w-[50%] sm:max-w-[45%] md:max-w-none">
+            <p className="text-primary font-display text-xs sm:text-lg md:text-xl lg:text-2xl xl:text-3xl uppercase tracking-wide animate-fadeInUp whitespace-nowrap">
               {displayedText}
               <span className="animate-blink">|</span>
             </p>

@@ -1,4 +1,7 @@
 import { useEffect, useRef } from 'react';
+import { Button } from '@/components/ui/button';
+import { Scissors } from 'lucide-react';
+import produtos1 from '@/assets/produtos1.png';
 
 const priceData = [
   { service: 'Navalhado + Barba', duration: '20 min', price: 'R$ 50,00' },
@@ -65,6 +68,46 @@ export const PriceTable = () => {
           <p className="text-muted-foreground text-lg mt-6">
             Confira todos os nossos serviços e valores
           </p>
+        </div>
+
+        {/* Produtos Premium Card */}
+        <div className="mb-12 max-w-md mx-auto">
+          <article className="bg-card border border-border rounded-lg p-8 text-center transition-all duration-300 hover:-translate-y-2 hover:shadow-xl group">
+            <div className="inline-flex items-center justify-center w-32 h-32 rounded-full bg-primary/10 group-hover:bg-primary/20 transition-colors duration-300 mb-6 overflow-hidden">
+              <img 
+                src={produtos1}
+                alt="Produtos Premium"
+                className="w-full h-full object-contain p-4"
+              />
+            </div>
+            
+            <h3 className="font-display text-xl md:text-2xl mb-3 uppercase">
+              Produtos Premium
+            </h3>
+            
+            <p className="text-muted-foreground mb-4">
+              Minoxidil, Pomada modeladora e linhas exclusivas.
+            </p>
+            
+            <div className="text-primary font-bold text-lg bg-primary/10 py-2 px-4 rounded-lg inline-block mb-6">
+              A partir de R$ 25,00
+            </div>
+
+            <Button
+              asChild
+              size="lg"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold uppercase tracking-wide w-full shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
+            >
+              <a 
+                href="https://filaparacorteoficial.lovable.app/fila/barbearia-brutos-1759232212817"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Scissors className="mr-2" size={20} />
+                Entre na fila agora
+              </a>
+            </Button>
+          </article>
         </div>
 
         <div className="overflow-x-auto mt-16">
