@@ -90,64 +90,65 @@ export const Navbar = () => {
             </div>
 
             {/* Menu Button - Visible on all screens */}
-            <button
-              className="relative w-16 h-16 md:w-20 md:h-20 flex items-center justify-center transition-all duration-300 hover:scale-110 group rounded-lg hover:bg-gradient-to-br hover:from-primary/20 hover:to-primary/5 z-50"
-              onClick={() => setIsOpen(!isOpen)}
-              aria-label={isOpen ? 'Fechar menu' : 'Abrir menu'}
-              aria-expanded={isOpen}
-            >
-              <img 
-                src={isOpen ? closeIcon : menuIcon} 
-                alt={isOpen ? 'Fechar menu' : 'Abrir menu'}
-                className={`w-16 h-16 md:w-20 md:h-20 object-contain transition-all duration-500 group-hover:drop-shadow-[0_0_12px_rgba(212,175,55,0.8)] ${isOpen ? 'rotate-180' : ''}`}
-              />
-              <div className="absolute inset-0 bg-primary/20 blur-xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10" />
-            </button>
+            <div className="relative">
+              <button
+                className="relative w-16 h-16 md:w-20 md:h-20 flex items-center justify-center transition-all duration-300 hover:scale-110 group rounded-lg hover:bg-gradient-to-br hover:from-primary/20 hover:to-primary/5 z-50"
+                onClick={() => setIsOpen(!isOpen)}
+                aria-label={isOpen ? 'Fechar menu' : 'Abrir menu'}
+                aria-expanded={isOpen}
+              >
+                <img 
+                  src={isOpen ? closeIcon : menuIcon} 
+                  alt={isOpen ? 'Fechar menu' : 'Abrir menu'}
+                  className={`w-16 h-16 md:w-20 md:h-20 object-contain transition-all duration-500 group-hover:drop-shadow-[0_0_12px_rgba(212,175,55,0.8)] ${isOpen ? 'rotate-180' : ''}`}
+                />
+                <div className="absolute inset-0 bg-primary/20 blur-xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10" />
+              </button>
+
+              {/* Dropdown Menu */}
+              <div
+                className={`absolute top-full right-0 mt-2 w-56 bg-black/95 backdrop-blur-xl border border-primary/30 rounded-lg shadow-2xl transition-all duration-300 origin-top z-[60] ${
+                  isOpen 
+                    ? 'opacity-100 scale-y-100 translate-y-0' 
+                    : 'opacity-0 scale-y-0 -translate-y-4 pointer-events-none'
+                }`}
+              >
+                <ul className="py-2">
+                  {navLinks.map((link, index) => (
+                    <li 
+                      key={link.href}
+                      className={`transform transition-all duration-300 ${
+                        isOpen 
+                          ? 'translate-x-0 opacity-100' 
+                          : '-translate-x-4 opacity-0'
+                      }`}
+                      style={{ 
+                        transitionDelay: isOpen ? `${index * 0.05}s` : '0s'
+                      }}
+                    >
+                      <a
+                        href={link.href}
+                        onClick={(e) => handleLinkClick(e, link.href)}
+                        className="block text-foreground hover:text-primary transition-all duration-200 text-base font-medium py-3 px-4 hover:bg-primary/10 border-b border-border/20 last:border-b-0"
+                      >
+                        {link.label}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Overlay - Below navbar */}
+        {/* Overlay */}
         {isOpen && (
           <div
-            className="fixed inset-0 bg-black/70 backdrop-blur-sm transition-all duration-300"
-            style={{ top: '6rem' }}
+            className="fixed inset-0 bg-transparent z-40"
             onClick={() => setIsOpen(false)}
             aria-hidden="true"
           />
         )}
-
-        {/* Sidebar Menu */}
-        <div
-          className={`fixed top-0 right-0 h-full w-64 sm:w-72 bg-black/98 backdrop-blur-xl border-l border-primary/30 shadow-2xl transition-all duration-500 ease-in-out z-[60] ${
-            isOpen ? 'translate-x-0' : 'translate-x-full'
-          }`}
-        >
-          <div className="flex flex-col h-full pt-32">
-            <ul className="flex flex-col px-6 space-y-2">
-              {navLinks.map((link, index) => (
-                <li 
-                  key={link.href}
-                  className={`transform transition-all duration-300 ${
-                    isOpen 
-                      ? 'translate-x-0 opacity-100' 
-                      : 'translate-x-8 opacity-0'
-                  }`}
-                  style={{ 
-                    transitionDelay: isOpen ? `${index * 0.1}s` : '0s'
-                  }}
-                >
-                  <a
-                    href={link.href}
-                    onClick={(e) => handleLinkClick(e, link.href)}
-                    className="block text-foreground hover:text-primary transition-all duration-300 text-lg font-medium py-4 px-5 rounded-lg hover:bg-primary/10 hover:translate-x-2 border-b border-border/30"
-                  >
-                    {link.label}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
       </nav>
     </>
   );
