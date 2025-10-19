@@ -7,11 +7,11 @@ export const Hero = () => {
     <header className="relative h-screen min-h-[600px] md:min-h-[700px] w-full flex items-center justify-center overflow-hidden">
       {/* Background Mobile - Visível apenas em telas pequenas */}
       <div 
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat md:hidden"
+        className="absolute inset-0 bg-no-repeat md:hidden"
         style={{ 
           backgroundImage: `url(${heroMobileImage})`,
           backgroundPosition: 'center center',
-          backgroundSize: 'cover'
+          backgroundSize: 'contain'
         }}
       />
       
