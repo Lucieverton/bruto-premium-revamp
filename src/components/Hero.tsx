@@ -4,10 +4,10 @@ import heroImage from '@/assets/hero-bg.jpg';
 export const Hero = () => {
   return (
     <header 
-      className="relative h-screen min-h-[600px] md:min-h-[700px] w-full flex items-center justify-center bg-cover bg-center bg-no-repeat overflow-hidden"
+      className="relative h-screen min-h-[600px] md:min-h-[700px] w-full flex items-center justify-center bg-cover bg-no-repeat overflow-hidden"
       style={{ 
         backgroundImage: `url(${heroImage})`,
-        backgroundPosition: 'center center',
+        backgroundPosition: 'center 35%',
         backgroundSize: 'cover'
       }}
     >
