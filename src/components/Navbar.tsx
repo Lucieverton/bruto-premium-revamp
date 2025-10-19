@@ -63,15 +63,6 @@ export const Navbar = () => {
 
   return (
     <>
-      {/* Overlay */}
-      {isOpen && (
-        <div
-          className="fixed inset-0 bg-black/80 backdrop-blur-md z-40 transition-all duration-300"
-          onClick={() => setIsOpen(false)}
-          aria-hidden="true"
-        />
-      )}
-
       <nav 
         className={`fixed top-0 w-full z-50 transition-all duration-500 animate-slideDown ${
           isScrolled 
@@ -115,14 +106,24 @@ export const Navbar = () => {
           </div>
         </div>
 
+        {/* Overlay - Below navbar */}
+        {isOpen && (
+          <div
+            className="fixed inset-0 bg-black/70 backdrop-blur-sm transition-all duration-300"
+            style={{ top: '6rem' }}
+            onClick={() => setIsOpen(false)}
+            aria-hidden="true"
+          />
+        )}
+
         {/* Sidebar Menu */}
         <div
-          className={`fixed top-0 right-0 h-full w-80 bg-black/98 backdrop-blur-xl border-l border-primary/30 shadow-2xl transition-all duration-500 ease-in-out z-50 ${
+          className={`fixed top-0 right-0 h-full w-64 sm:w-72 bg-black/98 backdrop-blur-xl border-l border-primary/30 shadow-2xl transition-all duration-500 ease-in-out z-[60] ${
             isOpen ? 'translate-x-0' : 'translate-x-full'
           }`}
         >
           <div className="flex flex-col h-full pt-32">
-            <ul className="flex flex-col px-8 space-y-2">
+            <ul className="flex flex-col px-6 space-y-2">
               {navLinks.map((link, index) => (
                 <li 
                   key={link.href}
