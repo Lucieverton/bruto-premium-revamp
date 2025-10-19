@@ -139,6 +139,22 @@ export default {
             transform: 'translateY(-20px)',
           },
         },
+        scissorCut: {
+          '0%': { 
+            transform: 'scaleX(1)',
+            opacity: '1',
+            clipPath: 'inset(0% 0% 0% 0%)'
+          },
+          '50%': { 
+            transform: 'scaleX(0.5)',
+            clipPath: 'inset(0% 25% 0% 25%)'
+          },
+          '100%': { 
+            transform: 'scaleX(0)',
+            opacity: '0',
+            clipPath: 'inset(0% 50% 0% 50%)'
+          }
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -149,6 +165,7 @@ export default {
         'glow': 'glow 2s ease-in-out infinite',
         'bounce': 'bounce 2s ease-in-out infinite',
         'float': 'float 6s ease-in-out infinite',
+        'scissorCut': 'scissorCut 0.6s ease-out forwards',
       },
       perspective: {
         '1000': '1000px',
