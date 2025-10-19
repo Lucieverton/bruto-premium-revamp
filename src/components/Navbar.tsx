@@ -65,8 +65,8 @@ export const Navbar = () => {
     <nav 
       className={`fixed top-0 w-full z-50 transition-all duration-500 animate-slideDown ${
         isScrolled 
-          ? 'bg-black shadow-2xl border-b border-primary/30' 
-          : 'bg-black'
+          ? 'bg-black/95 backdrop-blur-md shadow-2xl border-b border-primary/30' 
+          : 'bg-transparent'
       }`}
     >
       <div className="max-w-[1400px] mx-auto px-5 md:px-8">

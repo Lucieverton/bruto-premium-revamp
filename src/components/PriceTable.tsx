@@ -58,7 +58,7 @@ export const PriceTable = () => {
   }, []);
 
   return (
-    <section id="precos" ref={sectionRef} className="py-16 md:py-24 px-5 bg-card">
+    <section id="precos" ref={sectionRef} className="py-12 md:py-16 px-5 bg-card">
       <div className="max-w-[1200px] mx-auto">
         <div className="text-center mb-12">
           <h2 className="font-display text-3xl md:text-4xl lg:text-5xl uppercase relative inline-block">

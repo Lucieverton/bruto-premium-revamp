@@ -33,7 +33,7 @@ export const Contact = () => {
     <section 
       id="contato" 
       ref={sectionRef} 
-      className="py-16 md:py-24 px-5 bg-background relative overflow-hidden"
+      className="py-12 md:py-16 px-5 bg-background relative overflow-hidden"
     >
       <div className="absolute inset-0 bg-gradient-to-b from-card/50 to-transparent" />
       

@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 
 export const IntroBanner = () => {
   return (
-    <section className="bg-background py-16 md:py-20 px-5 text-center border-b border-border">
+    <section className="bg-background py-8 md:py-12 px-5 text-center border-b border-border">
       <div className="max-w-[1200px] mx-auto">
         <h1 className="font-display text-4xl md:text-5xl lg:text-6xl uppercase tracking-wide mb-8 animate-fadeInUp">
           Tradição e Modernidade

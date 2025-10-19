@@ -30,7 +30,7 @@ export const About = () => {
   }, []);
 
   return (
-    <section id="sobre" ref={sectionRef} className="py-16 md:py-24 px-5 bg-background">
+    <section id="sobre" ref={sectionRef} className="py-12 md:py-16 px-5 bg-background">
       <div className="max-w-[900px] mx-auto">
         <h2 className="font-display text-3xl md:text-4xl lg:text-5xl text-center mb-16 uppercase relative inline-block left-1/2 -translate-x-1/2">
           Sobre nós
