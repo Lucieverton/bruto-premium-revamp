@@ -15,34 +15,78 @@ Isso criará uma pasta `dist` com todos os arquivos otimizados.
 
 ### 3. Upload para Hostgator
 
-**IMPORTANTE**: Não tente compactar ou extrair arquivos no servidor. Envie os arquivos SOLTOS da pasta `dist`.
+**⚠️ ATENÇÃO - ERRO COMUM**: Muitos usuários tentam compactar a pasta dist em .zip e extrair no servidor, mas isso SEMPRE dá erro! Siga o método correto abaixo.
 
-#### Opção A - Via cPanel File Manager (RECOMENDADO):
-1. Acesse o cPanel da Hostgator
-2. Abra o "Gerenciador de Arquivos" (File Manager)
-3. Navegue até a pasta `public_html` (ou a pasta do seu domínio)
-4. **DELETE todos os arquivos antigos** que estiverem lá (se houver)
-5. Abra a pasta `dist` no seu computador
-6. **Selecione TODOS os arquivos DENTRO da pasta dist** (não a pasta dist em si)
-7. Arraste e solte os arquivos direto no File Manager, ou use o botão "Upload"
-8. Aguarde o upload completar
-9. Verifique se os arquivos estão na raiz de `public_html`:
-   - index.html
-   - .htaccess
-   - pasta assets/
-   - robots.txt
+#### Opção A - Via cPanel File Manager (MÉTODO MAIS FÁCIL):
 
-**NÃO FAÇA**: Não envie a pasta `dist` compactada (.zip ou .rar). O File Manager pode não conseguir extrair.
+**PASSO A PASSO DETALHADO:**
 
-#### Opção B - Via FTP (Mais confiável para muitos arquivos):
-1. Baixe e instale o FileZilla (https://filezilla-project.org/)
-2. Conecte-se ao servidor FTP da Hostgator (use as credenciais do cPanel)
-3. No lado esquerdo (local), navegue até a pasta `dist` do projeto
-4. No lado direito (servidor), navegue até `public_html`
-5. **DELETE todos os arquivos antigos** que estiverem em `public_html`
-6. Selecione TODOS os arquivos DENTRO de `dist` (não a pasta dist)
-7. Arraste para `public_html`
-8. Aguarde a transferência completar
+1. **No seu computador:**
+   - Abra a pasta `dist` que foi criada após o build
+   - Dentro dela você verá: index.html, .htaccess, pasta assets/, robots.txt, etc.
+   - **SELECIONE TUDO que está DENTRO da pasta dist** (Ctrl+A ou Cmd+A)
+   - ⚠️ NÃO selecione a pasta dist em si, apenas o CONTEÚDO dentro dela
+
+2. **No cPanel:**
+   - Acesse o cPanel da Hostgator
+   - Clique em "Gerenciador de Arquivos" (File Manager)
+   - Navegue até a pasta `public_html` (ou a pasta específica do seu domínio)
+   - **IMPORTANTE**: Delete TODOS os arquivos antigos que estiverem lá
+
+3. **Fazendo o upload:**
+   - Com os arquivos selecionados no seu computador
+   - Arraste e solte DIRETAMENTE na janela do File Manager
+   - OU clique no botão "Upload" no File Manager e selecione os arquivos
+   - Aguarde a barra de progresso completar (pode demorar alguns minutos)
+
+4. **Verificação final:**
+   - Confirme que na raiz de `public_html` você tem:
+     - ✅ index.html
+     - ✅ .htaccess (arquivo oculto, pode precisar ativar "Mostrar arquivos ocultos")
+     - ✅ pasta assets/
+     - ✅ robots.txt
+   - ❌ NÃO deve ter: pasta dist/, arquivos .zip ou .rar
+
+**❌ NÃO FAÇA ISSO:**
+- ❌ Compactar a pasta dist em .zip
+- ❌ Fazer upload de arquivo compactado
+- ❌ Tentar extrair arquivos no servidor
+- ❌ Copiar a pasta dist inteira (só o conteúdo dentro dela)
+
+#### Opção B - Via FTP (Recomendado se o File Manager estiver lento):
+
+**PASSO A PASSO COM FILEZILLA:**
+
+1. **Instalar o FileZilla:**
+   - Baixe em: https://filezilla-project.org/
+   - Instale no seu computador
+
+2. **Conectar ao servidor:**
+   - Abra o FileZilla
+   - Use as credenciais FTP do seu cPanel:
+     - Host: ftp.seudominio.com.br
+     - Usuário: seu usuário do cPanel
+     - Senha: sua senha do cPanel
+     - Porta: 21
+   - Clique em "Conexão Rápida"
+
+3. **Preparar para upload:**
+   - **Lado esquerdo (Local)**: Navegue até a pasta `dist` do projeto
+   - **Lado direito (Remoto)**: Navegue até `public_html`
+   - Delete TODOS os arquivos antigos que estiverem em `public_html`
+
+4. **Fazer o upload:**
+   - No lado esquerdo, ENTRE na pasta `dist`
+   - Selecione TODOS os arquivos e pastas que estão DENTRO de `dist`
+   - Clique com botão direito e escolha "Upload"
+   - OU arraste os arquivos para o lado direito (`public_html`)
+   - Aguarde a transferência completar (acompanhe na parte inferior do FileZilla)
+
+5. **Vantagens do FTP:**
+   - ✅ Mais confiável para muitos arquivos
+   - ✅ Mostra progresso detalhado
+   - ✅ Retoma uploads interrompidos
+   - ✅ Não tem limite de tempo como o navegador
 
 ### 4. Verificar o .htaccess
 - O arquivo `.htaccess` é essencial para o funcionamento das rotas
