@@ -94,7 +94,7 @@ export const Contact = () => {
               className="bg-[#25D366] hover:bg-[#20BA5A] text-white font-bold text-lg py-6"
             >
               <a 
-                href="https://wa.me/5582996592830"
+                href="https://wa.me/5582996592830?text=Ol%C3%A1!%20Vim%20pelo%20site%20da%20Barbearia%20Brutos%20e%20gostaria%20de%20mais%20informa%C3%A7%C3%B5es%2C%20por%20favor."
                 target="_blank"
                 rel="noopener noreferrer"
               >

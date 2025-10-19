@@ -182,7 +182,7 @@ export const Portfolio = () => {
   };
 
   return (
-    <section id="portfolio" ref={sectionRef} className="py-16 md:py-24 px-5 bg-card">
+    <section id="portfolio" ref={sectionRef} className="py-16 md:py-24 px-3 sm:px-5 bg-card">
       <div className="max-w-[1200px] mx-auto">
         <div className="text-center mb-12">
           <h2 className="font-display text-3xl md:text-4xl lg:text-5xl uppercase relative inline-block">
@@ -220,9 +220,10 @@ export const Portfolio = () => {
                   className="flex-shrink-0 cursor-pointer transition-transform duration-300 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-primary rounded-lg select-none"
                   style={{ 
                     width: itemsPerView === 1 
-                      ? '100%' 
+                      ? 'calc(100% - 2rem)' 
                       : `calc(${100 / itemsPerView}% - ${(itemsPerView - 1) / itemsPerView}rem)`,
-                    marginRight: index < portfolioImages.length - 1 ? '1rem' : '0'
+                    marginRight: index < portfolioImages.length - 1 ? '1rem' : '0',
+                    marginLeft: itemsPerView === 1 && index === 0 ? '1rem' : '0'
                   }}
                 >
                   <img 

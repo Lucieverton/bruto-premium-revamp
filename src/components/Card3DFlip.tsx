@@ -27,13 +27,13 @@ export const Card3DFlip = ({ frontImage, backImage, frontAlt, backAlt }: Card3DF
         >
           {/* Front Side */}
           <div
-            className="absolute inset-0 w-full h-full backface-hidden rounded-2xl shadow-2xl overflow-hidden"
+            className="absolute inset-0 w-full h-full backface-hidden rounded-2xl shadow-2xl overflow-hidden bg-transparent"
             style={{ backfaceVisibility: 'hidden' }}
           >
             <img
               src={frontImage}
               alt={frontAlt}
-              className="w-full h-full object-contain"
+              className="w-full h-full object-contain bg-transparent"
               loading="lazy"
             />
             <button
