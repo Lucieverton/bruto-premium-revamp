@@ -4,13 +4,13 @@ import heroMobileImage from '@/assets/hero-mobile.jpg';
 
 export const Hero = () => {
   return (
-    <header className="relative h-screen min-h-[500px] md:min-h-[700px] w-full flex items-center justify-center overflow-hidden pt-24">
+    <header className="relative h-[85vh] md:h-screen md:min-h-[700px] w-full flex items-center justify-center overflow-hidden">
       {/* Background Mobile - Visível apenas em telas pequenas */}
       <div 
-        className="absolute inset-0 bg-no-repeat md:hidden flex items-center justify-center"
+        className="absolute inset-0 bg-no-repeat md:hidden"
         style={{ 
           backgroundImage: `url(${heroMobileImage})`,
-          backgroundPosition: 'center 45%',
+          backgroundPosition: 'center center',
           backgroundSize: '100% auto'
         }}
       />
@@ -27,7 +27,7 @@ export const Hero = () => {
       
       <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/30 to-black/80" />
       
-      <div className="relative z-10 text-center px-5 max-w-4xl mx-auto -mt-20 md:mt-0">
+      <div className="relative z-10 text-center px-5 max-w-4xl mx-auto">
         <h1 className="font-display text-4xl sm:text-5xl md:text-6xl lg:text-7xl uppercase mb-6 animate-fadeInUp text-shadow-lg">
           Barbearia <span className="text-primary">Brutos</span>
         </h1>
