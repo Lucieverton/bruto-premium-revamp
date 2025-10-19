@@ -51,20 +51,14 @@ export const Navbar = () => {
 
   const handleLinkClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
     e.preventDefault();
+    setIsOpen(false);
     
-    const linkElement = e.currentTarget;
-    linkElement.classList.add('animate-scissorCut');
+    const targetId = href.replace('#', '');
+    const targetElement = document.getElementById(targetId);
     
-    setTimeout(() => {
-      setIsOpen(false);
-      
-      const targetId = href.replace('#', '');
-      const targetElement = document.getElementById(targetId);
-      
-      if (targetElement) {
-        targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
-    }, 400);
+    if (targetElement) {
+      targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
   };
 
   return (
