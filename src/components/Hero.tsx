@@ -16,8 +16,19 @@ export const Hero = () => {
       />
 
       {/* Background Desktop - Visível apenas em telas médias e grandes */}
+      {/* Camada de fundo desfocada para preencher laterais */}
       <div
-        className="hidden md:block absolute inset-0 bg-no-repeat bg-center transition-all duration-700 ease-out bg-black"
+        className="hidden md:block absolute inset-0 bg-no-repeat bg-center"
+        style={{
+          backgroundImage: `url(${heroImage})`,
+          backgroundSize: "cover",
+          filter: "blur(20px)",
+          transform: "scale(1.1)",
+        }}
+      />
+      {/* Imagem principal nítida */}
+      <div
+        className="hidden md:block absolute inset-0 bg-no-repeat bg-center transition-all duration-700 ease-out"
         style={{
           backgroundImage: `url(${heroImage})`,
           backgroundPosition: "center center",
