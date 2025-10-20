@@ -21,7 +21,7 @@ export const Hero = () => {
         style={{
           backgroundImage: `url(${heroImage})`,
           backgroundPosition: "center center",
-          backgroundSize: "auto 100%", // 👈 100% da altura para mostrar imagem completa sem cortar
+          backgroundSize: "cover", // 👈 Preenche todo o espaço mantendo proporções
         }}
       />
 
