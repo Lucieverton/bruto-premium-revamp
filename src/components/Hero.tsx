@@ -7,14 +7,14 @@ export const Hero = () => {
       <div className="absolute inset-0 bg-no-repeat md:hidden" style={{
       backgroundImage: `url(${heroMobileImage})`,
       backgroundPosition: "center center",
-      backgroundSize: "100% auto"
+      backgroundSize: "contain"
     }} />
 
       {/* Background Desktop - Visível apenas em telas médias e grandes */}
-      <div className="hidden md:block absolute inset-0 bg-cover bg-center bg-no-repeat" style={{
+      <div className="hidden md:block absolute inset-0 bg-no-repeat bg-center" style={{
       backgroundImage: `url(${heroImage})`,
       backgroundPosition: "center center",
-      backgroundSize: "cover"
+      backgroundSize: "contain"
     }} />
 
       {/* Overlay gradiente */}
