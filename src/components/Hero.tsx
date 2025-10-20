@@ -17,11 +17,11 @@ export const Hero = () => {
 
       {/* Background Desktop - Visível apenas em telas médias e grandes */}
       <div
-        className="hidden md:block absolute inset-0 bg-no-repeat bg-center transition-all duration-700 ease-out"
+        className="hidden md:block absolute inset-0 bg-no-repeat bg-center transition-all duration-700 ease-out bg-black"
         style={{
           backgroundImage: `url(${heroImage})`,
           backgroundPosition: "center center",
-          backgroundSize: "cover", // 👈 Preenche todo o espaço mantendo proporções
+          backgroundSize: "contain", // 👈 Mostra imagem completa sem cortar
         }}
       />
 
