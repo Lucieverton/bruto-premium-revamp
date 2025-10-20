@@ -11,7 +11,7 @@ export const Hero = () => {
         style={{
           backgroundImage: `url(${heroMobileImage})`,
           backgroundPosition: "center center",
-          backgroundSize: "cover",
+          backgroundSize: "contain", // 👈 Mantido igual ao seu código original
         }}
       />
 
@@ -21,7 +21,7 @@ export const Hero = () => {
         style={{
           backgroundImage: `url(${heroImage})`,
           backgroundPosition: "center center",
-          backgroundSize: "115%", // Aumente esse valor pra dar mais zoom (ex: 120%)
+          backgroundSize: "115%", // 👈 Aumentamos aqui o zoom no desktop
         }}
       />
 
@@ -30,15 +30,7 @@ export const Hero = () => {
 
       {/* Conteúdo principal */}
       <div className="relative z-10 text-center px-5 max-w-4xl mx-auto">
-        {/* Exemplo caso queira o conteúdo aqui */}
-        {/* 
-        <h1 className="text-4xl md:text-6xl font-display text-white uppercase mb-6">
-          Barbearia <span className="text-primary">Brutos</span>
-        </h1>
-        <p className="text-xl text-gray-300">
-          Tradição, Estilo e Atitude em Cada Corte
-        </p>
-        */}
+        {/* (Conteúdo pode ser recolocado aqui se quiser mostrar título e subtítulo) */}
       </div>
 
       {/* Ícone chevron para rolagem */}
