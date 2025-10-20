@@ -21,7 +21,7 @@ export const Hero = () => {
         style={{
           backgroundImage: `url(${heroImage})`,
           backgroundPosition: "center center",
-          backgroundSize: "115%", // 👈 Aumentamos aqui o zoom no desktop
+          backgroundSize: "auto 100%", // 👈 100% da altura para mostrar imagem completa sem cortar
         }}
       />
 
