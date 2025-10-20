@@ -28,11 +28,11 @@ export const Hero = () => {
       />
       {/* Imagem principal nítida */}
       <div
-        className="hidden md:block absolute inset-0 bg-no-repeat bg-center transition-all duration-700 ease-out"
+        className="hidden md:block absolute inset-0 bg-no-repeat transition-all duration-700 ease-out"
         style={{
           backgroundImage: `url(${heroImage})`,
-          backgroundPosition: "center center",
-          backgroundSize: "contain", // 👈 Mostra imagem completa sem cortar
+          backgroundPosition: "center 65%",
+          backgroundSize: "auto 110%",
         }}
       />
 
