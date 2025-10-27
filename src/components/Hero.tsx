@@ -4,7 +4,7 @@ import heroMobileImage from "@/assets/hero-mobile.jpg";
 
 export const Hero = () => {
   return (
-    <header className="relative h-[calc(100vh-96px)] md:h-[calc(100vh-112px)] w-full flex items-center justify-center overflow-hidden bg-black">
+    <header className="relative h-[calc(100vh-80px)] md:h-[calc(100vh-100px)] w-full flex items-center justify-center overflow-hidden bg-black">
       {/* Background Mobile - Visível apenas em telas pequenas */}
       <div
         className="absolute inset-0 bg-no-repeat md:hidden"

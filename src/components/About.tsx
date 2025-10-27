@@ -53,7 +53,7 @@ export const About = () => {
             </p>
             
             <p className="text-muted-foreground text-base md:text-lg leading-relaxed">
-              Nosso time é formado por três excelentes profissionais que seguem o padrão Brutos de qualidade: <strong className="text-foreground font-bold">Lucas</strong>, <strong className="text-foreground font-bold">DG</strong> e <strong className="text-foreground font-bold">Bruninho</strong>. Eles estão prontos para atender você com toda a dedicação e habilidade, garantindo um visual que reflete sua personalidade.
+              Nosso time é formado por dois excelentes profissionais que seguem o padrão Brutos de qualidade: <strong className="text-foreground font-bold">Lucas</strong> e <strong className="text-foreground font-bold">DG</strong>. Eles estão prontos para atender você com toda a dedicação e habilidade, garantindo um visual que reflete sua personalidade.
             </p>
             
             <p className="text-muted-foreground text-base md:text-lg leading-relaxed">

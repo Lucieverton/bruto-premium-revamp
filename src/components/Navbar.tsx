@@ -70,20 +70,20 @@ export const Navbar = () => {
             : 'bg-transparent'
         }`}
       >
-        <div className="max-w-[1400px] mx-auto px-5 md:px-8">
-          <div className="flex items-center justify-between h-24 md:h-28">
+        <div className="max-w-[1400px] mx-auto px-4 md:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-20 md:h-24 lg:h-28">
             {/* Logo */}
             <a href="#" className="flex-shrink-0 group">
               <img 
                 src={logo} 
                 alt="Logo Barbearia Brutos" 
-                className="h-16 md:h-20 lg:h-24 w-auto transition-all duration-500 hover:scale-110 animate-breathe hover:drop-shadow-[0_0_15px_rgba(212,175,55,0.6)]"
+                className="h-14 md:h-16 lg:h-20 w-auto transition-all duration-500 hover:scale-110 animate-breathe hover:drop-shadow-[0_0_15px_rgba(212,175,55,0.6)]"
               />
             </a>
 
             {/* Typing Message - Center - Responsive */}
-            <div className="absolute left-1/2 -translate-x-1/2 max-w-[50%] sm:max-w-[45%] md:max-w-none">
-              <p className="text-primary font-display text-xs sm:text-lg md:text-xl lg:text-2xl xl:text-3xl uppercase tracking-wide animate-fadeInUp whitespace-nowrap">
+            <div className="absolute left-1/2 -translate-x-1/2 max-w-[45%] sm:max-w-[50%] md:max-w-none">
+              <p className="text-primary font-display text-[10px] sm:text-base md:text-lg lg:text-xl xl:text-2xl uppercase tracking-wide animate-fadeInUp whitespace-nowrap">
                 {displayedText}
                 <span className="animate-blink">|</span>
               </p>
@@ -92,7 +92,7 @@ export const Navbar = () => {
             {/* Menu Button - Visible on all screens */}
             <div className="relative">
               <button
-                className="relative w-16 h-16 md:w-20 md:h-20 flex items-center justify-center transition-all duration-300 hover:scale-110 group rounded-lg hover:bg-gradient-to-br hover:from-primary/20 hover:to-primary/5 z-50"
+                className="relative w-20 h-20 md:w-24 md:h-24 flex items-center justify-center transition-all duration-300 hover:scale-110 group rounded-lg hover:bg-gradient-to-br hover:from-primary/20 hover:to-primary/5 z-50"
                 onClick={() => setIsOpen(!isOpen)}
                 aria-label={isOpen ? 'Fechar menu' : 'Abrir menu'}
                 aria-expanded={isOpen}
@@ -100,7 +100,7 @@ export const Navbar = () => {
                 <img 
                   src={isOpen ? closeIcon : menuIcon} 
                   alt={isOpen ? 'Fechar menu' : 'Abrir menu'}
-                  className={`w-16 h-16 md:w-20 md:h-20 object-contain transition-all duration-500 group-hover:drop-shadow-[0_0_12px_rgba(212,175,55,0.8)] ${isOpen ? 'rotate-180' : ''}`}
+                  className={`w-20 h-20 md:w-24 md:h-24 object-contain transition-all duration-500 group-hover:drop-shadow-[0_0_12px_rgba(212,175,55,0.8)] ${isOpen ? 'rotate-180' : ''}`}
                 />
                 <div className="absolute inset-0 bg-primary/20 blur-xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10" />
               </button>
