@@ -1,0 +1,138 @@
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+
+export interface AttendanceRecord {
+  id: string;
+  queue_item_id: string | null;
+  barber_id: string | null;
+  service_id: string | null;
+  customer_name: string;
+  price_charged: number;
+  payment_method: string | null;
+  notes: string | null;
+  completed_at: string;
+}
+
+export interface FinancialMetrics {
+  totalAttendances: number;
+  totalRevenue: number;
+  averageTicket: number;
+  attendancesByBarber: Record<string, { count: number; revenue: number }>;
+  popularServices: { serviceId: string; count: number }[];
+}
+
+type DateRange = 'today' | 'week' | 'month' | 'year' | 'custom';
+
+const getDateRange = (range: DateRange, customStart?: string, customEnd?: string) => {
+  const now = new Date();
+  let start: Date;
+  let end = new Date(now);
+  
+  switch (range) {
+    case 'today':
+      start = new Date(now);
+      start.setHours(0, 0, 0, 0);
+      break;
+    case 'week':
+      start = new Date(now);
+      start.setDate(now.getDate() - 7);
+      start.setHours(0, 0, 0, 0);
+      break;
+    case 'month':
+      start = new Date(now);
+      start.setMonth(now.getMonth() - 1);
+      start.setHours(0, 0, 0, 0);
+      break;
+    case 'year':
+      start = new Date(now);
+      start.setFullYear(now.getFullYear() - 1);
+      start.setHours(0, 0, 0, 0);
+      break;
+    case 'custom':
+      start = customStart ? new Date(customStart) : new Date(now);
+      end = customEnd ? new Date(customEnd) : new Date(now);
+      break;
+    default:
+      start = new Date(now);
+      start.setHours(0, 0, 0, 0);
+  }
+  
+  return { start: start.toISOString(), end: end.toISOString() };
+};
+
+export const useAttendanceRecords = (
+  range: DateRange = 'today',
+  barberId?: string,
+  customStart?: string,
+  customEnd?: string
+) => {
+  const { start, end } = getDateRange(range, customStart, customEnd);
+  
+  return useQuery({
+    queryKey: ['attendance-records', range, barberId, customStart, customEnd],
+    queryFn: async () => {
+      let query = supabase
+        .from('attendance_records')
+        .select('*')
+        .gte('completed_at', start)
+        .lte('completed_at', end)
+        .order('completed_at', { ascending: false });
+      
+      if (barberId) {
+        query = query.eq('barber_id', barberId);
+      }
+      
+      const { data, error } = await query;
+      if (error) throw error;
+      return data as AttendanceRecord[];
+    },
+  });
+};
+
+export const useFinancialMetrics = (
+  range: DateRange = 'today',
+  barberId?: string,
+  customStart?: string,
+  customEnd?: string
+) => {
+  const { data: records } = useAttendanceRecords(range, barberId, customStart, customEnd);
+  
+  const metrics: FinancialMetrics = {
+    totalAttendances: 0,
+    totalRevenue: 0,
+    averageTicket: 0,
+    attendancesByBarber: {},
+    popularServices: [],
+  };
+  
+  if (records) {
+    metrics.totalAttendances = records.length;
+    metrics.totalRevenue = records.reduce((sum, r) => sum + Number(r.price_charged), 0);
+    metrics.averageTicket = metrics.totalAttendances > 0 
+      ? metrics.totalRevenue / metrics.totalAttendances 
+      : 0;
+    
+    // Group by barber
+    records.forEach((record) => {
+      const barberId = record.barber_id || 'unknown';
+      if (!metrics.attendancesByBarber[barberId]) {
+        metrics.attendancesByBarber[barberId] = { count: 0, revenue: 0 };
+      }
+      metrics.attendancesByBarber[barberId].count++;
+      metrics.attendancesByBarber[barberId].revenue += Number(record.price_charged);
+    });
+    
+    // Group by service
+    const serviceCounts: Record<string, number> = {};
+    records.forEach((record) => {
+      if (record.service_id) {
+        serviceCounts[record.service_id] = (serviceCounts[record.service_id] || 0) + 1;
+      }
+    });
+    metrics.popularServices = Object.entries(serviceCounts)
+      .map(([serviceId, count]) => ({ serviceId, count }))
+      .sort((a, b) => b.count - a.count);
+  }
+  
+  return metrics;
+};

@@ -1,4 +1,5 @@
 import { Scissors, MessageCircle } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 
 export const IntroBanner = () => {
@@ -15,14 +16,10 @@ export const IntroBanner = () => {
             size="lg"
             className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold uppercase tracking-wide min-w-[200px] shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
           >
-            <a 
-              href="https://filaparacorteoficial.lovable.app/fila/barbearia-brutos-1759232212817"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
+            <Link to="/fila">
               <Scissors className="mr-2" size={20} />
               Entre na fila
-            </a>
+            </Link>
           </Button>
           
           <Button

@@ -1,0 +1,115 @@
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { LogIn, Loader2, Eye, EyeOff } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { useAuth } from '@/hooks/useAuth';
+import logo from '@/assets/logo.png';
+
+const AdminLogin = () => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const navigate = useNavigate();
+  const { signIn } = useAuth();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+
+    const { error: signInError } = await signIn(email, password);
+
+    if (signInError) {
+      setError('Email ou senha incorretos');
+      setLoading(false);
+      return;
+    }
+
+    navigate('/admin');
+  };
+
+  return (
+    <div className="min-h-screen bg-background flex items-center justify-center p-5">
+      <div className="w-full max-w-md">
+        <div className="text-center mb-8">
+          <img 
+            src={logo} 
+            alt="Brutos Barbearia" 
+            className="h-20 w-auto mx-auto mb-4"
+          />
+          <h1 className="font-display text-3xl uppercase">Admin</h1>
+          <p className="text-muted-foreground mt-2">Acesso restrito a funcionários</p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="bg-card border border-border rounded-lg p-6 space-y-4">
+          {error && (
+            <div className="bg-destructive/20 border border-destructive text-destructive p-3 rounded-lg text-sm text-center">
+              {error}
+            </div>
+          )}
+
+          <div className="space-y-2">
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              type="email"
+              placeholder="seu@email.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="bg-background"
+              required
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="password">Senha</Label>
+            <div className="relative">
+              <Input
+                id="password"
+                type={showPassword ? 'text' : 'password'}
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="bg-background pr-10"
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
+          </div>
+
+          <Button
+            type="submit"
+            size="lg"
+            disabled={loading}
+            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold uppercase"
+          >
+            {loading ? (
+              <Loader2 className="animate-spin mr-2" size={20} />
+            ) : (
+              <LogIn className="mr-2" size={20} />
+            )}
+            Entrar
+          </Button>
+        </form>
+
+        <p className="text-center text-muted-foreground text-sm mt-6">
+          <a href="/" className="hover:text-foreground transition-colors">
+            ← Voltar ao site
+          </a>
+        </p>
+      </div>
+    </div>
+  );
+};
+
+export default AdminLogin;
