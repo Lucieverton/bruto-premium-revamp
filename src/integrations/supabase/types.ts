@@ -14,16 +14,256 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      attendance_records: {
+        Row: {
+          barber_id: string | null
+          completed_at: string
+          customer_name: string
+          id: string
+          notes: string | null
+          payment_method: string | null
+          price_charged: number
+          queue_item_id: string | null
+          service_id: string | null
+        }
+        Insert: {
+          barber_id?: string | null
+          completed_at?: string
+          customer_name: string
+          id?: string
+          notes?: string | null
+          payment_method?: string | null
+          price_charged: number
+          queue_item_id?: string | null
+          service_id?: string | null
+        }
+        Update: {
+          barber_id?: string | null
+          completed_at?: string
+          customer_name?: string
+          id?: string
+          notes?: string | null
+          payment_method?: string | null
+          price_charged?: number
+          queue_item_id?: string | null
+          service_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attendance_records_barber_id_fkey"
+            columns: ["barber_id"]
+            isOneToOne: false
+            referencedRelation: "barbers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attendance_records_queue_item_id_fkey"
+            columns: ["queue_item_id"]
+            isOneToOne: false
+            referencedRelation: "queue_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attendance_records_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      barbers: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          display_name: string
+          id: string
+          is_active: boolean
+          is_available: boolean
+          specialty: string | null
+          user_id: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name: string
+          id?: string
+          is_active?: boolean
+          is_available?: boolean
+          specialty?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string
+          id?: string
+          is_active?: boolean
+          is_available?: boolean
+          specialty?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      queue_items: {
+        Row: {
+          barber_id: string | null
+          called_at: string | null
+          completed_at: string | null
+          created_at: string
+          customer_name: string
+          customer_phone: string
+          id: string
+          is_called: boolean
+          notes: string | null
+          origin: string
+          priority: string
+          service_id: string | null
+          status: string
+          ticket_number: string
+        }
+        Insert: {
+          barber_id?: string | null
+          called_at?: string | null
+          completed_at?: string | null
+          created_at?: string
+          customer_name: string
+          customer_phone: string
+          id?: string
+          is_called?: boolean
+          notes?: string | null
+          origin?: string
+          priority?: string
+          service_id?: string | null
+          status?: string
+          ticket_number: string
+        }
+        Update: {
+          barber_id?: string | null
+          called_at?: string | null
+          completed_at?: string | null
+          created_at?: string
+          customer_name?: string
+          customer_phone?: string
+          id?: string
+          is_called?: boolean
+          notes?: string | null
+          origin?: string
+          priority?: string
+          service_id?: string | null
+          status?: string
+          ticket_number?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "queue_items_barber_id_fkey"
+            columns: ["barber_id"]
+            isOneToOne: false
+            referencedRelation: "barbers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "queue_items_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      queue_settings: {
+        Row: {
+          closing_time: string
+          id: string
+          is_active: boolean
+          max_queue_size: number
+          opening_time: string
+          updated_at: string
+        }
+        Insert: {
+          closing_time?: string
+          id?: string
+          is_active?: boolean
+          max_queue_size?: number
+          opening_time?: string
+          updated_at?: string
+        }
+        Update: {
+          closing_time?: string
+          id?: string
+          is_active?: boolean
+          max_queue_size?: number
+          opening_time?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      services: {
+        Row: {
+          created_at: string
+          description: string | null
+          duration_minutes: number
+          id: string
+          is_active: boolean
+          name: string
+          price: number
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          duration_minutes?: number
+          id?: string
+          is_active?: boolean
+          name: string
+          price: number
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          duration_minutes?: number
+          id?: string
+          is_active?: boolean
+          name?: string
+          price?: number
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "barber" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +390,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "barber", "user"],
+    },
   },
 } as const
