@@ -255,7 +255,8 @@ const Atendimento = () => {
                         <Button
                           onClick={() => {
                             setSelectedTicket(item.id);
-                            setPriceCharged(service?.price.toString() || '');
+                            // Pre-fill with service price
+                            setPriceCharged(service?.price?.toFixed(2).replace('.', ',') || '');
                             setShowCompleteDialog(true);
                           }}
                           className="bg-green-600 hover:bg-green-700"
@@ -432,6 +433,18 @@ const Atendimento = () => {
           </DialogHeader>
           
           <div className="space-y-4">
+            {/* Show service info */}
+            {selectedTicket && (() => {
+              const ticket = myInProgress.find(t => t.id === selectedTicket);
+              const service = ticket ? getService(ticket.service_id) : null;
+              return service ? (
+                <div className="bg-muted/50 rounded-lg p-3 text-sm">
+                  <div className="font-medium">{service.name}</div>
+                  <div className="text-muted-foreground">Valor configurado: R$ {service.price.toFixed(2).replace('.', ',')}</div>
+                </div>
+              ) : null;
+            })()}
+            
             <div className="space-y-2">
               <Label>Valor Cobrado</Label>
               <Input
@@ -440,6 +453,9 @@ const Atendimento = () => {
                 onChange={(e) => setPriceCharged(e.target.value)}
                 className="bg-background"
               />
+              <p className="text-xs text-muted-foreground">
+                Altere apenas se houver desconto ou acréscimo
+              </p>
             </div>
             
             <div className="space-y-2">
@@ -449,10 +465,11 @@ const Atendimento = () => {
                   <SelectValue placeholder="Selecione..." />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="dinheiro">Dinheiro</SelectItem>
-                  <SelectItem value="pix">PIX</SelectItem>
-                  <SelectItem value="cartao">Cartão (Débito/Crédito)</SelectItem>
-                  <SelectItem value="pendente">Pendente</SelectItem>
+                  <SelectItem value="dinheiro">💵 Dinheiro</SelectItem>
+                  <SelectItem value="pix">📱 PIX</SelectItem>
+                  <SelectItem value="debito">💳 Cartão Débito</SelectItem>
+                  <SelectItem value="credito">💳 Cartão Crédito</SelectItem>
+                  <SelectItem value="pendente">⏳ Pendente</SelectItem>
                 </SelectContent>
               </Select>
             </div>

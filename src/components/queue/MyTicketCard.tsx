@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
-import { Ticket, Clock, MapPin, X } from 'lucide-react';
+import { useEffect, useState, useRef } from 'react';
+import { Ticket, Clock, MapPin, X, Star, Bell, Timer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useQueueItem, useLeaveQueue, useQueuePosition } from '@/hooks/useQueue';
+import { useQueueItem, useLeaveQueue, useQueuePosition, useQueueStats } from '@/hooks/useQueue';
 import { clearMyTicket } from '@/lib/antiAbuse';
+import { sendNotification } from '@/lib/notifications';
 import { cn } from '@/lib/utils';
 
 interface MyTicketCardProps {
@@ -13,12 +14,39 @@ interface MyTicketCardProps {
 export const MyTicketCard = ({ ticketId, onLeave }: MyTicketCardProps) => {
   const { data: ticket, isLoading: ticketLoading } = useQueueItem(ticketId);
   const { data: positionData } = useQueuePosition(ticketId);
+  const { data: stats } = useQueueStats();
   const leaveQueue = useLeaveQueue();
   const [timeWaiting, setTimeWaiting] = useState('');
+  const lastPositionRef = useRef<number | null>(null);
   
   // Get position from secure RPC
   const position = positionData?.queue_position || 0;
   const isLoading = ticketLoading;
+  const avgWaitTime = stats?.avg_wait_minutes || 15;
+  
+  // Calculate estimated time
+  const estimatedMinutes = position > 0 ? (position - 1) * avgWaitTime : 0;
+  
+  // Notify when position changes to 1 (next in line)
+  useEffect(() => {
+    if (lastPositionRef.current !== null && lastPositionRef.current > 1 && position === 1) {
+      sendNotification('🎉 Você é o próximo!', {
+        body: 'Prepare-se, você será chamado em breve!',
+        tag: 'queue-next',
+      });
+    }
+    lastPositionRef.current = position;
+  }, [position]);
+  
+  // Notify when called
+  useEffect(() => {
+    if (ticket?.status === 'called') {
+      sendNotification('📢 É sua vez!', {
+        body: 'Por favor, dirija-se ao balcão imediatamente!',
+        tag: 'queue-called',
+      });
+    }
+  }, [ticket?.status]);
   
   // Update time waiting
   useEffect(() => {
@@ -92,6 +120,7 @@ export const MyTicketCard = ({ ticketId, onLeave }: MyTicketCardProps) => {
   };
   
   const statusConfig = getStatusConfig();
+  const isNextInLine = position === 1 && ticket.status === 'waiting';
 
   return (
     <div className={cn(
@@ -110,6 +139,16 @@ export const MyTicketCard = ({ ticketId, onLeave }: MyTicketCardProps) => {
         </Button>
       )}
       
+      {/* Next in line banner */}
+      {isNextInLine && (
+        <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
+          <div className="flex items-center gap-1.5 bg-green-500 text-white px-4 py-1.5 rounded-full text-sm font-bold shadow-lg animate-bounce">
+            <Bell size={14} className="animate-pulse" />
+            Você é o próximo!
+          </div>
+        </div>
+      )}
+      
       <div className="text-center mb-6">
         <div className={cn('inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold mb-4', statusConfig.text, 'bg-background/50')}>
           <Ticket size={16} />
@@ -125,19 +164,30 @@ export const MyTicketCard = ({ ticketId, onLeave }: MyTicketCardProps) => {
         </div>
       </div>
       
-      <div className="grid grid-cols-2 gap-4">
-        <div className="bg-background/50 rounded-lg p-4 text-center">
-          <div className="text-muted-foreground text-sm mb-1">Posição</div>
-          <div className="text-2xl font-bold text-primary">
+      <div className="grid grid-cols-3 gap-3">
+        <div className="bg-background/50 rounded-lg p-3 text-center">
+          <div className="text-muted-foreground text-xs mb-1">Posição</div>
+          <div className={cn(
+            'text-2xl font-bold',
+            isNextInLine ? 'text-green-500' : 'text-primary'
+          )}>
             {ticket.status === 'waiting' ? `${position}º` : '-'}
           </div>
         </div>
         
-        <div className="bg-background/50 rounded-lg p-4 text-center">
-          <div className="text-muted-foreground text-sm mb-1">Tempo</div>
-          <div className="text-2xl font-bold flex items-center justify-center gap-1">
-            <Clock size={18} className="text-primary" />
+        <div className="bg-background/50 rounded-lg p-3 text-center">
+          <div className="text-muted-foreground text-xs mb-1">Esperando</div>
+          <div className="text-xl font-bold flex items-center justify-center gap-1">
+            <Clock size={16} className="text-primary" />
             {timeWaiting}
+          </div>
+        </div>
+        
+        <div className="bg-background/50 rounded-lg p-3 text-center">
+          <div className="text-muted-foreground text-xs mb-1">Estimado</div>
+          <div className="text-xl font-bold flex items-center justify-center gap-1">
+            <Timer size={16} className="text-blue-400" />
+            ~{estimatedMinutes}min
           </div>
         </div>
       </div>
@@ -154,7 +204,7 @@ export const MyTicketCard = ({ ticketId, onLeave }: MyTicketCardProps) => {
       {ticket.priority === 'preferencial' && (
         <div className="mt-4 text-center">
           <span className="inline-flex items-center gap-1 text-sm bg-purple-500/20 text-purple-400 px-3 py-1 rounded-full">
-            ⭐ Atendimento Preferencial
+            <Star size={14} /> Atendimento Preferencial
           </span>
         </div>
       )}

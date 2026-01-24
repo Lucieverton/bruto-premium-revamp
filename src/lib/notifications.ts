@@ -58,6 +58,21 @@ export const showPushNotification = (title: string, body: string) => {
   }
 };
 
+// Generic function to send notifications with options
+export const sendNotification = (title: string, options?: { body?: string; tag?: string }) => {
+  if ('Notification' in window && Notification.permission === 'granted') {
+    new Notification(title, {
+      body: options?.body || '',
+      icon: '/favicon.ico',
+      badge: '/favicon.ico',
+      tag: options?.tag,
+      requireInteraction: true,
+    });
+    playNotificationSound();
+    vibrateDevice();
+  }
+};
+
 export const notifyUserCalled = (ticketNumber: string) => {
   playNotificationSound();
   vibrateDevice();

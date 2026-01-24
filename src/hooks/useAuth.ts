@@ -15,6 +15,18 @@ export const useAuth = () => {
   const [isAdminLoading, setIsAdminLoading] = useState(true);
   const { toast } = useToast();
 
+  // Update barber status on login/logout
+  const updateBarberStatus = useCallback(async (userId: string, status: 'online' | 'offline') => {
+    try {
+      await supabase.rpc('update_barber_status_on_auth', {
+        p_user_id: userId,
+        p_status: status
+      });
+    } catch (error) {
+      console.error('Error updating barber status:', error);
+    }
+  }, []);
+
   const checkUserRole = useCallback(async (userId: string) => {
     setIsAdminLoading(true);
     try {
@@ -31,6 +43,8 @@ export const useAuth = () => {
         setIsAdmin(true);
         setIsBarber(false);
         setIsAdminLoading(false);
+        // Update barber status if also a barber
+        updateBarberStatus(userId, 'online');
         return;
       }
 
@@ -47,6 +61,8 @@ export const useAuth = () => {
         setIsAdmin(false);
         setIsBarber(true);
         setIsAdminLoading(false);
+        // Update barber status to online
+        updateBarberStatus(userId, 'online');
         return;
       }
 
@@ -62,7 +78,7 @@ export const useAuth = () => {
     } finally {
       setIsAdminLoading(false);
     }
-  }, []);
+  }, [updateBarberStatus]);
 
   useEffect(() => {
     // Set up auth state listener BEFORE checking session
@@ -123,6 +139,11 @@ export const useAuth = () => {
   };
 
   const signOut = async () => {
+    // Update barber status to offline before signing out
+    if (user) {
+      await updateBarberStatus(user.id, 'offline');
+    }
+    
     const { error } = await supabase.auth.signOut();
     if (error) {
       toast({

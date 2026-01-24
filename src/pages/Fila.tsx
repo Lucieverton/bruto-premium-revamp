@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { QueueHeader } from '@/components/queue/QueueHeader';
 import { QueueStatus } from '@/components/queue/QueueStatus';
-import { QueueJoinForm } from '@/components/queue/QueueJoinForm';
+import { QueueJoinButton } from '@/components/queue/QueueJoinButton';
 import { MyTicketCard } from '@/components/queue/MyTicketCard';
 import { PublicQueueList } from '@/components/queue/PublicQueueList';
 import { BarberStatusCards } from '@/components/queue/BarberStatusCards';
@@ -65,7 +65,12 @@ const Fila = () => {
               {myTicketId ? (
                 <MyTicketCard ticketId={myTicketId} onLeave={handleLeave} />
               ) : (
-                <QueueJoinForm onSuccess={handleJoinSuccess} />
+                <div className="flex flex-col items-center justify-center p-8 bg-card border border-border rounded-lg">
+                  <p className="text-muted-foreground mb-6 text-center">
+                    Clique no botão abaixo para entrar na fila virtual
+                  </p>
+                  <QueueJoinButton onSuccess={handleJoinSuccess} />
+                </div>
               )}
             </div>
             
