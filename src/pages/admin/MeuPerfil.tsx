@@ -51,9 +51,11 @@ const MeuPerfil = () => {
       if (error) throw error;
     },
     onSuccess: (_, is_available) => {
-      queryClient.invalidateQueries({ queryKey: ['my-barber-profile'] });
-      queryClient.invalidateQueries({ queryKey: ['barbers'] });
-      queryClient.invalidateQueries({ queryKey: ['public-barbers'] });
+      // Force immediate refetch for real-time sync
+      queryClient.refetchQueries({ queryKey: ['my-barber-profile'] });
+      queryClient.refetchQueries({ queryKey: ['barbers'] });
+      queryClient.refetchQueries({ queryKey: ['public-barbers'] });
+      queryClient.refetchQueries({ queryKey: ['admin-barbers'] });
       toast({ 
         title: is_available ? 'Agora você está online!' : 'Você está offline',
         description: is_available 
@@ -147,38 +149,55 @@ const MeuPerfil = () => {
           
           <CardContent className="space-y-4 relative z-10">
             {/* Availability Toggle */}
-            <div className={`flex items-center justify-between p-4 rounded-xl border transition-all ${
-              barber.is_available 
-                ? 'bg-success/10 border-success/30' 
-                : 'bg-muted/50 border-border'
-            }`}>
-              <div className="flex items-center gap-3">
-                {barber.is_available ? (
-                  <div className="p-2 bg-success/20 rounded-lg">
-                    <UserCheck size={20} className="text-success" />
+            {(() => {
+              const isInService = barber.status === 'busy';
+              return (
+                <div className={`flex items-center justify-between p-4 rounded-xl border transition-all ${
+                  isInService
+                    ? 'bg-destructive/10 border-destructive/30'
+                    : barber.is_available 
+                      ? 'bg-success/10 border-success/30' 
+                      : 'bg-muted/50 border-border'
+                }`}>
+                  <div className="flex items-center gap-3">
+                    {isInService ? (
+                      <div className="p-2 bg-destructive/20 rounded-lg">
+                        <Loader2 size={20} className="text-destructive animate-spin" />
+                      </div>
+                    ) : barber.is_available ? (
+                      <div className="p-2 bg-success/20 rounded-lg">
+                        <UserCheck size={20} className="text-success" />
+                      </div>
+                    ) : (
+                      <div className="p-2 bg-muted rounded-lg">
+                        <UserX size={20} className="text-muted-foreground" />
+                      </div>
+                    )}
+                    <div>
+                      <p className="font-medium">
+                        {isInService 
+                          ? 'Em atendimento' 
+                          : barber.is_available 
+                            ? 'Disponível para atendimento' 
+                            : 'Indisponível'}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        {isInService
+                          ? 'Finalize o atendimento atual para alterar'
+                          : barber.is_available 
+                            ? 'Você pode receber novos clientes na fila' 
+                            : 'Você não receberá novos clientes'}
+                      </p>
+                    </div>
                   </div>
-                ) : (
-                  <div className="p-2 bg-muted rounded-lg">
-                    <UserX size={20} className="text-muted-foreground" />
-                  </div>
-                )}
-                <div>
-                  <p className="font-medium">
-                    {barber.is_available ? 'Disponível para atendimento' : 'Indisponível'}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    {barber.is_available 
-                      ? 'Você pode receber novos clientes na fila' 
-                      : 'Você não receberá novos clientes'}
-                  </p>
+                  <Switch
+                    checked={barber.is_available}
+                    onCheckedChange={(checked) => toggleAvailability.mutate(checked)}
+                    disabled={toggleAvailability.isPending || isInService}
+                  />
                 </div>
-              </div>
-              <Switch
-                checked={barber.is_available}
-                onCheckedChange={(checked) => toggleAvailability.mutate(checked)}
-                disabled={toggleAvailability.isPending}
-              />
-            </div>
+              );
+            })()}
 
             {/* User Info */}
             <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">

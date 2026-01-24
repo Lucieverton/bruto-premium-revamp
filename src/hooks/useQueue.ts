@@ -193,6 +193,8 @@ export const usePublicBarbers = () => {
       if (error) throw error;
       return data as PublicBarber[];
     },
+    staleTime: 0, // Always consider data stale for immediate updates
+    refetchInterval: 5000, // Polling every 5 seconds for reliable sync
   });
 };
 

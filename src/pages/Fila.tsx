@@ -6,17 +6,17 @@ import { MyTicketCard } from '@/components/queue/MyTicketCard';
 import { PublicQueueList } from '@/components/queue/PublicQueueList';
 import { BarberStatusCards } from '@/components/queue/BarberStatusCards';
 import { ActiveServicesDisplay } from '@/components/queue/ActiveServicesDisplay';
-import { useQueueRealtime, useQueueSettingsRealtime, useBarbersRealtime } from '@/hooks/useQueueRealtime';
+import { useQueueRealtime, useQueueSettingsRealtime } from '@/hooks/useQueueRealtime';
 import { getMyTicket, clearMyTicket } from '@/lib/antiAbuse';
 import { requestNotificationPermission } from '@/lib/notifications';
 
 const Fila = () => {
   const [myTicketId, setMyTicketId] = useState<string | null>(null);
   
-  // Enable realtime updates
+  // Enable realtime updates (barbers uses polling instead of realtime for reliability)
   useQueueRealtime();
   useQueueSettingsRealtime();
-  useBarbersRealtime();
+  // Note: useBarbersRealtime() removed - using polling via refetchInterval in usePublicBarbers
   
   // Check for existing ticket on mount
   useEffect(() => {

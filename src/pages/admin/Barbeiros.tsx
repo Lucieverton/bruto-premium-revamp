@@ -175,7 +175,10 @@ const AdminBarbeiros = () => {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-barbers'] });
+      // Force immediate refetch for real-time sync
+      queryClient.refetchQueries({ queryKey: ['admin-barbers'] });
+      queryClient.refetchQueries({ queryKey: ['barbers'] });
+      queryClient.refetchQueries({ queryKey: ['public-barbers'] });
     },
   });
 
