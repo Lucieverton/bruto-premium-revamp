@@ -13,11 +13,24 @@ export interface AttendanceRecord {
   completed_at: string;
 }
 
+export interface BarberWithCommission {
+  id: string;
+  display_name: string;
+  commission_percentage: number;
+}
+
 export interface FinancialMetrics {
   totalAttendances: number;
   totalRevenue: number;
   averageTicket: number;
-  attendancesByBarber: Record<string, { count: number; revenue: number }>;
+  totalCommissions: number;
+  shopProfit: number;
+  attendancesByBarber: Record<string, { 
+    count: number; 
+    revenue: number; 
+    commission: number;
+    commissionPercentage: number;
+  }>;
   popularServices: { serviceId: string; count: number }[];
 }
 
@@ -89,6 +102,21 @@ export const useAttendanceRecords = (
   });
 };
 
+// Fetch barbers with commission info
+export const useBarbersWithCommission = () => {
+  return useQuery({
+    queryKey: ['barbers-commission'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('barbers')
+        .select('id, display_name, commission_percentage');
+      
+      if (error) throw error;
+      return data as BarberWithCommission[];
+    },
+  });
+};
+
 export const useFinancialMetrics = (
   range: DateRange = 'today',
   barberId?: string,
@@ -96,31 +124,49 @@ export const useFinancialMetrics = (
   customEnd?: string
 ) => {
   const { data: records } = useAttendanceRecords(range, barberId, customStart, customEnd);
+  const { data: barbers } = useBarbersWithCommission();
   
   const metrics: FinancialMetrics = {
     totalAttendances: 0,
     totalRevenue: 0,
     averageTicket: 0,
+    totalCommissions: 0,
+    shopProfit: 0,
     attendancesByBarber: {},
     popularServices: [],
   };
   
-  if (records) {
+  if (records && barbers) {
     metrics.totalAttendances = records.length;
     metrics.totalRevenue = records.reduce((sum, r) => sum + Number(r.price_charged), 0);
     metrics.averageTicket = metrics.totalAttendances > 0 
       ? metrics.totalRevenue / metrics.totalAttendances 
       : 0;
     
-    // Group by barber
+    // Group by barber and calculate commissions
     records.forEach((record) => {
       const barberId = record.barber_id || 'unknown';
+      const barber = barbers.find(b => b.id === barberId);
+      const commissionPct = barber?.commission_percentage || 50;
+      const priceCharged = Number(record.price_charged);
+      const commission = (priceCharged * commissionPct) / 100;
+      
       if (!metrics.attendancesByBarber[barberId]) {
-        metrics.attendancesByBarber[barberId] = { count: 0, revenue: 0 };
+        metrics.attendancesByBarber[barberId] = { 
+          count: 0, 
+          revenue: 0, 
+          commission: 0,
+          commissionPercentage: commissionPct,
+        };
       }
       metrics.attendancesByBarber[barberId].count++;
-      metrics.attendancesByBarber[barberId].revenue += Number(record.price_charged);
+      metrics.attendancesByBarber[barberId].revenue += priceCharged;
+      metrics.attendancesByBarber[barberId].commission += commission;
+      
+      metrics.totalCommissions += commission;
     });
+    
+    metrics.shopProfit = metrics.totalRevenue - metrics.totalCommissions;
     
     // Group by service
     const serviceCounts: Record<string, number> = {};

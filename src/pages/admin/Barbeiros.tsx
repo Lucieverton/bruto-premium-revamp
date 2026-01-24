@@ -37,6 +37,8 @@ interface Barber {
   is_active: boolean;
   avatar_url: string | null;
   user_id: string | null;
+  commission_percentage: number;
+  status: 'online' | 'away' | 'offline';
 }
 
 const AdminBarbeiros = () => {
@@ -49,6 +51,7 @@ const AdminBarbeiros = () => {
     specialty: '',
     email: '',
     password: '',
+    commission_percentage: '50',
   });
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -66,10 +69,11 @@ const AdminBarbeiros = () => {
   });
 
   const createSimpleMutation = useMutation({
-    mutationFn: async (data: { display_name: string; specialty: string }) => {
+    mutationFn: async (data: { display_name: string; specialty: string; commission_percentage: string }) => {
       const { error } = await supabase.from('barbers').insert({
         display_name: data.display_name,
         specialty: data.specialty || null,
+        commission_percentage: parseFloat(data.commission_percentage) || 50,
       });
       if (error) throw error;
     },
@@ -179,7 +183,7 @@ const AdminBarbeiros = () => {
   });
 
   const resetForm = () => {
-    setFormData({ display_name: '', specialty: '', email: '', password: '' });
+    setFormData({ display_name: '', specialty: '', email: '', password: '', commission_percentage: '50' });
     setCreateMode('simple');
   };
 
@@ -190,6 +194,7 @@ const AdminBarbeiros = () => {
       specialty: barber.specialty || '',
       email: '',
       password: '',
+      commission_percentage: String(barber.commission_percentage || 50),
     });
     setIsDialogOpen(true);
   };
@@ -202,6 +207,7 @@ const AdminBarbeiros = () => {
         data: { 
           display_name: formData.display_name,
           specialty: formData.specialty || null,
+          commission_percentage: parseFloat(formData.commission_percentage) || 50,
         } 
       });
     } else if (createMode === 'with-login') {
@@ -271,6 +277,23 @@ const AdminBarbeiros = () => {
                           onChange={(e) => setFormData({ ...formData, specialty: e.target.value })}
                           placeholder="Ex: Corte clássico, Barba..."
                         />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="commission">Comissão (%)</Label>
+                        <div className="flex items-center gap-2">
+                          <Input
+                            id="commission"
+                            type="number"
+                            min="0"
+                            max="100"
+                            step="0.5"
+                            value={formData.commission_percentage}
+                            onChange={(e) => setFormData({ ...formData, commission_percentage: e.target.value })}
+                            placeholder="50"
+                            className="w-24"
+                          />
+                          <span className="text-muted-foreground">%</span>
+                        </div>
                       </div>
                       <Button type="submit" className="w-full" disabled={isPending}>
                         {isPending && <Loader2 className="animate-spin mr-2" size={18} />}
@@ -362,6 +385,26 @@ const AdminBarbeiros = () => {
                       placeholder="Ex: Corte clássico, Barba..."
                     />
                   </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-commission">Comissão (%)</Label>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        id="edit-commission"
+                        type="number"
+                        min="0"
+                        max="100"
+                        step="0.5"
+                        value={formData.commission_percentage}
+                        onChange={(e) => setFormData({ ...formData, commission_percentage: e.target.value })}
+                        placeholder="50"
+                        className="w-24"
+                      />
+                      <span className="text-muted-foreground">%</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Porcentagem do valor cobrado que vai para o barbeiro
+                    </p>
+                  </div>
                   <Button type="submit" className="w-full" disabled={isPending}>
                     {isPending && <Loader2 className="animate-spin mr-2" size={18} />}
                     Salvar Alterações
@@ -412,6 +455,13 @@ const AdminBarbeiros = () => {
                   {barber.specialty && (
                     <p className="text-sm text-muted-foreground">{barber.specialty}</p>
                   )}
+                  
+                  {/* Commission Badge */}
+                  <div className="flex items-center gap-2 bg-primary/10 text-primary px-3 py-2 rounded-lg">
+                    <span className="text-sm font-medium">Comissão:</span>
+                    <span className="font-bold">{barber.commission_percentage}%</span>
+                  </div>
+                  
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       {barber.is_available ? (

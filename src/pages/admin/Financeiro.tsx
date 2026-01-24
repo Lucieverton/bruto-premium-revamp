@@ -1,17 +1,19 @@
 import { useState } from 'react';
 import { AdminLayout } from '@/components/admin/AdminLayout';
-import { useAttendanceRecords, useFinancialMetrics } from '@/hooks/useFinancial';
+import { useAttendanceRecords, useFinancialMetrics, useBarbersWithCommission } from '@/hooks/useFinancial';
 import { useBarbers, useServices } from '@/hooks/useQueue';
 import { 
   DollarSign, 
   TrendingUp, 
   Users, 
   Scissors,
-  Calendar
+  Calendar,
+  PiggyBank,
+  Percent
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 import { cn } from '@/lib/utils';
 
 type DateRange = 'today' | 'week' | 'month' | 'year';
@@ -23,6 +25,7 @@ const AdminFinanceiro = () => {
   const { data: records, isLoading } = useAttendanceRecords(dateRange, selectedBarber === 'all' ? undefined : selectedBarber);
   const metrics = useFinancialMetrics(dateRange, selectedBarber === 'all' ? undefined : selectedBarber);
   const { data: barbers } = useBarbers();
+  const { data: barbersWithCommission } = useBarbersWithCommission();
   const { data: services } = useServices();
   
   const rangeLabels: Record<DateRange, string> = {
@@ -32,13 +35,15 @@ const AdminFinanceiro = () => {
     year: 'Este Ano',
   };
   
-  // Prepare chart data
+  // Prepare chart data with commission info
   const barberChartData = Object.entries(metrics.attendancesByBarber).map(([barberId, data]) => {
     const barber = barbers?.find(b => b.id === barberId);
     return {
       name: barber?.display_name || 'Desconhecido',
       atendimentos: data.count,
       faturamento: data.revenue,
+      comissao: data.commission,
+      lucro: data.revenue - data.commission,
     };
   });
   
@@ -49,6 +54,12 @@ const AdminFinanceiro = () => {
       value: count,
     };
   });
+
+  // Profit distribution pie chart
+  const profitDistribution = [
+    { name: 'Lucro Barbearia', value: metrics.shopProfit, color: 'hsl(var(--primary))' },
+    { name: 'Comissões Barbeiros', value: metrics.totalCommissions, color: '#22c55e' },
+  ];
   
   const COLORS = ['hsl(var(--primary))', '#22c55e', '#3b82f6', '#f59e0b', '#8b5cf6'];
 
@@ -93,7 +104,7 @@ const AdminFinanceiro = () => {
         </div>
         
         {/* Metrics Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
           <div className="bg-card border border-border rounded-lg p-4">
             <div className="flex items-center gap-2 text-muted-foreground mb-2">
               <Users size={18} />
@@ -111,6 +122,26 @@ const AdminFinanceiro = () => {
             </div>
             <div className="text-3xl font-bold text-green-500">
               R$ {metrics.totalRevenue.toFixed(2).replace('.', ',')}
+            </div>
+          </div>
+          
+          <div className="bg-card border border-border rounded-lg p-4">
+            <div className="flex items-center gap-2 text-muted-foreground mb-2">
+              <Percent size={18} />
+              <span className="text-sm">Comissões</span>
+            </div>
+            <div className="text-3xl font-bold text-orange-500">
+              R$ {metrics.totalCommissions.toFixed(2).replace('.', ',')}
+            </div>
+          </div>
+          
+          <div className="bg-card border border-border rounded-lg p-4">
+            <div className="flex items-center gap-2 text-muted-foreground mb-2">
+              <PiggyBank size={18} />
+              <span className="text-sm">Lucro</span>
+            </div>
+            <div className="text-3xl font-bold text-primary">
+              R$ {metrics.shopProfit.toFixed(2).replace('.', ',')}
             </div>
           </div>
           
@@ -136,29 +167,72 @@ const AdminFinanceiro = () => {
         </div>
         
         {/* Charts */}
-        <div className="grid lg:grid-cols-2 gap-6">
+        <div className="grid lg:grid-cols-3 gap-6">
           {/* Atendimentos por Barbeiro */}
           <div className="bg-card border border-border rounded-lg p-6">
             <h3 className="font-bold mb-4 flex items-center gap-2">
               <Users size={18} className="text-primary" />
-              Atendimentos por Barbeiro
+              Faturamento por Barbeiro
             </h3>
             
             {barberChartData.length > 0 ? (
               <ResponsiveContainer width="100%" height={250}>
                 <BarChart data={barberChartData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" />
-                  <YAxis stroke="hsl(var(--muted-foreground))" />
+                  <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                  <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
                   <Tooltip 
                     contentStyle={{ 
                       backgroundColor: 'hsl(var(--card))', 
                       border: '1px solid hsl(var(--border))',
                       borderRadius: '8px'
                     }}
+                    formatter={(value: number, name: string) => [
+                      `R$ ${value.toFixed(2).replace('.', ',')}`,
+                      name === 'faturamento' ? 'Faturamento' : name === 'comissao' ? 'Comissão' : 'Lucro'
+                    ]}
                   />
-                  <Bar dataKey="atendimentos" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                  <Legend />
+                  <Bar dataKey="faturamento" name="Faturamento" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="comissao" name="Comissão" fill="#22c55e" radius={[4, 4, 0, 0]} />
                 </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <p className="text-center text-muted-foreground py-12">
+                Sem dados para o período selecionado
+              </p>
+            )}
+          </div>
+          
+          {/* Profit Distribution */}
+          <div className="bg-card border border-border rounded-lg p-6">
+            <h3 className="font-bold mb-4 flex items-center gap-2">
+              <PiggyBank size={18} className="text-primary" />
+              Distribuição do Lucro
+            </h3>
+            
+            {metrics.totalRevenue > 0 ? (
+              <ResponsiveContainer width="100%" height={250}>
+                <PieChart>
+                  <Pie
+                    data={profitDistribution}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={50}
+                    outerRadius={80}
+                    paddingAngle={5}
+                    dataKey="value"
+                    label={({ name, value }) => `R$ ${value.toFixed(0)}`}
+                  >
+                    {profitDistribution.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip 
+                    formatter={(value: number) => `R$ ${value.toFixed(2).replace('.', ',')}`}
+                  />
+                  <Legend />
+                </PieChart>
               </ResponsiveContainer>
             ) : (
               <p className="text-center text-muted-foreground py-12">
@@ -181,17 +255,18 @@ const AdminFinanceiro = () => {
                     data={serviceChartData}
                     cx="50%"
                     cy="50%"
-                    innerRadius={60}
-                    outerRadius={100}
+                    innerRadius={50}
+                    outerRadius={80}
                     paddingAngle={5}
                     dataKey="value"
-                    label={({ name, value }) => `${name}: ${value}`}
+                    label={({ name, value }) => `${value}`}
                   >
                     {serviceChartData.map((_, index) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>
                   <Tooltip />
+                  <Legend />
                 </PieChart>
               </ResponsiveContainer>
             ) : (
@@ -199,6 +274,80 @@ const AdminFinanceiro = () => {
                 Sem dados para o período selecionado
               </p>
             )}
+          </div>
+        </div>
+        
+        {/* Barber Commissions Table */}
+        <div className="bg-card border border-border rounded-lg overflow-hidden">
+          <div className="p-4 border-b border-border">
+            <h3 className="font-bold flex items-center gap-2">
+              <Percent size={18} className="text-primary" />
+              Comissões por Barbeiro
+            </h3>
+          </div>
+          
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-border bg-muted/50">
+                  <th className="p-3 text-left text-sm font-medium">Barbeiro</th>
+                  <th className="p-3 text-center text-sm font-medium">% Comissão</th>
+                  <th className="p-3 text-center text-sm font-medium">Atendimentos</th>
+                  <th className="p-3 text-right text-sm font-medium">Faturado</th>
+                  <th className="p-3 text-right text-sm font-medium">Comissão</th>
+                  <th className="p-3 text-right text-sm font-medium">Lucro Barbearia</th>
+                </tr>
+              </thead>
+              <tbody>
+                {Object.entries(metrics.attendancesByBarber).length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="p-8 text-center text-muted-foreground">
+                      Nenhum atendimento no período
+                    </td>
+                  </tr>
+                ) : (
+                  Object.entries(metrics.attendancesByBarber).map(([barberId, data]) => {
+                    const barber = barbers?.find(b => b.id === barberId);
+                    const profit = data.revenue - data.commission;
+                    
+                    return (
+                      <tr key={barberId} className="border-b border-border hover:bg-muted/30">
+                        <td className="p-3 text-sm font-medium">{barber?.display_name || 'Desconhecido'}</td>
+                        <td className="p-3 text-sm text-center">{data.commissionPercentage}%</td>
+                        <td className="p-3 text-sm text-center">{data.count}</td>
+                        <td className="p-3 text-sm text-right text-green-500 font-medium">
+                          R$ {data.revenue.toFixed(2).replace('.', ',')}
+                        </td>
+                        <td className="p-3 text-sm text-right text-orange-500 font-medium">
+                          R$ {data.commission.toFixed(2).replace('.', ',')}
+                        </td>
+                        <td className="p-3 text-sm text-right text-primary font-bold">
+                          R$ {profit.toFixed(2).replace('.', ',')}
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+              {Object.entries(metrics.attendancesByBarber).length > 0 && (
+                <tfoot>
+                  <tr className="bg-muted/50">
+                    <td className="p-3 text-sm font-bold">TOTAL</td>
+                    <td className="p-3"></td>
+                    <td className="p-3 text-sm text-center font-bold">{metrics.totalAttendances}</td>
+                    <td className="p-3 text-sm text-right text-green-500 font-bold">
+                      R$ {metrics.totalRevenue.toFixed(2).replace('.', ',')}
+                    </td>
+                    <td className="p-3 text-sm text-right text-orange-500 font-bold">
+                      R$ {metrics.totalCommissions.toFixed(2).replace('.', ',')}
+                    </td>
+                    <td className="p-3 text-sm text-right text-primary font-bold">
+                      R$ {metrics.shopProfit.toFixed(2).replace('.', ',')}
+                    </td>
+                  </tr>
+                </tfoot>
+              )}
+            </table>
           </div>
         </div>
         
