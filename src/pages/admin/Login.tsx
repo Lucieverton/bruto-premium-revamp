@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LogIn, Loader2, Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 import logo from '@/assets/logo.png';
 
 const AdminLogin = () => {
@@ -14,14 +15,21 @@ const AdminLogin = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
-  const { signIn } = useAuth();
+  const { signIn, user, isAdmin, loading: authLoading, isAdminLoading } = useAuth();
+
+  // Redirect if already logged in as admin
+  useEffect(() => {
+    if (!authLoading && !isAdminLoading && user && isAdmin) {
+      navigate('/admin');
+    }
+  }, [user, isAdmin, authLoading, isAdminLoading, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setLoading(true);
 
-    const { error: signInError } = await signIn(email, password);
+    const { data, error: signInError } = await signIn(email, password);
 
     if (signInError) {
       setError('Email ou senha incorretos');
@@ -29,7 +37,27 @@ const AdminLogin = () => {
       return;
     }
 
-    navigate('/admin');
+    // Verify if user is admin before navigating
+    if (data?.user) {
+      const { data: roleData } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', data.user.id)
+        .eq('role', 'admin')
+        .maybeSingle();
+
+      if (!roleData) {
+        setError('Acesso negado. Você não tem permissão de administrador.');
+        await supabase.auth.signOut();
+        setLoading(false);
+        return;
+      }
+
+      navigate('/admin');
+    } else {
+      setError('Erro ao autenticar. Tente novamente.');
+      setLoading(false);
+    }
   };
 
   return (
