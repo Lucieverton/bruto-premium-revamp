@@ -99,16 +99,16 @@ export const QueueCard = ({ item }: QueueCardProps) => {
   return (
     <>
       <div className={cn(
-        'bg-card border rounded-lg p-4 transition-all duration-300',
+        'bg-card border rounded-lg p-3 sm:p-4 transition-all duration-300',
         item.status === 'called' && 'border-green-500 bg-green-500/10 animate-pulse',
         item.status === 'in_progress' && 'border-blue-500 bg-blue-500/10',
         item.status === 'waiting' && 'border-border'
       )}>
         {/* Header */}
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
+        <div className="flex items-center justify-between mb-2 sm:mb-3">
+          <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
             <span className={cn(
-              'text-2xl font-bold',
+              'text-lg sm:text-2xl font-bold',
               item.status === 'called' && 'text-green-500',
               item.status === 'in_progress' && 'text-blue-500',
               item.status === 'waiting' && 'text-primary'
@@ -117,60 +117,60 @@ export const QueueCard = ({ item }: QueueCardProps) => {
             </span>
             
             {item.priority === 'preferencial' && (
-              <span className="text-xs bg-purple-500/20 text-purple-400 px-2 py-1 rounded">
-                ⭐ Pref
+              <span className="text-[10px] sm:text-xs bg-purple-500/20 text-purple-400 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded">
+                ⭐
               </span>
             )}
             
             <span className={cn(
-              'text-xs px-2 py-1 rounded',
+              'text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 rounded',
               item.origin === 'online' ? 'bg-blue-500/20 text-blue-400' : 'bg-orange-500/20 text-orange-400'
             )}>
               {item.origin === 'online' ? '🌐' : '🏪'}
             </span>
           </div>
           
-          <div className="flex items-center gap-1 text-muted-foreground text-sm">
-            <Clock size={14} />
+          <div className="flex items-center gap-1 text-muted-foreground text-xs sm:text-sm">
+            <Clock size={12} />
             {getTimeString()}
           </div>
         </div>
         
         {/* Client Info */}
-        <div className="space-y-1 mb-3">
-          <div className="flex items-center gap-2">
-            <User size={14} className="text-muted-foreground" />
-            <span className="font-medium">{item.customer_name}</span>
+        <div className="space-y-1 mb-2 sm:mb-3">
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            <User size={12} className="text-muted-foreground flex-shrink-0" />
+            <span className="font-medium text-sm sm:text-base truncate">{item.customer_name}</span>
           </div>
           
           <a 
             href={whatsappUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-2 text-sm text-green-500 hover:text-green-400"
+            className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-green-500 hover:text-green-400"
           >
-            <MessageCircle size={14} />
+            <MessageCircle size={12} />
             {item.customer_phone.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3')}
           </a>
           
           {service && (
-            <div className="text-sm text-muted-foreground">
-              Serviço: {service.name} - R$ {service.price.toFixed(2).replace('.', ',')}
+            <div className="text-xs sm:text-sm text-muted-foreground truncate">
+              {service.name} - R$ {service.price.toFixed(2).replace('.', ',')}
             </div>
           )}
           
           {barber && (
-            <div className="text-sm text-muted-foreground">
+            <div className="text-xs sm:text-sm text-muted-foreground truncate">
               Barbeiro: {barber.display_name}
             </div>
           )}
         </div>
         
-        {/* Barber Selection for in_progress */}
+        {/* Barber Selection */}
         {(item.status === 'called' || item.status === 'waiting') && (
-          <div className="mb-3">
+          <div className="mb-2 sm:mb-3">
             <Select value={selectedBarber} onValueChange={setSelectedBarber}>
-              <SelectTrigger className="bg-background h-8 text-sm">
+              <SelectTrigger className="bg-background h-8 text-xs sm:text-sm">
                 <SelectValue placeholder="Barbeiro..." />
               </SelectTrigger>
               <SelectContent>
@@ -185,16 +185,16 @@ export const QueueCard = ({ item }: QueueCardProps) => {
         )}
         
         {/* Actions */}
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-1.5 sm:gap-2">
           {item.status === 'waiting' && (
             <>
               <Button
                 size="sm"
                 onClick={handleCall}
                 disabled={callClient.isPending}
-                className="bg-green-600 hover:bg-green-700 text-white flex-1"
+                className="bg-green-600 hover:bg-green-700 text-white flex-1 h-8 text-xs sm:text-sm"
               >
-                <Phone size={14} className="mr-1" />
+                <Phone size={12} className="mr-1" />
                 Chamar
               </Button>
               <Button
@@ -202,9 +202,9 @@ export const QueueCard = ({ item }: QueueCardProps) => {
                 variant="outline"
                 onClick={handleDelete}
                 disabled={deleteItem.isPending}
-                className="text-destructive hover:bg-destructive/10"
+                className="text-destructive hover:bg-destructive/10 h-8 w-8 p-0"
               >
-                <Trash2 size={14} />
+                <Trash2 size={12} />
               </Button>
             </>
           )}
@@ -215,9 +215,9 @@ export const QueueCard = ({ item }: QueueCardProps) => {
                 size="sm"
                 onClick={handleStart}
                 disabled={startService.isPending}
-                className="bg-blue-600 hover:bg-blue-700 text-white flex-1"
+                className="bg-blue-600 hover:bg-blue-700 text-white flex-1 h-8 text-xs sm:text-sm"
               >
-                <Play size={14} className="mr-1" />
+                <Play size={12} className="mr-1" />
                 Iniciar
               </Button>
               <Button
@@ -225,9 +225,9 @@ export const QueueCard = ({ item }: QueueCardProps) => {
                 variant="outline"
                 onClick={handleNoShow}
                 disabled={markNoShow.isPending}
-                className="text-yellow-500 hover:bg-yellow-500/10"
+                className="text-yellow-500 hover:bg-yellow-500/10 h-8 w-8 p-0"
               >
-                <XCircle size={14} />
+                <XCircle size={12} />
               </Button>
             </>
           )}
@@ -236,9 +236,9 @@ export const QueueCard = ({ item }: QueueCardProps) => {
             <Button
               size="sm"
               onClick={() => setShowCompleteDialog(true)}
-              className="bg-green-600 hover:bg-green-700 text-white flex-1"
+              className="bg-green-600 hover:bg-green-700 text-white flex-1 h-8 text-xs sm:text-sm"
             >
-              <CheckCircle size={14} className="mr-1" />
+              <CheckCircle size={12} className="mr-1" />
               Finalizar
             </Button>
           )}

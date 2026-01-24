@@ -52,17 +52,17 @@ export const QueueMetricsCards = () => {
   ];
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 md:gap-4">
       {metrics.map((metric) => (
         <div 
           key={metric.label}
-          className={`${metric.bg} rounded-lg p-4 border border-border`}
+          className={`${metric.bg} rounded-lg p-3 sm:p-4 border border-border`}
         >
-          <div className="flex items-center gap-3 mb-2">
-            <metric.icon className={metric.color} size={20} />
-            <span className="text-sm text-muted-foreground">{metric.label}</span>
+          <div className="flex items-center gap-2 sm:gap-3 mb-1 sm:mb-2">
+            <metric.icon className={metric.color} size={16} />
+            <span className="text-xs sm:text-sm text-muted-foreground truncate">{metric.label}</span>
           </div>
-          <div className={`text-3xl font-bold ${metric.color}`}>
+          <div className={`text-xl sm:text-2xl md:text-3xl font-bold ${metric.color}`}>
             {metric.value}
           </div>
         </div>
