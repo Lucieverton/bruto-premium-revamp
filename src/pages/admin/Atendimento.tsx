@@ -29,7 +29,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useTodayQueue, useServices, useBarbers } from '@/hooks/useQueue';
-import { useBarberStartService, useBarberCompleteService, useUpdateBarberStatus } from '@/hooks/useBarberQueue';
+import { useBarberStartService, useBarberCompleteService } from '@/hooks/useBarberQueue';
 import { useQueueRealtime, useBarbersRealtime, useQueueTransfersRealtime } from '@/hooks/useQueueRealtime';
 import { RequestQueueEntryForm } from '@/components/admin/RequestQueueEntryForm';
 import { TransferClientDialog } from '@/components/admin/TransferClientDialog';
@@ -75,7 +75,6 @@ const Atendimento = () => {
   // Mutations
   const startService = useBarberStartService();
   const completeService = useBarberCompleteService();
-  const updateStatus = useUpdateBarberStatus();
 
   // Filter queue items - PHASE 3: Only show clients assigned to this barber OR with no barber assigned
   const waitingQueue = queue?.filter(q => 
@@ -129,15 +128,6 @@ const Atendimento = () => {
     setSelectedServiceId('');
   };
 
-  // Toggle availability
-  const handleToggleAvailability = (available: boolean) => {
-    if (!barber?.id) return;
-    updateStatus.mutate({
-      barberId: barber.id,
-      status: available ? 'online' : 'offline',
-      isAvailable: available,
-    });
-  };
 
   if (barberLoading || queueLoading) {
     return (
@@ -181,22 +171,16 @@ const Atendimento = () => {
             </div>
           </div>
           
-          {/* Status Toggle */}
-          <div className="flex items-center gap-3">
+          {/* Status Info Only - Control is in Meu Perfil */}
+          <div className="flex items-center gap-2">
             <span className={cn(
-              'text-sm font-medium',
-              barber.is_available ? 'text-green-500' : 'text-muted-foreground'
+              'text-sm font-medium px-3 py-1.5 rounded-full',
+              barber.is_available 
+                ? 'bg-green-500/20 text-green-500' 
+                : 'bg-muted text-muted-foreground'
             )}>
-              {barber.is_available ? '🟢 Disponível' : '⚫ Indisponível'}
+              {barber.is_available ? '🟢 Online' : '⚫ Offline'}
             </span>
-            <Button
-              variant={barber.is_available ? 'outline' : 'default'}
-              size="sm"
-              onClick={() => handleToggleAvailability(!barber.is_available)}
-              disabled={updateStatus.isPending}
-            >
-              {barber.is_available ? 'Ficar Offline' : 'Ficar Online'}
-            </Button>
           </div>
         </div>
 

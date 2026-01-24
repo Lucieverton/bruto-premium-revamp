@@ -34,20 +34,26 @@ const MeuPerfil = () => {
     mutationFn: async (is_available: boolean) => {
       if (!barber?.id) throw new Error('Barbeiro não encontrado');
       
+      // Update both is_available AND status field for real-time sync
       const { error } = await supabase
         .from('barbers')
-        .update({ is_available })
+        .update({ 
+          is_available,
+          status: is_available ? 'online' : 'offline'
+        })
         .eq('id', barber.id);
       
       if (error) throw error;
     },
     onSuccess: (_, is_available) => {
       queryClient.invalidateQueries({ queryKey: ['my-barber-profile'] });
+      queryClient.invalidateQueries({ queryKey: ['barbers'] });
+      queryClient.invalidateQueries({ queryKey: ['public-barbers'] });
       toast({ 
-        title: is_available ? 'Agora você está disponível!' : 'Você está indisponível',
+        title: is_available ? 'Agora você está online!' : 'Você está offline',
         description: is_available 
-          ? 'Clientes podem ser atribuídos a você na fila.' 
-          : 'Você não receberá novos atendimentos.',
+          ? 'Clientes podem ver você disponível na fila.' 
+          : 'Você aparecerá como offline na fila.',
       });
     },
     onError: (error: Error) => {
