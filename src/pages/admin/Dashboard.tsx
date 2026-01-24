@@ -2,12 +2,14 @@ import { AdminLayout } from '@/components/admin/AdminLayout';
 import { QueueMetricsCards } from '@/components/admin/QueueMetricsCards';
 import { AddWalkInForm } from '@/components/admin/AddWalkInForm';
 import { QueueKanban } from '@/components/admin/QueueKanban';
-import { useQueueRealtime, useQueueSettingsRealtime } from '@/hooks/useQueueRealtime';
+import { ActiveServicesAdmin } from '@/components/admin/ActiveServicesAdmin';
+import { useQueueRealtime, useQueueSettingsRealtime, useBarbersRealtime } from '@/hooks/useQueueRealtime';
 
 const AdminDashboard = () => {
   // Enable realtime updates
   useQueueRealtime();
   useQueueSettingsRealtime();
+  useBarbersRealtime();
 
   return (
     <AdminLayout>
@@ -19,6 +21,9 @@ const AdminDashboard = () => {
         </div>
         
         <QueueMetricsCards />
+        
+        {/* Active Services Display */}
+        <ActiveServicesAdmin />
         
         <QueueKanban />
       </div>

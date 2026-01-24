@@ -57,34 +57,50 @@ export const useCallClient = () => {
   });
 };
 
-// Start service
+// Start service - uses secure RPC for better authorization
 export const useStartService = () => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   
   return useMutation({
     mutationFn: async ({ ticketId, barberId }: { ticketId: string; barberId?: string }) => {
-      const { error } = await supabase
-        .from('queue_items')
-        .update({ 
-          status: 'in_progress',
-          barber_id: barberId || null,
-        })
-        .eq('id', ticketId);
+      if (!barberId) {
+        throw new Error('Selecione um barbeiro para iniciar o atendimento');
+      }
+      
+      // Use the secure RPC function
+      const { data, error } = await supabase.rpc('barber_start_service', {
+        p_ticket_id: ticketId,
+        p_barber_id: barberId
+      });
       
       if (error) throw error;
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['queue-items'] });
       queryClient.invalidateQueries({ queryKey: ['today-queue'] });
+      queryClient.invalidateQueries({ queryKey: ['barber-queue'] });
+      queryClient.invalidateQueries({ queryKey: ['public-queue'] });
+      queryClient.invalidateQueries({ queryKey: ['queue-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['active-services-public'] });
+      queryClient.invalidateQueries({ queryKey: ['barbers'] });
+      queryClient.invalidateQueries({ queryKey: ['public-barbers'] });
       toast({
         title: 'Atendimento iniciado!',
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Erro ao iniciar atendimento',
+        description: error.message,
+        variant: 'destructive',
       });
     },
   });
 };
 
-// Complete service
+// Complete service - uses secure RPC
 export const useCompleteService = () => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -94,54 +110,41 @@ export const useCompleteService = () => {
       ticketId, 
       priceCharged,
       paymentMethod,
-      notes,
     }: { 
       ticketId: string; 
       priceCharged: number;
       paymentMethod?: string;
       notes?: string;
     }) => {
-      // First get the queue item details
-      const { data: queueItem, error: fetchError } = await supabase
-        .from('queue_items')
-        .select('*')
-        .eq('id', ticketId)
-        .single();
+      // Use the secure RPC function
+      const { data, error } = await supabase.rpc('barber_complete_service', {
+        p_ticket_id: ticketId,
+        p_price_charged: priceCharged,
+        p_payment_method: paymentMethod || null
+      });
       
-      if (fetchError) throw fetchError;
-      
-      // Update queue item status
-      const { error: updateError } = await supabase
-        .from('queue_items')
-        .update({ 
-          status: 'completed',
-          completed_at: new Date().toISOString(),
-        })
-        .eq('id', ticketId);
-      
-      if (updateError) throw updateError;
-      
-      // Create attendance record
-      const { error: recordError } = await supabase
-        .from('attendance_records')
-        .insert({
-          queue_item_id: ticketId,
-          barber_id: queueItem.barber_id,
-          service_id: queueItem.service_id,
-          customer_name: queueItem.customer_name,
-          price_charged: priceCharged,
-          payment_method: paymentMethod || null,
-          notes: notes || null,
-        });
-      
-      if (recordError) throw recordError;
+      if (error) throw error;
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['queue-items'] });
       queryClient.invalidateQueries({ queryKey: ['today-queue'] });
+      queryClient.invalidateQueries({ queryKey: ['barber-queue'] });
+      queryClient.invalidateQueries({ queryKey: ['public-queue'] });
+      queryClient.invalidateQueries({ queryKey: ['queue-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['active-services-public'] });
       queryClient.invalidateQueries({ queryKey: ['attendance-records'] });
+      queryClient.invalidateQueries({ queryKey: ['barbers'] });
+      queryClient.invalidateQueries({ queryKey: ['public-barbers'] });
       toast({
         title: 'Atendimento finalizado!',
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Erro ao finalizar atendimento',
+        description: error.message,
+        variant: 'destructive',
       });
     },
   });

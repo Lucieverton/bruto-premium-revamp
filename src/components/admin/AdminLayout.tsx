@@ -9,7 +9,8 @@ import {
   LogOut,
   Menu,
   X,
-  User
+  User,
+  Play
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
@@ -35,6 +36,7 @@ const adminNavItems = [
 
 // Limited nav items for barbers
 const barberNavItems = [
+  { href: '/admin/atendimento', icon: Play, label: 'Atendimento' },
   { href: '/admin', icon: LayoutDashboard, label: 'Fila' },
   { href: '/admin/meu-perfil', icon: User, label: 'Meu Perfil' },
 ];

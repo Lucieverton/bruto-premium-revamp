@@ -24,6 +24,7 @@ export const useQueueRealtime = () => {
           queryClient.invalidateQueries({ queryKey: ['public-queue'] });
           queryClient.invalidateQueries({ queryKey: ['queue-stats'] });
           queryClient.invalidateQueries({ queryKey: ['active-services-public'] });
+          queryClient.invalidateQueries({ queryKey: ['barber-queue'] });
           
           // Check if current user's ticket was called
           const myTicketId = getMyTicket();
@@ -72,6 +73,34 @@ export const useQueueSettingsRealtime = () => {
         },
         () => {
           queryClient.invalidateQueries({ queryKey: ['queue-settings'] });
+        }
+      )
+      .subscribe();
+    
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
+};
+
+// Realtime updates for barbers table
+export const useBarbersRealtime = () => {
+  const queryClient = useQueryClient();
+  
+  useEffect(() => {
+    const channel = supabase
+      .channel('barbers-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'barbers',
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['barbers'] });
+          queryClient.invalidateQueries({ queryKey: ['public-barbers'] });
+          queryClient.invalidateQueries({ queryKey: ['my-barber-profile'] });
         }
       )
       .subscribe();
