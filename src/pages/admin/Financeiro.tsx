@@ -68,11 +68,17 @@ const AdminFinanceiro = () => {
     };
   });
 
-  // Profit distribution pie chart
-  const profitDistribution = [
+  // Profit distribution pie chart - now with individual barber commissions
+  const barberColors = ['#22c55e', '#3b82f6', '#f97316', '#8b5cf6', '#ef4444', '#06b6d4'];
+  
+  const profitDistributionData = [
     { name: 'Lucro Barbearia', value: metrics.shopProfit, color: 'hsl(43, 96%, 56%)' },
-    { name: 'Comissões', value: metrics.totalCommissions, color: '#22c55e' },
-  ];
+    ...barberChartData.map((barberData, index) => ({
+      name: `${barberData.name} (Comissão)`,
+      value: barberData.comissao,
+      color: barberColors[index % barberColors.length],
+    }))
+  ].filter(item => item.value > 0);
   
   const COLORS = ['hsl(43, 96%, 56%)', '#22c55e', '#3b82f6', '#f97316', '#8b5cf6'];
 
@@ -265,7 +271,7 @@ const AdminFinanceiro = () => {
               <ResponsiveContainer width="100%" height={200}>
                 <PieChart>
                   <Pie
-                    data={profitDistribution}
+                    data={profitDistributionData}
                     cx="50%"
                     cy="50%"
                     innerRadius={50}
@@ -273,7 +279,7 @@ const AdminFinanceiro = () => {
                     paddingAngle={5}
                     dataKey="value"
                   >
-                    {profitDistribution.map((entry, index) => (
+                    {profitDistributionData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
                   </Pie>

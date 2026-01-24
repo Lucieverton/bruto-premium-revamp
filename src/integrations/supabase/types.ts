@@ -548,6 +548,10 @@ export type Database = {
         Args: { p_barber_id: string; p_is_available: boolean; p_status: string }
         Returns: boolean
       }
+      update_barber_status_on_auth: {
+        Args: { p_status: string; p_user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role: "admin" | "barber" | "user"

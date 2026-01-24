@@ -1,15 +1,21 @@
 import { usePublicBarbers } from '@/hooks/useQueue';
 import { cn } from '@/lib/utils';
-import { User, Wifi, WifiOff, Clock } from 'lucide-react';
+import { User, Wifi, WifiOff, Clock, Scissors } from 'lucide-react';
 
-type BarberStatus = 'online' | 'away' | 'offline';
+type BarberStatus = 'online' | 'away' | 'offline' | 'busy';
 
 const statusConfig: Record<BarberStatus, { label: string; color: string; icon: React.ReactNode; bgColor: string }> = {
   online: {
-    label: 'Online',
+    label: 'Disponível',
     color: 'text-green-500',
     bgColor: 'bg-green-500/20 border-green-500/30',
     icon: <Wifi size={14} className="text-green-500" />,
+  },
+  busy: {
+    label: 'Atendendo',
+    color: 'text-blue-500',
+    bgColor: 'bg-blue-500/20 border-blue-500/30',
+    icon: <Scissors size={14} className="text-blue-500" />,
   },
   away: {
     label: 'Ausente',
@@ -41,9 +47,9 @@ export const BarberStatusCards = () => {
     );
   }
 
-  // Sort: online first, then away, then offline
+  // Sort: online first, then busy, then away, then offline
   const sortedBarbers = [...(barbers || [])].sort((a, b) => {
-    const statusOrder = { online: 0, away: 1, offline: 2 };
+    const statusOrder = { online: 0, busy: 1, away: 2, offline: 3 };
     const aStatus = (a.status || 'offline') as BarberStatus;
     const bStatus = (b.status || 'offline') as BarberStatus;
     return statusOrder[aStatus] - statusOrder[bStatus];
@@ -67,7 +73,8 @@ export const BarberStatusCards = () => {
               className={cn(
                 'flex-shrink-0 rounded-lg border p-2 sm:p-3 min-w-[80px] sm:min-w-[110px] transition-all duration-300',
                 config.bgColor,
-                status === 'online' && 'shadow-[0_0_10px_rgba(34,197,94,0.2)]'
+                status === 'online' && 'shadow-[0_0_10px_rgba(34,197,94,0.2)]',
+                status === 'busy' && 'shadow-[0_0_10px_rgba(59,130,246,0.2)]'
               )}
             >
               {/* Avatar placeholder */}
@@ -83,6 +90,7 @@ export const BarberStatusCards = () => {
                   className={cn(
                     'absolute bottom-0 right-1/2 translate-x-4 sm:translate-x-5 w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full border-2 border-background',
                     status === 'online' && 'bg-green-500',
+                    status === 'busy' && 'bg-blue-500 animate-pulse',
                     status === 'away' && 'bg-yellow-500',
                     status === 'offline' && 'bg-muted-foreground'
                   )}

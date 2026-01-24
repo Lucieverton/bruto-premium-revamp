@@ -52,6 +52,14 @@ export const QueueCard = ({ item }: QueueCardProps) => {
   const service = services?.find(s => s.id === item.service_id);
   const barber = barbers?.find(b => b.id === item.barber_id);
   
+  // Pre-fill price when opening dialog
+  const openCompleteDialog = () => {
+    if (service) {
+      setPriceCharged(service.price.toFixed(2).replace('.', ','));
+    }
+    setShowCompleteDialog(true);
+  };
+  
   // Calculate time waiting
   const created = new Date(item.created_at);
   const now = new Date();
@@ -235,7 +243,7 @@ export const QueueCard = ({ item }: QueueCardProps) => {
           {item.status === 'in_progress' && (
             <Button
               size="sm"
-              onClick={() => setShowCompleteDialog(true)}
+              onClick={openCompleteDialog}
               className="bg-green-600 hover:bg-green-700 text-white flex-1 h-8 text-xs sm:text-sm"
             >
               <CheckCircle size={12} className="mr-1" />
@@ -253,14 +261,24 @@ export const QueueCard = ({ item }: QueueCardProps) => {
           </DialogHeader>
           
           <div className="space-y-4">
+            {service && (
+              <div className="bg-muted/50 rounded-lg p-3 text-sm">
+                <div className="font-medium">{service.name}</div>
+                <div className="text-muted-foreground">Valor configurado: R$ {service.price.toFixed(2).replace('.', ',')}</div>
+              </div>
+            )}
+            
             <div className="space-y-2">
               <Label>Valor Cobrado</Label>
               <Input
-                placeholder={service ? `R$ ${service.price.toFixed(2).replace('.', ',')}` : 'R$ 0,00'}
+                placeholder="R$ 0,00"
                 value={priceCharged}
                 onChange={(e) => setPriceCharged(e.target.value)}
                 className="bg-background"
               />
+              <p className="text-xs text-muted-foreground">
+                Altere apenas se houver desconto ou acréscimo
+              </p>
             </div>
             
             <div className="space-y-2">
@@ -270,10 +288,11 @@ export const QueueCard = ({ item }: QueueCardProps) => {
                   <SelectValue placeholder="Selecione..." />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="dinheiro">Dinheiro</SelectItem>
-                  <SelectItem value="pix">PIX</SelectItem>
-                  <SelectItem value="cartao">Cartão (Débito/Crédito)</SelectItem>
-                  <SelectItem value="pendente">Pendente</SelectItem>
+                  <SelectItem value="dinheiro">💵 Dinheiro</SelectItem>
+                  <SelectItem value="pix">📱 PIX</SelectItem>
+                  <SelectItem value="debito">💳 Cartão Débito</SelectItem>
+                  <SelectItem value="credito">💳 Cartão Crédito</SelectItem>
+                  <SelectItem value="pendente">⏳ Pendente</SelectItem>
                 </SelectContent>
               </Select>
             </div>
