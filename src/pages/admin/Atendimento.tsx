@@ -40,6 +40,7 @@ const Atendimento = () => {
   const { user } = useAuth();
   const [showCompleteDialog, setShowCompleteDialog] = useState(false);
   const [selectedTicket, setSelectedTicket] = useState<string | null>(null);
+  const [selectedServiceId, setSelectedServiceId] = useState<string>('');
   const [priceCharged, setPriceCharged] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('');
   
@@ -99,13 +100,21 @@ const Atendimento = () => {
     startService.mutate({ ticketId, barberId: barber.id });
   };
 
+  // Handle service selection in dialog - auto-fill price
+  const handleServiceSelect = (serviceId: string) => {
+    setSelectedServiceId(serviceId);
+    const svc = services?.find(s => s.id === serviceId);
+    if (svc) {
+      setPriceCharged(svc.price.toFixed(2).replace('.', ','));
+    }
+  };
+
   // Handle complete service
   const handleCompleteService = () => {
-    if (!selectedTicket) return;
+    if (!selectedTicket || !selectedServiceId) return;
     
-    const ticket = myInProgress.find(t => t.id === selectedTicket);
-    const service = ticket ? getService(ticket.service_id) : null;
-    const price = parseFloat(priceCharged.replace(',', '.')) || service?.price || 0;
+    const svc = services?.find(s => s.id === selectedServiceId);
+    const price = parseFloat(priceCharged.replace(',', '.')) || svc?.price || 0;
     
     completeService.mutate({
       ticketId: selectedTicket,
@@ -117,6 +126,7 @@ const Atendimento = () => {
     setPriceCharged('');
     setPaymentMethod('');
     setSelectedTicket(null);
+    setSelectedServiceId('');
   };
 
   // Toggle availability
@@ -255,8 +265,14 @@ const Atendimento = () => {
                         <Button
                           onClick={() => {
                             setSelectedTicket(item.id);
-                            // Pre-fill with service price
-                            setPriceCharged(service?.price?.toFixed(2).replace('.', ',') || '');
+                            // Pre-fill with service if exists
+                            if (service) {
+                              setSelectedServiceId(service.id);
+                              setPriceCharged(service.price.toFixed(2).replace('.', ','));
+                            } else {
+                              setSelectedServiceId('');
+                              setPriceCharged('');
+                            }
                             setShowCompleteDialog(true);
                           }}
                           className="bg-green-600 hover:bg-green-700"
@@ -433,14 +449,30 @@ const Atendimento = () => {
           </DialogHeader>
           
           <div className="space-y-4">
-            {/* Show service info */}
-            {selectedTicket && (() => {
-              const ticket = myInProgress.find(t => t.id === selectedTicket);
-              const service = ticket ? getService(ticket.service_id) : null;
-              return service ? (
-                <div className="bg-muted/50 rounded-lg p-3 text-sm">
-                  <div className="font-medium">{service.name}</div>
-                  <div className="text-muted-foreground">Valor configurado: R$ {service.price.toFixed(2).replace('.', ',')}</div>
+            {/* Service Selection - Required */}
+            <div className="space-y-2">
+              <Label>Serviço Realizado *</Label>
+              <Select value={selectedServiceId} onValueChange={handleServiceSelect}>
+                <SelectTrigger className="bg-background">
+                  <SelectValue placeholder="Selecione o serviço..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {services?.map((svc) => (
+                    <SelectItem key={svc.id} value={svc.id}>
+                      {svc.name} - R$ {svc.price.toFixed(2).replace('.', ',')}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            {/* Show selected service info */}
+            {selectedServiceId && (() => {
+              const svc = services?.find(s => s.id === selectedServiceId);
+              return svc ? (
+                <div className="bg-primary/10 rounded-lg p-3 text-sm border border-primary/20">
+                  <div className="font-medium text-primary">{svc.name}</div>
+                  <div className="text-lg font-bold">R$ {svc.price.toFixed(2).replace('.', ',')}</div>
                 </div>
               ) : null;
             })()}
@@ -459,7 +491,7 @@ const Atendimento = () => {
             </div>
             
             <div className="space-y-2">
-              <Label>Forma de Pagamento</Label>
+              <Label>Forma de Pagamento *</Label>
               <Select value={paymentMethod} onValueChange={setPaymentMethod}>
                 <SelectTrigger className="bg-background">
                   <SelectValue placeholder="Selecione..." />
@@ -481,7 +513,7 @@ const Atendimento = () => {
             </Button>
             <Button 
               onClick={handleCompleteService}
-              disabled={completeService.isPending}
+              disabled={completeService.isPending || !selectedServiceId || !paymentMethod}
               className="bg-green-600 hover:bg-green-700"
             >
               <CheckCircle size={16} className="mr-2" />

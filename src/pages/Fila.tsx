@@ -6,7 +6,7 @@ import { MyTicketCard } from '@/components/queue/MyTicketCard';
 import { PublicQueueList } from '@/components/queue/PublicQueueList';
 import { BarberStatusCards } from '@/components/queue/BarberStatusCards';
 import { ActiveServicesDisplay } from '@/components/queue/ActiveServicesDisplay';
-import { useQueueRealtime, useQueueSettingsRealtime } from '@/hooks/useQueueRealtime';
+import { useQueueRealtime, useQueueSettingsRealtime, useBarbersRealtime } from '@/hooks/useQueueRealtime';
 import { getMyTicket, clearMyTicket } from '@/lib/antiAbuse';
 import { requestNotificationPermission } from '@/lib/notifications';
 
@@ -16,6 +16,7 @@ const Fila = () => {
   // Enable realtime updates
   useQueueRealtime();
   useQueueSettingsRealtime();
+  useBarbersRealtime();
   
   // Check for existing ticket on mount
   useEffect(() => {

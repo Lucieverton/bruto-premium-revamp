@@ -8,7 +8,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useJoinQueue, useServices, usePublicBarbers, useQueueSettings } from '@/hooks/useQueue';
-import { canJoinQueue, getRemainingEntries } from '@/lib/antiAbuse';
 import { requestNotificationPermission } from '@/lib/notifications';
 
 const formSchema = z.object({
@@ -32,14 +31,10 @@ export const QueueJoinForm = ({ onSuccess }: QueueJoinFormProps) => {
   const { data: settings } = useQueueSettings();
   const joinQueue = useJoinQueue();
   
-  const canJoin = canJoinQueue();
-  const remaining = getRemainingEntries();
-  
   const {
     register,
     handleSubmit,
     setValue,
-    watch,
     formState: { errors },
   } = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -99,17 +94,6 @@ export const QueueJoinForm = ({ onSuccess }: QueueJoinFormProps) => {
         </p>
         <p className="text-sm text-muted-foreground">
           Horário atual: {currentTime}
-        </p>
-      </div>
-    );
-  }
-  
-  if (!canJoin) {
-    return (
-      <div className="bg-card border border-border rounded-lg p-6 text-center">
-        <h3 className="text-xl font-bold text-yellow-500 mb-2">Limite Atingido</h3>
-        <p className="text-muted-foreground">
-          Você já entrou na fila 5 vezes hoje. Tente novamente amanhã!
         </p>
       </div>
     );
@@ -221,10 +205,6 @@ export const QueueJoinForm = ({ onSuccess }: QueueJoinFormProps) => {
           )}
           Entrar na Fila
         </Button>
-        
-        <p className="text-xs text-muted-foreground text-center">
-          Você ainda pode entrar {remaining}x hoje
-        </p>
       </form>
     </div>
   );
