@@ -83,10 +83,10 @@ export const BarberEarningsCard = ({ barberId, barberName, commissionPercentage 
             <div className="bg-background/50 rounded-xl p-4 border border-border/50">
               <div className="flex items-center gap-2 text-muted-foreground mb-1">
                 <Calendar size={14} />
-                <span className="text-xs">Faturado (Total)</span>
+                <span className="text-xs">Mês Atual</span>
               </div>
               <p className="text-xl sm:text-2xl font-bold text-orange-400">
-                R$ {earnings.totalRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 0 })}
+                R$ {(earnings.monthlyData[new Date().getMonth()]?.commission || 0).toLocaleString('pt-BR', { minimumFractionDigits: 0 })}
               </p>
             </div>
           </div>

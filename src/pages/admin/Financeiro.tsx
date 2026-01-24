@@ -1,5 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { AdminLayout } from '@/components/admin/AdminLayout';
+import { useAuth } from '@/contexts/AuthContext';
 import { useAttendanceRecords, useFinancialMetrics, useBarbersWithCommission } from '@/hooks/useFinancial';
 import { useBarbers, useServices } from '@/hooks/useQueue';
 import { AnnualChart } from '@/components/admin/AnnualChart';
@@ -21,7 +23,16 @@ import { cn } from '@/lib/utils';
 type DateRange = 'today' | 'week' | 'month' | 'year';
 
 const AdminFinanceiro = () => {
+  const { isAdmin, isAdminLoading } = useAuth();
+  const navigate = useNavigate();
   const [dateRange, setDateRange] = useState<DateRange>('today');
+
+  // Protect route: only admins can access
+  useEffect(() => {
+    if (!isAdminLoading && !isAdmin) {
+      navigate('/admin/atendimento');
+    }
+  }, [isAdmin, isAdminLoading, navigate]);
   const [selectedBarber, setSelectedBarber] = useState<string>('all');
   
   const { data: records, isLoading } = useAttendanceRecords(dateRange, selectedBarber === 'all' ? undefined : selectedBarber);
