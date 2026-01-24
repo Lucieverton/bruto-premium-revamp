@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { recordQueueEntry, saveMyTicket } from '@/lib/antiAbuse';
+import { saveMyTicket } from '@/lib/antiAbuse';
 
 export interface QueueItem {
   id: string;
@@ -311,7 +311,6 @@ export const useJoinQueue = () => {
       return ticket as { id: string; ticket_number: string };
     },
     onSuccess: (data) => {
-      recordQueueEntry();
       saveMyTicket(data.id);
       queryClient.invalidateQueries({ queryKey: ['queue-items'] });
       queryClient.invalidateQueries({ queryKey: ['today-queue'] });

@@ -39,6 +39,7 @@ export const QueueCard = ({ item }: QueueCardProps) => {
   const [priceCharged, setPriceCharged] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('');
   const [selectedBarber, setSelectedBarber] = useState(item.barber_id || '');
+  const [selectedServiceId, setSelectedServiceId] = useState(item.service_id || '');
   
   const { data: services } = useServices();
   const { data: barbers } = useBarbers();
@@ -50,12 +51,24 @@ export const QueueCard = ({ item }: QueueCardProps) => {
   const deleteItem = useDeleteQueueItem();
   
   const service = services?.find(s => s.id === item.service_id);
+  const selectedService = services?.find(s => s.id === selectedServiceId);
   const barber = barbers?.find(b => b.id === item.barber_id);
+  
+  // Handle service selection in dialog - auto-fill price
+  const handleServiceSelect = (serviceId: string) => {
+    setSelectedServiceId(serviceId);
+    const svc = services?.find(s => s.id === serviceId);
+    if (svc) {
+      setPriceCharged(svc.price.toFixed(2).replace('.', ','));
+    }
+  };
   
   // Pre-fill price when opening dialog
   const openCompleteDialog = () => {
-    if (service) {
-      setPriceCharged(service.price.toFixed(2).replace('.', ','));
+    const svc = service || selectedService;
+    if (svc) {
+      setPriceCharged(svc.price.toFixed(2).replace('.', ','));
+      setSelectedServiceId(svc.id);
     }
     setShowCompleteDialog(true);
   };
@@ -257,14 +270,31 @@ export const QueueCard = ({ item }: QueueCardProps) => {
       <Dialog open={showCompleteDialog} onOpenChange={setShowCompleteDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Finalizar Atendimento</DialogTitle>
+            <DialogTitle>Finalizar Atendimento - {item.ticket_number}</DialogTitle>
           </DialogHeader>
           
           <div className="space-y-4">
-            {service && (
-              <div className="bg-muted/50 rounded-lg p-3 text-sm">
-                <div className="font-medium">{service.name}</div>
-                <div className="text-muted-foreground">Valor configurado: R$ {service.price.toFixed(2).replace('.', ',')}</div>
+            {/* Service Selection - Required if not pre-selected */}
+            <div className="space-y-2">
+              <Label>Serviço Realizado *</Label>
+              <Select value={selectedServiceId} onValueChange={handleServiceSelect}>
+                <SelectTrigger className="bg-background">
+                  <SelectValue placeholder="Selecione o serviço..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {services?.map((svc) => (
+                    <SelectItem key={svc.id} value={svc.id}>
+                      {svc.name} - R$ {svc.price.toFixed(2).replace('.', ',')}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            {selectedService && (
+              <div className="bg-primary/10 rounded-lg p-3 text-sm border border-primary/20">
+                <div className="font-medium text-primary">{selectedService.name}</div>
+                <div className="text-lg font-bold">R$ {selectedService.price.toFixed(2).replace('.', ',')}</div>
               </div>
             )}
             
@@ -282,7 +312,7 @@ export const QueueCard = ({ item }: QueueCardProps) => {
             </div>
             
             <div className="space-y-2">
-              <Label>Forma de Pagamento</Label>
+              <Label>Forma de Pagamento *</Label>
               <Select value={paymentMethod} onValueChange={setPaymentMethod}>
                 <SelectTrigger className="bg-background">
                   <SelectValue placeholder="Selecione..." />
@@ -304,7 +334,7 @@ export const QueueCard = ({ item }: QueueCardProps) => {
             </Button>
             <Button 
               onClick={handleComplete}
-              disabled={completeService.isPending}
+              disabled={completeService.isPending || !selectedServiceId || !paymentMethod}
               className="bg-green-600 hover:bg-green-700"
             >
               <CheckCircle size={16} className="mr-2" />
