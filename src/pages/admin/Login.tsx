@@ -41,31 +41,37 @@ const AdminLogin = () => {
       // Verify if user has admin or barber role before navigating
       if (data?.user) {
         // Check admin role first
-        const { data: adminRoleData } = await supabase
+        const { data: adminRoleData, error: adminError } = await supabase
           .from('user_roles')
           .select('role')
           .eq('user_id', data.user.id)
           .eq('role', 'admin')
           .maybeSingle();
 
+        if (adminError) {
+          console.error('Error checking admin role:', adminError);
+        }
+
         if (adminRoleData) {
-          // Small delay to ensure context updates
-          await new Promise(resolve => setTimeout(resolve, 150));
+          setLoading(false);
           navigate('/admin');
           return;
         }
 
         // Check barber role
-        const { data: barberRoleData } = await supabase
+        const { data: barberRoleData, error: barberError } = await supabase
           .from('user_roles')
           .select('role')
           .eq('user_id', data.user.id)
           .eq('role', 'barber')
           .maybeSingle();
 
+        if (barberError) {
+          console.error('Error checking barber role:', barberError);
+        }
+
         if (barberRoleData) {
-          // Small delay to ensure context updates
-          await new Promise(resolve => setTimeout(resolve, 150));
+          setLoading(false);
           navigate('/admin');
           return;
         }

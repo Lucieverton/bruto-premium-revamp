@@ -49,18 +49,25 @@ export const QueueJoinForm = ({ onSuccess }: QueueJoinFormProps) => {
   });
   
   const onSubmit = async (data: FormData) => {
-    // Request notification permission
-    await requestNotificationPermission();
-    
-    await joinQueue.mutateAsync({
-      customer_name: data.customer_name.trim(),
-      customer_phone: data.customer_phone.replace(/\D/g, ''),
-      service_id: data.service_id || undefined,
-      barber_id: data.barber_id || undefined,
-      priority: data.priority,
-    });
-    
-    onSuccess();
+    try {
+      // Request notification permission (non-blocking)
+      requestNotificationPermission().catch(() => {
+        // Silently ignore permission errors
+      });
+      
+      await joinQueue.mutateAsync({
+        customer_name: data.customer_name.trim(),
+        customer_phone: data.customer_phone.replace(/\D/g, ''),
+        service_id: data.service_id || undefined,
+        barber_id: data.barber_id || undefined,
+        priority: data.priority,
+      });
+      
+      onSuccess();
+    } catch (error) {
+      // Error is already handled by the mutation's onError
+      console.error('Queue join error:', error);
+    }
   };
   
   // Format phone number

@@ -67,12 +67,15 @@ export const useAuth = () => {
   useEffect(() => {
     // Set up auth state listener BEFORE checking session
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          await checkUserRole(session.user.id);
+          // Use setTimeout to avoid blocking the auth state change callback
+          setTimeout(() => {
+            checkUserRole(session.user.id);
+          }, 0);
         } else {
           setUserRole(null);
           setIsAdmin(false);
@@ -85,12 +88,12 @@ export const useAuth = () => {
     );
 
     // Get initial session
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
       
       if (session?.user) {
-        await checkUserRole(session.user.id);
+        checkUserRole(session.user.id);
       } else {
         setIsAdminLoading(false);
       }
