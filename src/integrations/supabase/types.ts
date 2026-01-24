@@ -261,6 +261,31 @@ export type Database = {
     }
     Functions: {
       get_client_ticket_id: { Args: never; Returns: string }
+      get_public_barbers: {
+        Args: never
+        Returns: {
+          avatar_url: string
+          display_name: string
+          id: string
+          is_available: boolean
+          specialty: string
+          status: string
+        }[]
+      }
+      get_public_queue: {
+        Args: never
+        Returns: {
+          barber_id: string
+          called_at: string
+          created_at: string
+          customer_name_masked: string
+          id: string
+          priority: string
+          service_id: string
+          status: string
+          ticket_number: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

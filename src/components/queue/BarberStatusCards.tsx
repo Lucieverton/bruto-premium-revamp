@@ -1,4 +1,4 @@
-import { useBarbers } from '@/hooks/useQueue';
+import { usePublicBarbers } from '@/hooks/useQueue';
 import { cn } from '@/lib/utils';
 import { User, Wifi, WifiOff, Clock } from 'lucide-react';
 
@@ -26,7 +26,7 @@ const statusConfig: Record<BarberStatus, { label: string; color: string; icon: R
 };
 
 export const BarberStatusCards = () => {
-  const { data: barbers, isLoading } = useBarbers();
+  const { data: barbers, isLoading } = usePublicBarbers();
 
   if (isLoading) {
     return (
@@ -44,8 +44,8 @@ export const BarberStatusCards = () => {
   // Sort: online first, then away, then offline
   const sortedBarbers = [...(barbers || [])].sort((a, b) => {
     const statusOrder = { online: 0, away: 1, offline: 2 };
-    const aStatus = (a as { status?: BarberStatus }).status || 'offline';
-    const bStatus = (b as { status?: BarberStatus }).status || 'offline';
+    const aStatus = (a.status || 'offline') as BarberStatus;
+    const bStatus = (b.status || 'offline') as BarberStatus;
     return statusOrder[aStatus] - statusOrder[bStatus];
   });
 
@@ -58,7 +58,7 @@ export const BarberStatusCards = () => {
       
       <div className="flex gap-2 sm:gap-3 overflow-x-auto pb-2 scrollbar-hide -mx-3 px-3 sm:mx-0 sm:px-0">
         {sortedBarbers.map((barber) => {
-          const status = ((barber as { status?: BarberStatus }).status || 'offline') as BarberStatus;
+          const status = (barber.status || 'offline') as BarberStatus;
           const config = statusConfig[status];
           
           return (
