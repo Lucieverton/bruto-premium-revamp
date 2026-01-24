@@ -46,7 +46,20 @@ export interface QueueSettings {
   max_queue_size: number;
 }
 
-// Fetch queue items
+// Public queue item (safe for public display - no sensitive data)
+export interface PublicQueueItem {
+  id: string;
+  ticket_number: string;
+  status: string;
+  priority: string;
+  created_at: string;
+  called_at: string | null;
+  service_id: string | null;
+  barber_id: string | null;
+  customer_name_masked: string;
+}
+
+// Fetch queue items (for authenticated staff only)
 export const useQueueItems = (status?: string) => {
   return useQuery({
     queryKey: ['queue-items', status],
@@ -67,7 +80,7 @@ export const useQueueItems = (status?: string) => {
   });
 };
 
-// Fetch today's queue
+// Fetch today's queue (for authenticated staff only)
 export const useTodayQueue = () => {
   return useQuery({
     queryKey: ['today-queue'],
@@ -81,6 +94,19 @@ export const useTodayQueue = () => {
       
       if (error) throw error;
       return data as QueueItem[];
+    },
+  });
+};
+
+// Fetch public queue (safe for public display - uses secure function)
+export const usePublicQueue = () => {
+  return useQuery({
+    queryKey: ['public-queue'],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc('get_public_queue');
+      
+      if (error) throw error;
+      return data as PublicQueueItem[];
     },
   });
 };
@@ -102,7 +128,17 @@ export const useServices = () => {
   });
 };
 
-// Fetch barbers
+// Public barber info (safe for public display - no user_id)
+export interface PublicBarber {
+  id: string;
+  display_name: string;
+  status: string;
+  specialty: string | null;
+  is_available: boolean;
+  avatar_url: string | null;
+}
+
+// Fetch barbers (for authenticated staff - full data)
 export const useBarbers = () => {
   return useQuery({
     queryKey: ['barbers'],
@@ -115,6 +151,19 @@ export const useBarbers = () => {
       
       if (error) throw error;
       return data as Barber[];
+    },
+  });
+};
+
+// Fetch public barbers (safe for public display - uses secure function)
+export const usePublicBarbers = () => {
+  return useQuery({
+    queryKey: ['public-barbers'],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc('get_public_barbers');
+      
+      if (error) throw error;
+      return data as PublicBarber[];
     },
   });
 };

@@ -1,12 +1,12 @@
-import { useTodayQueue } from '@/hooks/useQueue';
+import { usePublicQueue } from '@/hooks/useQueue';
 import { cn } from '@/lib/utils';
 import { getMyTicket } from '@/lib/antiAbuse';
 
 export const PublicQueueList = () => {
-  const { data: queue, isLoading } = useTodayQueue();
+  const { data: queue, isLoading } = usePublicQueue();
   const myTicketId = getMyTicket();
   
-  // Filter to show only waiting and called tickets
+  // Filter to show only waiting and called tickets (already filtered by function, but keep for safety)
   const activeQueue = queue?.filter(q => 
     q.status === 'waiting' || q.status === 'called' || q.status === 'in_progress'
   ).slice(0, 15) || [];
@@ -61,7 +61,7 @@ export const PublicQueueList = () => {
                   </span>
                   
                   <span className="text-xs sm:text-sm text-muted-foreground truncate">
-                    {item.customer_name.split(' ')[0]}
+                    {item.customer_name_masked}
                     {isMe && <span className="text-primary ml-1">(você)</span>}
                   </span>
                 </div>
