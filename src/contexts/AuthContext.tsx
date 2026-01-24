@@ -1,5 +1,5 @@
 import React, { createContext, useContext, ReactNode } from 'react';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth as useAuthHook } from '@/hooks/useAuth';
 import { User, Session } from '@supabase/supabase-js';
 
 interface AuthContextType {
@@ -7,6 +7,7 @@ interface AuthContextType {
   session: Session | null;
   loading: boolean;
   isAdmin: boolean;
+  isAdminLoading: boolean;
   signIn: (email: string, password: string) => Promise<{ error?: { message: string }; data?: any }>;
   signOut: () => Promise<void>;
 }
@@ -14,7 +15,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const auth = useAuth();
+  const auth = useAuthHook();
   
   return (
     <AuthContext.Provider value={auth}>
@@ -30,3 +31,6 @@ export const useAuthContext = () => {
   }
   return context;
 };
+
+// Convenience alias so the rest of the app can import { useAuth } from this context.
+export const useAuth = useAuthContext;

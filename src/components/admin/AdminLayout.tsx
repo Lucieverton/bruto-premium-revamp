@@ -11,7 +11,7 @@ import {
   X
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/contexts/AuthContext';
 import { useToggleQueueActive } from '@/hooks/useAdminQueue';
 import { useQueueSettings } from '@/hooks/useQueue';
 import { Switch } from '@/components/ui/switch';
