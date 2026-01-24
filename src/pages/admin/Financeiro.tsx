@@ -65,13 +65,14 @@ const AdminFinanceiro = () => {
 
   return (
     <AdminLayout>
-      <div className="p-6 space-y-6">
-        <div className="flex items-center justify-between flex-wrap gap-4">
-          <h1 className="font-display text-2xl uppercase">Controle Financeiro</h1>
+      <div className="p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-6">
+        {/* Header - Stack on mobile */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+          <h1 className="font-display text-xl sm:text-2xl uppercase">Controle Financeiro</h1>
           
-          <div className="flex items-center gap-3">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
             <Select value={selectedBarber} onValueChange={setSelectedBarber}>
-              <SelectTrigger className="w-[180px] bg-card">
+              <SelectTrigger className="w-full sm:w-[160px] bg-card h-9 text-sm">
                 <SelectValue placeholder="Todos barbeiros" />
               </SelectTrigger>
               <SelectContent>
@@ -92,7 +93,7 @@ const AdminFinanceiro = () => {
                   size="sm"
                   onClick={() => setDateRange(range)}
                   className={cn(
-                    'rounded-none',
+                    'rounded-none flex-1 sm:flex-none text-xs sm:text-sm px-2 sm:px-3 h-9',
                     dateRange === range && 'bg-primary text-primary-foreground'
                   )}
                 >
@@ -103,175 +104,175 @@ const AdminFinanceiro = () => {
           </div>
         </div>
         
-        {/* Metrics Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-          <div className="bg-card border border-border rounded-lg p-4">
-            <div className="flex items-center gap-2 text-muted-foreground mb-2">
-              <Users size={18} />
-              <span className="text-sm">Atendimentos</span>
+        {/* Metrics Cards - Responsive grid */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3 md:gap-4">
+          <div className="bg-card border border-border rounded-lg p-3 sm:p-4">
+            <div className="flex items-center gap-1.5 sm:gap-2 text-muted-foreground mb-1 sm:mb-2">
+              <Users size={14} />
+              <span className="text-xs sm:text-sm truncate">Atendimentos</span>
             </div>
-            <div className="text-3xl font-bold text-primary">
+            <div className="text-xl sm:text-2xl md:text-3xl font-bold text-primary">
               {metrics.totalAttendances}
             </div>
           </div>
           
-          <div className="bg-card border border-border rounded-lg p-4">
-            <div className="flex items-center gap-2 text-muted-foreground mb-2">
-              <DollarSign size={18} />
-              <span className="text-sm">Faturamento</span>
+          <div className="bg-card border border-border rounded-lg p-3 sm:p-4">
+            <div className="flex items-center gap-1.5 sm:gap-2 text-muted-foreground mb-1 sm:mb-2">
+              <DollarSign size={14} />
+              <span className="text-xs sm:text-sm truncate">Faturamento</span>
             </div>
-            <div className="text-3xl font-bold text-green-500">
-              R$ {metrics.totalRevenue.toFixed(2).replace('.', ',')}
-            </div>
-          </div>
-          
-          <div className="bg-card border border-border rounded-lg p-4">
-            <div className="flex items-center gap-2 text-muted-foreground mb-2">
-              <Percent size={18} />
-              <span className="text-sm">Comissões</span>
-            </div>
-            <div className="text-3xl font-bold text-orange-500">
-              R$ {metrics.totalCommissions.toFixed(2).replace('.', ',')}
+            <div className="text-lg sm:text-xl md:text-2xl font-bold text-green-500 truncate">
+              R$ {metrics.totalRevenue.toFixed(0)}
             </div>
           </div>
           
-          <div className="bg-card border border-border rounded-lg p-4">
-            <div className="flex items-center gap-2 text-muted-foreground mb-2">
-              <PiggyBank size={18} />
-              <span className="text-sm">Lucro</span>
+          <div className="bg-card border border-border rounded-lg p-3 sm:p-4">
+            <div className="flex items-center gap-1.5 sm:gap-2 text-muted-foreground mb-1 sm:mb-2">
+              <Percent size={14} />
+              <span className="text-xs sm:text-sm truncate">Comissões</span>
             </div>
-            <div className="text-3xl font-bold text-primary">
-              R$ {metrics.shopProfit.toFixed(2).replace('.', ',')}
-            </div>
-          </div>
-          
-          <div className="bg-card border border-border rounded-lg p-4">
-            <div className="flex items-center gap-2 text-muted-foreground mb-2">
-              <TrendingUp size={18} />
-              <span className="text-sm">Ticket Médio</span>
-            </div>
-            <div className="text-3xl font-bold text-blue-500">
-              R$ {metrics.averageTicket.toFixed(2).replace('.', ',')}
+            <div className="text-lg sm:text-xl md:text-2xl font-bold text-orange-500 truncate">
+              R$ {metrics.totalCommissions.toFixed(0)}
             </div>
           </div>
           
-          <div className="bg-card border border-border rounded-lg p-4">
-            <div className="flex items-center gap-2 text-muted-foreground mb-2">
-              <Calendar size={18} />
-              <span className="text-sm">Período</span>
+          <div className="bg-card border border-border rounded-lg p-3 sm:p-4">
+            <div className="flex items-center gap-1.5 sm:gap-2 text-muted-foreground mb-1 sm:mb-2">
+              <PiggyBank size={14} />
+              <span className="text-xs sm:text-sm truncate">Lucro</span>
             </div>
-            <div className="text-xl font-bold">
+            <div className="text-lg sm:text-xl md:text-2xl font-bold text-primary truncate">
+              R$ {metrics.shopProfit.toFixed(0)}
+            </div>
+          </div>
+          
+          <div className="bg-card border border-border rounded-lg p-3 sm:p-4">
+            <div className="flex items-center gap-1.5 sm:gap-2 text-muted-foreground mb-1 sm:mb-2">
+              <TrendingUp size={14} />
+              <span className="text-xs sm:text-sm truncate">Ticket Médio</span>
+            </div>
+            <div className="text-lg sm:text-xl md:text-2xl font-bold text-blue-500 truncate">
+              R$ {metrics.averageTicket.toFixed(0)}
+            </div>
+          </div>
+          
+          <div className="bg-card border border-border rounded-lg p-3 sm:p-4">
+            <div className="flex items-center gap-1.5 sm:gap-2 text-muted-foreground mb-1 sm:mb-2">
+              <Calendar size={14} />
+              <span className="text-xs sm:text-sm truncate">Período</span>
+            </div>
+            <div className="text-base sm:text-lg md:text-xl font-bold truncate">
               {rangeLabels[dateRange]}
             </div>
           </div>
         </div>
         
-        {/* Charts */}
-        <div className="grid lg:grid-cols-3 gap-6">
+        {/* Charts - Stack on mobile */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {/* Atendimentos por Barbeiro */}
-          <div className="bg-card border border-border rounded-lg p-6">
-            <h3 className="font-bold mb-4 flex items-center gap-2">
-              <Users size={18} className="text-primary" />
+          <div className="bg-card border border-border rounded-lg p-4 sm:p-6">
+            <h3 className="font-bold mb-3 sm:mb-4 flex items-center gap-2 text-sm sm:text-base">
+              <Users size={16} className="text-primary" />
               Faturamento por Barbeiro
             </h3>
             
             {barberChartData.length > 0 ? (
-              <ResponsiveContainer width="100%" height={250}>
+              <ResponsiveContainer width="100%" height={180}>
                 <BarChart data={barberChartData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={12} />
-                  <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                  <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={10} />
+                  <YAxis stroke="hsl(var(--muted-foreground))" fontSize={10} />
                   <Tooltip 
                     contentStyle={{ 
                       backgroundColor: 'hsl(var(--card))', 
                       border: '1px solid hsl(var(--border))',
-                      borderRadius: '8px'
+                      borderRadius: '8px',
+                      fontSize: '12px'
                     }}
                     formatter={(value: number, name: string) => [
-                      `R$ ${value.toFixed(2).replace('.', ',')}`,
-                      name === 'faturamento' ? 'Faturamento' : name === 'comissao' ? 'Comissão' : 'Lucro'
+                      `R$ ${value.toFixed(0)}`,
+                      name === 'faturamento' ? 'Faturamento' : 'Comissão'
                     ]}
                   />
-                  <Legend />
                   <Bar dataKey="faturamento" name="Faturamento" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
                   <Bar dataKey="comissao" name="Comissão" fill="#22c55e" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             ) : (
-              <p className="text-center text-muted-foreground py-12">
-                Sem dados para o período selecionado
+              <p className="text-center text-muted-foreground py-8 text-sm">
+                Sem dados para o período
               </p>
             )}
           </div>
           
           {/* Profit Distribution */}
-          <div className="bg-card border border-border rounded-lg p-6">
-            <h3 className="font-bold mb-4 flex items-center gap-2">
-              <PiggyBank size={18} className="text-primary" />
+          <div className="bg-card border border-border rounded-lg p-4 sm:p-6">
+            <h3 className="font-bold mb-3 sm:mb-4 flex items-center gap-2 text-sm sm:text-base">
+              <PiggyBank size={16} className="text-primary" />
               Distribuição do Lucro
             </h3>
             
             {metrics.totalRevenue > 0 ? (
-              <ResponsiveContainer width="100%" height={250}>
+              <ResponsiveContainer width="100%" height={180}>
                 <PieChart>
                   <Pie
                     data={profitDistribution}
                     cx="50%"
                     cy="50%"
-                    innerRadius={50}
-                    outerRadius={80}
+                    innerRadius={40}
+                    outerRadius={65}
                     paddingAngle={5}
                     dataKey="value"
-                    label={({ name, value }) => `R$ ${value.toFixed(0)}`}
+                    label={({ value }) => `R$ ${value.toFixed(0)}`}
                   >
                     {profitDistribution.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
                   </Pie>
                   <Tooltip 
-                    formatter={(value: number) => `R$ ${value.toFixed(2).replace('.', ',')}`}
+                    formatter={(value: number) => `R$ ${value.toFixed(0)}`}
                   />
-                  <Legend />
+                  <Legend wrapperStyle={{ fontSize: '12px' }} />
                 </PieChart>
               </ResponsiveContainer>
             ) : (
-              <p className="text-center text-muted-foreground py-12">
-                Sem dados para o período selecionado
+              <p className="text-center text-muted-foreground py-8 text-sm">
+                Sem dados para o período
               </p>
             )}
           </div>
           
           {/* Serviços Mais Populares */}
-          <div className="bg-card border border-border rounded-lg p-6">
-            <h3 className="font-bold mb-4 flex items-center gap-2">
-              <Scissors size={18} className="text-primary" />
-              Serviços Mais Populares
+          <div className="bg-card border border-border rounded-lg p-4 sm:p-6 md:col-span-2 lg:col-span-1">
+            <h3 className="font-bold mb-3 sm:mb-4 flex items-center gap-2 text-sm sm:text-base">
+              <Scissors size={16} className="text-primary" />
+              Serviços Populares
             </h3>
             
             {serviceChartData.length > 0 ? (
-              <ResponsiveContainer width="100%" height={250}>
+              <ResponsiveContainer width="100%" height={180}>
                 <PieChart>
                   <Pie
                     data={serviceChartData}
                     cx="50%"
                     cy="50%"
-                    innerRadius={50}
-                    outerRadius={80}
+                    innerRadius={40}
+                    outerRadius={65}
                     paddingAngle={5}
                     dataKey="value"
-                    label={({ name, value }) => `${value}`}
+                    label={({ value }) => `${value}`}
                   >
                     {serviceChartData.map((_, index) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>
                   <Tooltip />
-                  <Legend />
+                  <Legend wrapperStyle={{ fontSize: '12px' }} />
                 </PieChart>
               </ResponsiveContainer>
             ) : (
-              <p className="text-center text-muted-foreground py-12">
-                Sem dados para o período selecionado
+              <p className="text-center text-muted-foreground py-8 text-sm">
+                Sem dados para o período
               </p>
             )}
           </div>

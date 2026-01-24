@@ -38,16 +38,16 @@ const Fila = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-[100svh] bg-background text-foreground">
       <QueueHeader />
       
-      <main className="py-8 px-5">
+      <main className="py-4 sm:py-6 md:py-8 px-3 sm:px-4 md:px-5">
         <div className="max-w-[1200px] mx-auto">
-          <div className="text-center mb-8">
-            <h1 className="font-display text-3xl md:text-4xl uppercase mb-2">
+          <div className="text-center mb-4 sm:mb-6 md:mb-8">
+            <h1 className="font-display text-2xl sm:text-3xl md:text-4xl uppercase mb-1 sm:mb-2">
               Fila Virtual
             </h1>
-            <p className="text-muted-foreground">
+            <p className="text-xs sm:text-sm md:text-base text-muted-foreground">
               Entre na fila de casa e acompanhe em tempo real
             </p>
           </div>
@@ -60,7 +60,7 @@ const Fila = () => {
           
           <QueueStatus />
           
-          <div className="grid md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
             <div>
               {myTicketId ? (
                 <MyTicketCard ticketId={myTicketId} onLeave={handleLeave} />

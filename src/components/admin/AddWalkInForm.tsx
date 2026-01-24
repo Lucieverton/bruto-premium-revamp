@@ -55,30 +55,32 @@ export const AddWalkInForm = () => {
     return (
       <Button
         onClick={() => setIsOpen(true)}
-        className="bg-primary hover:bg-primary/90 text-primary-foreground"
+        className="bg-primary hover:bg-primary/90 text-primary-foreground w-full sm:w-auto"
+        size="sm"
       >
-        <UserPlus className="mr-2" size={18} />
-        Adicionar Cliente Presencial
+        <UserPlus className="mr-2" size={16} />
+        <span className="hidden sm:inline">Adicionar Cliente Presencial</span>
+        <span className="sm:hidden">Add Cliente</span>
       </Button>
     );
   }
 
   return (
-    <div className="bg-card border border-border rounded-lg p-4">
-      <h3 className="font-bold mb-4 flex items-center gap-2">
-        <UserPlus size={18} />
-        Cliente Presencial (Walk-in)
+    <div className="bg-card border border-border rounded-lg p-3 sm:p-4 w-full">
+      <h3 className="font-bold mb-3 sm:mb-4 flex items-center gap-2 text-sm sm:text-base">
+        <UserPlus size={16} />
+        Cliente Presencial
       </h3>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div className="space-y-1">
-            <Label htmlFor="customer_name" className="text-sm">Nome *</Label>
+            <Label htmlFor="customer_name" className="text-xs sm:text-sm">Nome *</Label>
             <Input
               id="customer_name"
               placeholder="Nome do cliente"
               {...register('customer_name')}
-              className="bg-background"
+              className="bg-background h-9 sm:h-10 text-sm"
             />
             {errors.customer_name && (
               <p className="text-xs text-destructive">{errors.customer_name.message}</p>
@@ -86,12 +88,12 @@ export const AddWalkInForm = () => {
           </div>
 
           <div className="space-y-1">
-            <Label htmlFor="customer_phone" className="text-sm">Telefone *</Label>
+            <Label htmlFor="customer_phone" className="text-xs sm:text-sm">Telefone *</Label>
             <Input
               id="customer_phone"
               placeholder="(82) 99999-9999"
               {...register('customer_phone')}
-              className="bg-background"
+              className="bg-background h-9 sm:h-10 text-sm"
             />
             {errors.customer_phone && (
               <p className="text-xs text-destructive">{errors.customer_phone.message}</p>
@@ -99,11 +101,11 @@ export const AddWalkInForm = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div className="space-y-1">
-            <Label className="text-sm">Serviço</Label>
+            <Label className="text-xs sm:text-sm">Serviço</Label>
             <Select onValueChange={(value) => setValue('service_id', value)}>
-              <SelectTrigger className="bg-background">
+              <SelectTrigger className="bg-background h-9 sm:h-10 text-sm">
                 <SelectValue placeholder="Opcional" />
               </SelectTrigger>
               <SelectContent>
@@ -117,9 +119,9 @@ export const AddWalkInForm = () => {
           </div>
 
           <div className="space-y-1">
-            <Label className="text-sm">Barbeiro</Label>
+            <Label className="text-xs sm:text-sm">Barbeiro</Label>
             <Select onValueChange={(value) => setValue('barber_id', value)}>
-              <SelectTrigger className="bg-background">
+              <SelectTrigger className="bg-background h-9 sm:h-10 text-sm">
                 <SelectValue placeholder="Qualquer" />
               </SelectTrigger>
               <SelectContent>
@@ -138,9 +140,9 @@ export const AddWalkInForm = () => {
             type="checkbox"
             id="preferencial"
             onChange={(e) => setValue('priority', e.target.checked ? 'preferencial' : 'normal')}
-            className="rounded"
+            className="rounded w-4 h-4"
           />
-          <Label htmlFor="preferencial" className="text-sm cursor-pointer">
+          <Label htmlFor="preferencial" className="text-xs sm:text-sm cursor-pointer">
             Atendimento preferencial
           </Label>
         </div>
@@ -149,6 +151,7 @@ export const AddWalkInForm = () => {
           <Button
             type="button"
             variant="outline"
+            size="sm"
             onClick={() => { reset(); setIsOpen(false); }}
             className="flex-1"
           >
@@ -156,13 +159,14 @@ export const AddWalkInForm = () => {
           </Button>
           <Button
             type="submit"
+            size="sm"
             disabled={addWalkIn.isPending}
             className="flex-1 bg-primary hover:bg-primary/90"
           >
             {addWalkIn.isPending ? (
-              <Loader2 className="animate-spin mr-2" size={16} />
+              <Loader2 className="animate-spin mr-1" size={14} />
             ) : (
-              <UserPlus className="mr-2" size={16} />
+              <UserPlus className="mr-1" size={14} />
             )}
             Adicionar
           </Button>

@@ -4,14 +4,15 @@ import heroMobileImage from "@/assets/hero-mobile.jpg";
 
 export const Hero = () => {
   return (
-    <header className="relative h-[calc(100vh-80px)] md:h-[calc(100vh-100px)] w-full flex items-center justify-center overflow-hidden bg-black">
-      {/* Background Mobile - Visível apenas em telas pequenas */}
+    <header className="relative h-[100svh] md:h-[calc(100vh-100px)] w-full flex items-center justify-center overflow-hidden bg-black">
+      {/* Background Mobile - Otimizado para telas pequenas */}
       <div
-        className="absolute inset-0 bg-no-repeat md:hidden"
+        className="absolute inset-0 md:hidden"
         style={{
           backgroundImage: `url(${heroMobileImage})`,
           backgroundPosition: "center center",
-          backgroundSize: "contain", // 👈 Mantido igual ao seu código original
+          backgroundSize: "cover",
+          backgroundRepeat: "no-repeat",
         }}
       />
 
@@ -36,17 +37,22 @@ export const Hero = () => {
         }}
       />
 
-      {/* Overlay gradiente */}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/30 to-black/80" />
+      {/* Overlay gradiente - mais intenso no mobile para legibilidade */}
+      <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/90 md:from-black/50 md:via-black/30 md:to-black/80" />
 
-      {/* Conteúdo principal */}
-      <div className="relative z-10 text-center px-5 max-w-4xl mx-auto">
-        {/* (Conteúdo pode ser recolocado aqui se quiser mostrar título e subtítulo) */}
+      {/* Conteúdo principal - Melhor posicionamento mobile */}
+      <div className="relative z-10 text-center px-4 sm:px-5 max-w-4xl mx-auto mt-auto mb-24 md:mt-0 md:mb-0">
+        <h1 className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl uppercase tracking-wider text-foreground mb-3 md:mb-4 drop-shadow-lg">
+          Brutos Barbearia
+        </h1>
+        <p className="text-sm sm:text-base md:text-lg text-muted-foreground max-w-md mx-auto drop-shadow">
+          Estilo e tradição em cada corte
+        </p>
       </div>
 
-      {/* Ícone chevron para rolagem */}
-      <div className="absolute bottom-8 md:bottom-12 left-1/2 -translate-x-1/2 animate-bounce">
-        <ChevronDown className="w-10 h-10 text-foreground opacity-80" />
+      {/* Ícone chevron para rolagem - posição ajustada */}
+      <div className="absolute bottom-4 sm:bottom-6 md:bottom-12 left-1/2 -translate-x-1/2 animate-bounce">
+        <ChevronDown className="w-8 h-8 sm:w-10 sm:h-10 text-foreground opacity-80" />
       </div>
     </header>
   );

@@ -11,9 +11,10 @@ const AdminDashboard = () => {
 
   return (
     <AdminLayout>
-      <div className="p-6 space-y-6">
-        <div className="flex items-center justify-between flex-wrap gap-4">
-          <h1 className="font-display text-2xl uppercase">Gestão da Fila</h1>
+      <div className="p-3 sm:p-4 md:p-6 space-y-4 md:space-y-6">
+        {/* Header - Stack on mobile */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+          <h1 className="font-display text-xl sm:text-2xl uppercase">Gestão da Fila</h1>
           <AddWalkInForm />
         </div>
         
