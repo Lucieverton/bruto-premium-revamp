@@ -68,16 +68,22 @@ Deno.serve(async (req) => {
     // Parse request body
     const { email, password, display_name, specialty }: CreateBarberRequest = await req.json();
 
+    console.log(`[create-barber-user] Admin ${callerId} attempting to create barber with email: ${email}`);
+
     if (!email || !password || !display_name) {
+      console.log(`[create-barber-user] Validation failed: missing required fields`);
       return new Response(
         JSON.stringify({ error: 'Email, senha e nome são obrigatórios' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    if (password.length < 6) {
+    // Enhanced password validation: minimum 8 characters, at least 1 number
+    const hasNumber = /\d/.test(password);
+    if (password.length < 8 || !hasNumber) {
+      console.log(`[create-barber-user] Password validation failed for ${email}`);
       return new Response(
-        JSON.stringify({ error: 'A senha deve ter pelo menos 6 caracteres' }),
+        JSON.stringify({ error: 'A senha deve ter pelo menos 8 caracteres e incluir pelo menos 1 número' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -104,12 +110,14 @@ Deno.serve(async (req) => {
     });
 
     if (createUserError || !newUser.user) {
-      console.error('Error creating user:', createUserError);
+      console.error(`[create-barber-user] Error creating user ${email}:`, createUserError);
       return new Response(
         JSON.stringify({ error: 'Erro ao criar usuário: ' + (createUserError?.message || 'Erro desconhecido') }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+
+    console.log(`[create-barber-user] User created successfully: ${newUser.user.id}`);
 
     // Create barber record linked to the user
     const { data: barberData, error: barberError } = await adminClient
@@ -123,7 +131,7 @@ Deno.serve(async (req) => {
       .single();
 
     if (barberError) {
-      console.error('Error creating barber:', barberError);
+      console.error(`[create-barber-user] Error creating barber record for ${email}:`, barberError);
       // Rollback: delete the created user
       await adminClient.auth.admin.deleteUser(newUser.user.id);
       return new Response(
@@ -131,6 +139,8 @@ Deno.serve(async (req) => {
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+
+    console.log(`[create-barber-user] Barber record created: ${barberData.id}`);
 
     // Assign barber role
     const { error: roleError } = await adminClient
@@ -141,7 +151,7 @@ Deno.serve(async (req) => {
       });
 
     if (roleError) {
-      console.error('Error assigning role:', roleError);
+      console.error(`[create-barber-user] Error assigning role for ${email}:`, roleError);
       // Rollback
       await adminClient.from('barbers').delete().eq('id', barberData.id);
       await adminClient.auth.admin.deleteUser(newUser.user.id);
@@ -150,6 +160,8 @@ Deno.serve(async (req) => {
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+
+    console.log(`[create-barber-user] SUCCESS - Barber created: ${display_name} (${email}) by admin ${callerId}`);
 
     return new Response(
       JSON.stringify({ 

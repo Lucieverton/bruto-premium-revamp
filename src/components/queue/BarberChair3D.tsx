@@ -1,10 +1,30 @@
-import { motion, AnimatePresence } from 'framer-motion';
-import { QueueItem, Barber } from '@/hooks/useQueue';
+import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
+// Simplified item interface for public display (only fields we actually use)
+interface DisplayItem {
+  id: string;
+  ticket_number: string;
+  customer_name: string; // First name only for public display
+  status: string;
+  priority?: string;
+  barber_id?: string | null;
+  called_at?: string | null;
+}
+
+// Simplified barber interface for public display
+interface DisplayBarber {
+  id: string;
+  display_name: string;
+  status?: string;
+  specialty?: string | null;
+  is_available?: boolean;
+  avatar_url?: string | null;
+}
+
 interface BarberChair3DProps {
-  item: QueueItem;
-  barber?: Barber;
+  item: DisplayItem;
+  barber?: DisplayBarber;
   className?: string;
 }
 

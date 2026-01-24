@@ -1,12 +1,13 @@
-import { Clock, Users, Timer } from 'lucide-react';
-import { useQueueSettings, useTodayQueue } from '@/hooks/useQueue';
+import { Clock, Users, Timer, Scissors } from 'lucide-react';
+import { useQueueSettings, useQueueStats } from '@/hooks/useQueue';
 
 export const QueueStatus = () => {
   const { data: settings } = useQueueSettings();
-  const { data: queue } = useTodayQueue();
+  const { data: stats } = useQueueStats();
   
-  const waitingCount = queue?.filter(q => q.status === 'waiting').length || 0;
-  const avgWaitTime = waitingCount * 20; // Estimate 20 min per client
+  const waitingCount = stats?.waiting_count || 0;
+  const inProgressCount = stats?.in_progress_count || 0;
+  const avgWaitTime = stats?.avg_wait_minutes || 20;
   
   const isOpen = settings?.is_active ?? true;
   const now = new Date();
@@ -42,7 +43,7 @@ export const QueueStatus = () => {
         )}
       </div>
       
-      <div className="grid grid-cols-2 gap-3 sm:gap-4 mt-4 sm:mt-6">
+      <div className="grid grid-cols-3 gap-3 sm:gap-4 mt-4 sm:mt-6">
         <div className="bg-background/50 rounded-lg p-3 sm:p-4 text-center">
           <Users className="w-6 h-6 sm:w-8 sm:h-8 mx-auto mb-1.5 sm:mb-2 text-primary" />
           <div className="text-2xl sm:text-3xl font-bold text-primary">{waitingCount}</div>
@@ -50,9 +51,15 @@ export const QueueStatus = () => {
         </div>
         
         <div className="bg-background/50 rounded-lg p-3 sm:p-4 text-center">
+          <Scissors className="w-6 h-6 sm:w-8 sm:h-8 mx-auto mb-1.5 sm:mb-2 text-green-500" />
+          <div className="text-2xl sm:text-3xl font-bold text-green-500">{inProgressCount}</div>
+          <div className="text-xs sm:text-sm text-muted-foreground">atendendo</div>
+        </div>
+        
+        <div className="bg-background/50 rounded-lg p-3 sm:p-4 text-center">
           <Timer className="w-6 h-6 sm:w-8 sm:h-8 mx-auto mb-1.5 sm:mb-2 text-primary" />
           <div className="text-2xl sm:text-3xl font-bold text-primary">~{avgWaitTime}</div>
-          <div className="text-xs sm:text-sm text-muted-foreground">min de espera</div>
+          <div className="text-xs sm:text-sm text-muted-foreground">min espera</div>
         </div>
       </div>
     </div>

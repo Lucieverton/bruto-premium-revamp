@@ -1,17 +1,12 @@
 import { AnimatePresence, motion } from 'framer-motion';
-import { useTodayQueue, useBarbers } from '@/hooks/useQueue';
+import { useActiveServicesPublic, usePublicBarbers } from '@/hooks/useQueue';
 import { BarberChair3D } from './BarberChair3D';
 
 export const ActiveServicesDisplay = () => {
-  const { data: queue } = useTodayQueue();
-  const { data: barbers } = useBarbers();
-  
-  // Get items that are being attended (called or in_progress)
-  const activeServices = queue?.filter(
-    (q) => q.status === 'called' || q.status === 'in_progress'
-  ) || [];
+  const { data: activeServices } = useActiveServicesPublic();
+  const { data: barbers } = usePublicBarbers();
 
-  if (activeServices.length === 0) {
+  if (!activeServices || activeServices.length === 0) {
     return null;
   }
 
@@ -26,6 +21,17 @@ export const ActiveServicesDisplay = () => {
           {activeServices.map((item) => {
             const barber = barbers?.find((b) => b.id === item.barber_id);
             
+            // Create a compatible object for BarberChair3D using only public data
+            const displayItem = {
+              id: item.id,
+              ticket_number: item.ticket_number,
+              customer_name: item.customer_first_name, // Only first name (masked by RPC)
+              status: item.service_status,
+              priority: item.priority,
+              barber_id: item.barber_id,
+              called_at: item.started_at,
+            };
+            
             return (
               <motion.div
                 key={item.id}
@@ -33,8 +39,8 @@ export const ActiveServicesDisplay = () => {
                 className="bg-card border border-border rounded-xl p-4"
               >
                 <BarberChair3D
-                  item={item}
-                  barber={barber}
+                  item={displayItem}
+                  barber={barber || undefined}
                 />
               </motion.div>
             );
