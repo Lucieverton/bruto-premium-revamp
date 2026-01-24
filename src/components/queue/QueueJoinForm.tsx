@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useJoinQueue, useServices, useBarbers, useQueueSettings } from '@/hooks/useQueue';
+import { useJoinQueue, useServices, usePublicBarbers, useQueueSettings } from '@/hooks/useQueue';
 import { canJoinQueue, getRemainingEntries } from '@/lib/antiAbuse';
 import { requestNotificationPermission } from '@/lib/notifications';
 
@@ -28,7 +28,7 @@ interface QueueJoinFormProps {
 export const QueueJoinForm = ({ onSuccess }: QueueJoinFormProps) => {
   const [showPreferencial, setShowPreferencial] = useState(false);
   const { data: services } = useServices();
-  const { data: barbers } = useBarbers();
+  const { data: barbers } = usePublicBarbers();
   const { data: settings } = useQueueSettings();
   const joinQueue = useJoinQueue();
   

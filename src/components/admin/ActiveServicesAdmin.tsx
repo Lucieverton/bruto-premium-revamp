@@ -84,9 +84,9 @@ export const ActiveServicesAdmin = () => {
                       </span>
                     </div>
                     
-                    <div className="text-xs text-muted-foreground truncate flex items-center gap-1">
+                    <div className="text-xs text-muted-foreground flex items-center gap-1">
                       <User size={10} />
-                      {item.customer_name}
+                      <span className="break-words" title={item.customer_name}>{item.customer_name}</span>
                     </div>
                     
                     <div className="text-xs text-muted-foreground flex items-center gap-2">

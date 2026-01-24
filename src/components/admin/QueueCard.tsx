@@ -140,7 +140,7 @@ export const QueueCard = ({ item }: QueueCardProps) => {
         <div className="space-y-1 mb-2 sm:mb-3">
           <div className="flex items-center gap-1.5 sm:gap-2">
             <User size={12} className="text-muted-foreground flex-shrink-0" />
-            <span className="font-medium text-sm sm:text-base truncate">{item.customer_name}</span>
+            <span className="font-medium text-sm sm:text-base break-words" title={item.customer_name}>{item.customer_name}</span>
           </div>
           
           <a 
@@ -272,8 +272,8 @@ export const QueueCard = ({ item }: QueueCardProps) => {
                 <SelectContent>
                   <SelectItem value="dinheiro">Dinheiro</SelectItem>
                   <SelectItem value="pix">PIX</SelectItem>
-                  <SelectItem value="debito">Débito</SelectItem>
-                  <SelectItem value="credito">Crédito</SelectItem>
+                  <SelectItem value="cartao">Cartão (Débito/Crédito)</SelectItem>
+                  <SelectItem value="pendente">Pendente</SelectItem>
                 </SelectContent>
               </Select>
             </div>

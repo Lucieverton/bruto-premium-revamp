@@ -122,9 +122,9 @@ export const QueueKanban = () => {
                     >
                       {item.ticket_number}
                     </motion.div>
-                    <div className="text-sm sm:text-lg font-medium truncate">{item.customer_name}</div>
+                    <div className="text-sm sm:text-lg font-medium break-words">{item.customer_name}</div>
                     {barber && (
-                      <div className="text-xs sm:text-sm text-muted-foreground mt-1 truncate">
+                      <div className="text-xs sm:text-sm text-muted-foreground mt-1">
                         <span className="text-primary">{barber.display_name}</span>
                       </div>
                     )}
