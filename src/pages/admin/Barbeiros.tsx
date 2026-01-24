@@ -164,7 +164,14 @@ const AdminBarbeiros = () => {
 
   const toggleAvailability = useMutation({
     mutationFn: async ({ id, is_available }: { id: string; is_available: boolean }) => {
-      const { error } = await supabase.from('barbers').update({ is_available }).eq('id', id);
+      // Keep status consistent with the availability toggle
+      const { error } = await supabase
+        .from('barbers')
+        .update({
+          is_available,
+          status: is_available ? 'online' : 'offline',
+        })
+        .eq('id', id);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -465,7 +472,7 @@ const AdminBarbeiros = () => {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       {barber.is_available ? (
-                        <UserCheck size={16} className="text-green-500" />
+                        <UserCheck size={16} className="text-success" />
                       ) : (
                         <UserX size={16} className="text-muted-foreground" />
                       )}
