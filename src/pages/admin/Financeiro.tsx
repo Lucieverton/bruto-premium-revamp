@@ -18,10 +18,10 @@ type DateRange = 'today' | 'week' | 'month' | 'year';
 
 const AdminFinanceiro = () => {
   const [dateRange, setDateRange] = useState<DateRange>('today');
-  const [selectedBarber, setSelectedBarber] = useState<string>('');
+  const [selectedBarber, setSelectedBarber] = useState<string>('all');
   
-  const { data: records, isLoading } = useAttendanceRecords(dateRange, selectedBarber || undefined);
-  const metrics = useFinancialMetrics(dateRange, selectedBarber || undefined);
+  const { data: records, isLoading } = useAttendanceRecords(dateRange, selectedBarber === 'all' ? undefined : selectedBarber);
+  const metrics = useFinancialMetrics(dateRange, selectedBarber === 'all' ? undefined : selectedBarber);
   const { data: barbers } = useBarbers();
   const { data: services } = useServices();
   
@@ -64,7 +64,7 @@ const AdminFinanceiro = () => {
                 <SelectValue placeholder="Todos barbeiros" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos barbeiros</SelectItem>
+                <SelectItem value="all">Todos barbeiros</SelectItem>
                 {barbers?.map((barber) => (
                   <SelectItem key={barber.id} value={barber.id}>
                     {barber.display_name}
