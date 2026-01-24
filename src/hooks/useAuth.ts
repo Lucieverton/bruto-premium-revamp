@@ -139,18 +139,20 @@ export const useAuth = () => {
   };
 
   const signOut = async () => {
-    // Update barber status to offline before signing out
-    if (user) {
-      await updateBarberStatus(user.id, 'offline');
-    }
-    
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      toast({
-        title: 'Erro ao sair',
-        description: error.message,
-        variant: 'destructive',
-      });
+    // NOTE: Logout does NOT change barber status (user preference)
+    // Barber status is controlled only via the availability toggle
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error('Error signing out:', error);
+        toast({
+          title: 'Erro ao sair',
+          description: 'Tente novamente.',
+          variant: 'destructive',
+        });
+      }
+    } catch (e) {
+      console.error('Exception during signOut:', e);
     }
   };
 
