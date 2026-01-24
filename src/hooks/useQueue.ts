@@ -59,6 +59,34 @@ export interface PublicQueueItem {
   customer_name_masked: string;
 }
 
+// Queue position result from secure RPC
+export interface QueuePositionResult {
+  queue_position: number;
+  total_waiting: number;
+  ticket_status: string;
+  ticket_priority: string;
+}
+
+// Queue stats for public display
+export interface QueueStats {
+  waiting_count: number;
+  in_progress_count: number;
+  avg_wait_minutes: number;
+}
+
+// Active service for public display (masked data)
+export interface ActiveServicePublic {
+  id: string;
+  ticket_number: string;
+  service_status: string;
+  priority: string;
+  customer_first_name: string;
+  barber_id: string | null;
+  barber_name: string | null;
+  service_id: string | null;
+  started_at: string | null;
+}
+
 // Fetch queue items (for authenticated staff only)
 export const useQueueItems = (status?: string) => {
   return useQuery({
@@ -208,6 +236,53 @@ export const useQueueItem = (ticketId: string | null) => {
   });
 };
 
+// Fetch queue position for a ticket (public safe - uses secure RPC)
+export const useQueuePosition = (ticketId: string | null) => {
+  return useQuery({
+    queryKey: ['queue-position', ticketId],
+    queryFn: async () => {
+      if (!ticketId) return null;
+      
+      const { data, error } = await supabase.rpc('get_queue_position', {
+        p_ticket_id: ticketId
+      });
+      
+      if (error) throw error;
+      return (data as QueuePositionResult[])?.[0] || null;
+    },
+    enabled: !!ticketId,
+    refetchInterval: 10000, // Refresh every 10 seconds
+  });
+};
+
+// Fetch queue statistics (public safe - uses secure RPC)
+export const useQueueStats = () => {
+  return useQuery({
+    queryKey: ['queue-stats'],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc('get_queue_stats');
+      
+      if (error) throw error;
+      return (data as QueueStats[])?.[0] || { waiting_count: 0, in_progress_count: 0, avg_wait_minutes: 20 };
+    },
+    refetchInterval: 15000, // Refresh every 15 seconds
+  });
+};
+
+// Fetch active services for public display (masked data - uses secure RPC)
+export const useActiveServicesPublic = () => {
+  return useQuery({
+    queryKey: ['active-services-public'],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc('get_active_services_public');
+      
+      if (error) throw error;
+      return data as ActiveServicePublic[];
+    },
+    refetchInterval: 5000, // Refresh every 5 seconds for real-time feel
+  });
+};
+
 // Join queue mutation
 export const useJoinQueue = () => {
   const queryClient = useQueryClient();
@@ -245,6 +320,9 @@ export const useJoinQueue = () => {
       saveMyTicket(data.id);
       queryClient.invalidateQueries({ queryKey: ['queue-items'] });
       queryClient.invalidateQueries({ queryKey: ['today-queue'] });
+      queryClient.invalidateQueries({ queryKey: ['public-queue'] });
+      queryClient.invalidateQueries({ queryKey: ['queue-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['active-services-public'] });
       toast({
         title: 'Você entrou na fila!',
         description: `Seu ticket é ${data.ticket_number}`,
@@ -277,6 +355,9 @@ export const useLeaveQueue = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['queue-items'] });
       queryClient.invalidateQueries({ queryKey: ['today-queue'] });
+      queryClient.invalidateQueries({ queryKey: ['public-queue'] });
+      queryClient.invalidateQueries({ queryKey: ['queue-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['active-services-public'] });
       toast({
         title: 'Você saiu da fila',
         description: 'Esperamos vê-lo em breve!',

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Ticket, Clock, MapPin, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useQueueItem, useLeaveQueue, useTodayQueue } from '@/hooks/useQueue';
+import { useQueueItem, useLeaveQueue, useQueuePosition } from '@/hooks/useQueue';
 import { clearMyTicket } from '@/lib/antiAbuse';
 import { cn } from '@/lib/utils';
 
@@ -11,16 +11,14 @@ interface MyTicketCardProps {
 }
 
 export const MyTicketCard = ({ ticketId, onLeave }: MyTicketCardProps) => {
-  const { data: ticket, isLoading } = useQueueItem(ticketId);
-  const { data: queue } = useTodayQueue();
+  const { data: ticket, isLoading: ticketLoading } = useQueueItem(ticketId);
+  const { data: positionData } = useQueuePosition(ticketId);
   const leaveQueue = useLeaveQueue();
   const [timeWaiting, setTimeWaiting] = useState('');
   
-  // Calculate position in queue
-  const position = queue?.filter(q => 
-    q.status === 'waiting' && 
-    new Date(q.created_at) < new Date(ticket?.created_at || '')
-  ).length || 0;
+  // Get position from secure RPC
+  const position = positionData?.queue_position || 0;
+  const isLoading = ticketLoading;
   
   // Update time waiting
   useEffect(() => {
@@ -131,7 +129,7 @@ export const MyTicketCard = ({ ticketId, onLeave }: MyTicketCardProps) => {
         <div className="bg-background/50 rounded-lg p-4 text-center">
           <div className="text-muted-foreground text-sm mb-1">Posição</div>
           <div className="text-2xl font-bold text-primary">
-            {ticket.status === 'waiting' ? `${position + 1}º` : '-'}
+            {ticket.status === 'waiting' ? `${position}º` : '-'}
           </div>
         </div>
         

@@ -260,6 +260,20 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_active_services_public: {
+        Args: never
+        Returns: {
+          barber_id: string
+          barber_name: string
+          customer_first_name: string
+          id: string
+          priority: string
+          service_id: string
+          service_status: string
+          started_at: string
+          ticket_number: string
+        }[]
+      }
       get_client_ticket_id: { Args: never; Returns: string }
       get_public_barbers: {
         Args: never
@@ -284,6 +298,23 @@ export type Database = {
           service_id: string
           status: string
           ticket_number: string
+        }[]
+      }
+      get_queue_position: {
+        Args: { p_ticket_id: string }
+        Returns: {
+          queue_position: number
+          ticket_priority: string
+          ticket_status: string
+          total_waiting: number
+        }[]
+      }
+      get_queue_stats: {
+        Args: never
+        Returns: {
+          avg_wait_minutes: number
+          in_progress_count: number
+          waiting_count: number
         }[]
       }
       has_role: {

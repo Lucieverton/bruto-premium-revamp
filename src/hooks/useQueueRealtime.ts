@@ -18,9 +18,12 @@ export const useQueueRealtime = () => {
           table: 'queue_items',
         },
         (payload) => {
-          // Invalidate queries to refresh data
+          // Invalidate all queue-related queries to refresh data
           queryClient.invalidateQueries({ queryKey: ['queue-items'] });
           queryClient.invalidateQueries({ queryKey: ['today-queue'] });
+          queryClient.invalidateQueries({ queryKey: ['public-queue'] });
+          queryClient.invalidateQueries({ queryKey: ['queue-stats'] });
+          queryClient.invalidateQueries({ queryKey: ['active-services-public'] });
           
           // Check if current user's ticket was called
           const myTicketId = getMyTicket();
@@ -31,12 +34,18 @@ export const useQueueRealtime = () => {
             }
           }
           
-          // Also invalidate single ticket query
+          // Also invalidate single ticket query and position
           if (payload.eventType === 'UPDATE' || payload.eventType === 'DELETE') {
             const itemId = (payload.old as { id?: string })?.id || (payload.new as { id?: string })?.id;
             if (itemId) {
               queryClient.invalidateQueries({ queryKey: ['queue-item', itemId] });
+              queryClient.invalidateQueries({ queryKey: ['queue-position', itemId] });
             }
+          }
+          
+          // Invalidate position for current user's ticket on any queue change
+          if (myTicketId) {
+            queryClient.invalidateQueries({ queryKey: ['queue-position', myTicketId] });
           }
         }
       )
