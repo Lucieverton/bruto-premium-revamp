@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import logo from '@/assets/logo.png';
 import menuIcon from '@/assets/menu-icon.png';
@@ -8,6 +9,35 @@ export const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [displayedText, setDisplayedText] = useState('');
+  const [clickCount, setClickCount] = useState(0);
+  const [showHint, setShowHint] = useState(false);
+  const lastClickTime = useRef(Date.now());
+  const navigate = useNavigate();
+
+  // Secret admin access - 5 clicks on logo
+  const handleLogoClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    const now = Date.now();
+    
+    if (now - lastClickTime.current > 3000) {
+      setClickCount(1);
+    } else {
+      setClickCount(prev => prev + 1);
+    }
+    lastClickTime.current = now;
+    
+    // Visual hint at 3rd click
+    if (clickCount >= 2) {
+      setShowHint(true);
+      setTimeout(() => setShowHint(false), 200);
+    }
+    
+    // Navigate at 5th click
+    if (clickCount >= 4) {
+      navigate('/admin/login');
+      setClickCount(0);
+    }
+  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -72,14 +102,20 @@ export const Navbar = () => {
       >
         <div className="max-w-[1400px] mx-auto px-4 md:px-6 lg:px-8">
           <div className="flex items-center justify-between h-20 md:h-24 lg:h-28">
-            {/* Logo */}
-            <a href="#" className="flex-shrink-0 group">
+            {/* Logo with secret admin access */}
+            <button 
+              onClick={handleLogoClick}
+              className="flex-shrink-0 group bg-transparent border-none cursor-pointer"
+              aria-label="Logo Barbearia Brutos"
+            >
               <img 
                 src={logo} 
                 alt="Logo Barbearia Brutos" 
-                className="h-14 md:h-16 lg:h-20 w-auto transition-all duration-500 hover:scale-110 animate-breathe hover:drop-shadow-[0_0_15px_rgba(212,175,55,0.6)]"
+                className={`h-14 md:h-16 lg:h-20 w-auto transition-all duration-500 hover:scale-110 animate-breathe hover:drop-shadow-[0_0_15px_rgba(212,175,55,0.6)] ${
+                  showHint ? 'scale-95 opacity-70' : ''
+                }`}
               />
-            </a>
+            </button>
 
             {/* Typing Message - Center - Responsive */}
             <div className="absolute left-1/2 -translate-x-1/2 max-w-[45%] sm:max-w-[50%] md:max-w-none">
