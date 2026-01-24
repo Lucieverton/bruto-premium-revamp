@@ -8,7 +8,9 @@ import {
   Clock,
   AlertCircle,
   Sparkles,
-  MessageCircle
+  MessageCircle,
+  Target,
+  Users
 } from 'lucide-react';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { Button } from '@/components/ui/button';
@@ -26,9 +28,11 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useTodayQueue, useServices } from '@/hooks/useQueue';
+import { useTodayQueue, useServices, useBarbers } from '@/hooks/useQueue';
 import { useBarberStartService, useBarberCompleteService, useUpdateBarberStatus } from '@/hooks/useBarberQueue';
-import { useQueueRealtime, useBarbersRealtime } from '@/hooks/useQueueRealtime';
+import { useQueueRealtime, useBarbersRealtime, useQueueTransfersRealtime } from '@/hooks/useQueueRealtime';
+import { RequestQueueEntryForm } from '@/components/admin/RequestQueueEntryForm';
+import { TransferClientDialog } from '@/components/admin/TransferClientDialog';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -42,6 +46,7 @@ const Atendimento = () => {
   // Enable realtime updates
   useQueueRealtime();
   useBarbersRealtime();
+  useQueueTransfersRealtime();
 
   // Fetch barber profile
   const { data: barber, isLoading: barberLoading } = useQuery({
@@ -64,14 +69,19 @@ const Atendimento = () => {
   // Fetch today's queue
   const { data: queue, isLoading: queueLoading } = useTodayQueue();
   const { data: services } = useServices();
+  const { data: allBarbers } = useBarbers();
 
   // Mutations
   const startService = useBarberStartService();
   const completeService = useBarberCompleteService();
   const updateStatus = useUpdateBarberStatus();
 
-  // Filter queue items
-  const waitingQueue = queue?.filter(q => q.status === 'waiting') || [];
+  // Filter queue items - PHASE 3: Only show clients assigned to this barber OR with no barber assigned
+  const waitingQueue = queue?.filter(q => 
+    q.status === 'waiting' && 
+    (q.barber_id === barber?.id || q.barber_id === null)
+  ) || [];
+  
   const calledQueue = queue?.filter(q => q.status === 'called') || [];
   const myInProgress = queue?.filter(q => 
     q.status === 'in_progress' && q.barber_id === barber?.id
@@ -180,7 +190,10 @@ const Atendimento = () => {
           </div>
         </div>
 
-        {/* Current Service */}
+        {/* Request Queue Entry Form for Barbers */}
+        {barber && (
+          <RequestQueueEntryForm barberId={barber.id} />
+        )}
         <AnimatePresence>
           {myInProgress.length > 0 && (
             <motion.div
@@ -322,7 +335,7 @@ const Atendimento = () => {
           <CardContent>
             {waitingQueue.length === 0 ? (
               <p className="text-center text-muted-foreground py-8">
-                Nenhum cliente na fila de espera
+                Nenhum cliente na fila de espera para você
               </p>
             ) : (
               <div className="space-y-2">
@@ -331,46 +344,77 @@ const Atendimento = () => {
                   const created = new Date(item.created_at);
                   const now = new Date();
                   const diffMins = Math.floor((now.getTime() - created.getTime()) / 1000 / 60);
+                  const isDirectedToMe = item.barber_id === barber?.id;
+                  const assignedBarber = item.barber_id ? allBarbers?.find(b => b.id === item.barber_id) : null;
                   
                   return (
                     <div 
                       key={item.id}
                       className={cn(
-                        'bg-card border border-border rounded-lg p-3 flex items-center justify-between gap-3',
-                        index === 0 && 'border-yellow-500/50 bg-yellow-500/5'
+                        'bg-card border border-border rounded-lg p-3',
+                        index === 0 && 'border-yellow-500/50 bg-yellow-500/5',
+                        isDirectedToMe && 'border-blue-500/50 bg-blue-500/5'
                       )}
                     >
-                      <div className="flex items-center gap-4">
-                        <div className="text-center min-w-[50px]">
-                          <div className="text-lg font-bold text-primary">{item.ticket_number}</div>
-                          <div className="text-xs text-muted-foreground">{diffMins} min</div>
-                        </div>
-                        
-                        <div>
-                          <div className="font-medium">{item.customer_name}</div>
-                          {service && (
-                            <div className="text-xs text-muted-foreground">{service.name}</div>
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div className="flex items-center gap-4">
+                          <div className="text-center min-w-[50px]">
+                            <div className="text-lg font-bold text-primary">{item.ticket_number}</div>
+                            <div className="text-xs text-muted-foreground">{diffMins} min</div>
+                          </div>
+                          
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium">{item.customer_name}</span>
+                              
+                              {/* Visual indicator for client type */}
+                              {isDirectedToMe ? (
+                                <span className="flex items-center gap-1 text-xs bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded">
+                                  <Target size={10} />
+                                  Para você
+                                </span>
+                              ) : (
+                                <span className="flex items-center gap-1 text-xs bg-muted/50 text-muted-foreground px-2 py-0.5 rounded">
+                                  <Users size={10} />
+                                  Geral
+                                </span>
+                              )}
+                            </div>
+                            
+                            {service && (
+                              <div className="text-xs text-muted-foreground">{service.name}</div>
+                            )}
+                          </div>
+                          
+                          {item.priority === 'preferencial' && (
+                            <span className="text-xs bg-purple-500/20 text-purple-400 px-2 py-0.5 rounded">
+                              ⭐
+                            </span>
                           )}
                         </div>
                         
-                        {item.priority === 'preferencial' && (
-                          <span className="text-xs bg-purple-500/20 text-purple-400 px-2 py-0.5 rounded">
-                            ⭐
-                          </span>
-                        )}
+                        <div className="flex items-center gap-2">
+                          {/* Transfer Button */}
+                          <TransferClientDialog
+                            queueItemId={item.id}
+                            currentBarberId={item.barber_id}
+                            customerName={item.customer_name}
+                            ticketNumber={item.ticket_number}
+                          />
+                          
+                          {index === 0 && myInProgress.length === 0 && (
+                            <Button
+                              size="sm"
+                              onClick={() => handleStartService(item.id)}
+                              disabled={startService.isPending}
+                              className="bg-green-600 hover:bg-green-700"
+                            >
+                              <Phone size={14} className="mr-1" />
+                              Chamar e Iniciar
+                            </Button>
+                          )}
+                        </div>
                       </div>
-                      
-                      {index === 0 && myInProgress.length === 0 && (
-                        <Button
-                          size="sm"
-                          onClick={() => handleStartService(item.id)}
-                          disabled={startService.isPending}
-                          className="bg-green-600 hover:bg-green-700"
-                        >
-                          <Phone size={14} className="mr-1" />
-                          Chamar e Iniciar
-                        </Button>
-                      )}
                     </div>
                   );
                 })}

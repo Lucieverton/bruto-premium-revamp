@@ -3,13 +3,18 @@ import { QueueMetricsCards } from '@/components/admin/QueueMetricsCards';
 import { AddWalkInForm } from '@/components/admin/AddWalkInForm';
 import { QueueKanban } from '@/components/admin/QueueKanban';
 import { ActiveServicesAdmin } from '@/components/admin/ActiveServicesAdmin';
-import { useQueueRealtime, useQueueSettingsRealtime, useBarbersRealtime } from '@/hooks/useQueueRealtime';
+import { QueueRequestsPanel } from '@/components/admin/QueueRequestsPanel';
+import { useQueueRealtime, useQueueSettingsRealtime, useBarbersRealtime, useQueueRequestsRealtime } from '@/hooks/useQueueRealtime';
+import { useAuth } from '@/contexts/AuthContext';
 
 const AdminDashboard = () => {
+  const { isAdmin } = useAuth();
+  
   // Enable realtime updates
   useQueueRealtime();
   useQueueSettingsRealtime();
   useBarbersRealtime();
+  useQueueRequestsRealtime();
 
   return (
     <AdminLayout>
@@ -17,8 +22,11 @@ const AdminDashboard = () => {
         {/* Header - Stack on mobile */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
           <h1 className="font-display text-xl sm:text-2xl uppercase">Gestão da Fila</h1>
-          <AddWalkInForm />
+          {isAdmin && <AddWalkInForm />}
         </div>
+        
+        {/* Queue Requests Panel - Admin Only */}
+        {isAdmin && <QueueRequestsPanel />}
         
         <QueueMetricsCards />
         

@@ -210,6 +210,73 @@ export type Database = {
           },
         ]
       }
+      queue_requests: {
+        Row: {
+          admin_notes: string | null
+          barber_id: string | null
+          created_at: string
+          customer_name: string
+          customer_phone: string
+          id: string
+          priority: string
+          processed_at: string | null
+          processed_by: string | null
+          requested_by: string
+          service_id: string | null
+          status: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          barber_id?: string | null
+          created_at?: string
+          customer_name: string
+          customer_phone: string
+          id?: string
+          priority?: string
+          processed_at?: string | null
+          processed_by?: string | null
+          requested_by: string
+          service_id?: string | null
+          status?: string
+        }
+        Update: {
+          admin_notes?: string | null
+          barber_id?: string | null
+          created_at?: string
+          customer_name?: string
+          customer_phone?: string
+          id?: string
+          priority?: string
+          processed_at?: string | null
+          processed_by?: string | null
+          requested_by?: string
+          service_id?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "queue_requests_barber_id_fkey"
+            columns: ["barber_id"]
+            isOneToOne: false
+            referencedRelation: "barbers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "queue_requests_requested_by_fkey"
+            columns: ["requested_by"]
+            isOneToOne: false
+            referencedRelation: "barbers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "queue_requests_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       queue_settings: {
         Row: {
           closing_time: string
@@ -236,6 +303,58 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      queue_transfers: {
+        Row: {
+          created_at: string
+          from_barber_id: string | null
+          id: string
+          queue_item_id: string
+          reason: string | null
+          status: string
+          to_barber_id: string
+        }
+        Insert: {
+          created_at?: string
+          from_barber_id?: string | null
+          id?: string
+          queue_item_id: string
+          reason?: string | null
+          status?: string
+          to_barber_id: string
+        }
+        Update: {
+          created_at?: string
+          from_barber_id?: string | null
+          id?: string
+          queue_item_id?: string
+          reason?: string | null
+          status?: string
+          to_barber_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "queue_transfers_from_barber_id_fkey"
+            columns: ["from_barber_id"]
+            isOneToOne: false
+            referencedRelation: "barbers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "queue_transfers_queue_item_id_fkey"
+            columns: ["queue_item_id"]
+            isOneToOne: false
+            referencedRelation: "queue_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "queue_transfers_to_barber_id_fkey"
+            columns: ["to_barber_id"]
+            isOneToOne: false
+            referencedRelation: "barbers"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       services: {
         Row: {
@@ -305,6 +424,10 @@ export type Database = {
           id: string
           ticket_number: string
         }[]
+      }
+      approve_queue_request: {
+        Args: { p_notes?: string; p_request_id: string }
+        Returns: string
       }
       barber_complete_service: {
         Args: {
@@ -408,6 +531,18 @@ export type Database = {
           id: string
           ticket_number: string
         }[]
+      }
+      reject_queue_request: {
+        Args: { p_notes?: string; p_request_id: string }
+        Returns: boolean
+      }
+      transfer_queue_client: {
+        Args: {
+          p_queue_item_id: string
+          p_reason?: string
+          p_to_barber_id: string
+        }
+        Returns: boolean
       }
       update_barber_status: {
         Args: { p_barber_id: string; p_is_available: boolean; p_status: string }

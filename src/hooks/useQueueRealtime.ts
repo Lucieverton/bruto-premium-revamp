@@ -110,3 +110,58 @@ export const useBarbersRealtime = () => {
     };
   }, [queryClient]);
 };
+
+// Realtime updates for queue requests table
+export const useQueueRequestsRealtime = () => {
+  const queryClient = useQueryClient();
+  
+  useEffect(() => {
+    const channel = supabase
+      .channel('queue-requests-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'queue_requests',
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['pending-queue-requests'] });
+          queryClient.invalidateQueries({ queryKey: ['my-queue-requests'] });
+        }
+      )
+      .subscribe();
+    
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
+};
+
+// Realtime updates for queue transfers table
+export const useQueueTransfersRealtime = () => {
+  const queryClient = useQueryClient();
+  
+  useEffect(() => {
+    const channel = supabase
+      .channel('queue-transfers-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'queue_transfers',
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['queue-transfers'] });
+          queryClient.invalidateQueries({ queryKey: ['queue-items'] });
+          queryClient.invalidateQueries({ queryKey: ['today-queue'] });
+        }
+      )
+      .subscribe();
+    
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
+};
