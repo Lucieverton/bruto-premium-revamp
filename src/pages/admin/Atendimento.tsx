@@ -407,8 +407,8 @@ const Atendimento = () => {
                 <SelectContent>
                   <SelectItem value="dinheiro">Dinheiro</SelectItem>
                   <SelectItem value="pix">PIX</SelectItem>
-                  <SelectItem value="debito">Débito</SelectItem>
-                  <SelectItem value="credito">Crédito</SelectItem>
+                  <SelectItem value="cartao">Cartão (Débito/Crédito)</SelectItem>
+                  <SelectItem value="pendente">Pendente</SelectItem>
                 </SelectContent>
               </Select>
             </div>

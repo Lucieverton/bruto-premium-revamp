@@ -260,6 +260,19 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      add_walkin_client: {
+        Args: {
+          p_barber_id?: string
+          p_customer_name: string
+          p_customer_phone: string
+          p_priority?: string
+          p_service_id?: string
+        }
+        Returns: {
+          id: string
+          ticket_number: string
+        }[]
+      }
       barber_complete_service: {
         Args: {
           p_payment_method?: string
@@ -349,6 +362,19 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      join_queue: {
+        Args: {
+          p_barber_id?: string
+          p_customer_name: string
+          p_customer_phone: string
+          p_priority?: string
+          p_service_id?: string
+        }
+        Returns: {
+          id: string
+          ticket_number: string
+        }[]
       }
       update_barber_status: {
         Args: { p_barber_id: string; p_is_available: boolean; p_status: string }
