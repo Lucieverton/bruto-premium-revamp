@@ -75,32 +75,38 @@ export type Database = {
       barbers: {
         Row: {
           avatar_url: string | null
+          commission_percentage: number
           created_at: string
           display_name: string
           id: string
           is_active: boolean
           is_available: boolean
           specialty: string | null
+          status: string
           user_id: string | null
         }
         Insert: {
           avatar_url?: string | null
+          commission_percentage?: number
           created_at?: string
           display_name: string
           id?: string
           is_active?: boolean
           is_available?: boolean
           specialty?: string | null
+          status?: string
           user_id?: string | null
         }
         Update: {
           avatar_url?: string | null
+          commission_percentage?: number
           created_at?: string
           display_name?: string
           id?: string
           is_active?: boolean
           is_available?: boolean
           specialty?: string | null
+          status?: string
           user_id?: string | null
         }
         Relationships: []

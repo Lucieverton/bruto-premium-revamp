@@ -4,6 +4,8 @@ import { QueueStatus } from '@/components/queue/QueueStatus';
 import { QueueJoinForm } from '@/components/queue/QueueJoinForm';
 import { MyTicketCard } from '@/components/queue/MyTicketCard';
 import { PublicQueueList } from '@/components/queue/PublicQueueList';
+import { BarberStatusCards } from '@/components/queue/BarberStatusCards';
+import { ActiveServicesDisplay } from '@/components/queue/ActiveServicesDisplay';
 import { useQueueRealtime, useQueueSettingsRealtime } from '@/hooks/useQueueRealtime';
 import { getMyTicket, clearMyTicket } from '@/lib/antiAbuse';
 import { requestNotificationPermission } from '@/lib/notifications';
@@ -49,6 +51,12 @@ const Fila = () => {
               Entre na fila de casa e acompanhe em tempo real
             </p>
           </div>
+          
+          {/* Barbers Status */}
+          <BarberStatusCards />
+          
+          {/* Active Services with 3D Chair */}
+          <ActiveServicesDisplay />
           
           <QueueStatus />
           

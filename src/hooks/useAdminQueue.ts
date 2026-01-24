@@ -2,30 +2,49 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
-// Call next client
+// Call next client - improved logic with validation
 export const useCallClient = () => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   
   return useMutation({
     mutationFn: async (ticketId: string) => {
-      const { error } = await supabase
+      // First verify the ticket exists and is in waiting status
+      const { data: ticket, error: fetchError } = await supabase
+        .from('queue_items')
+        .select('id, status, ticket_number, customer_name')
+        .eq('id', ticketId)
+        .single();
+      
+      if (fetchError) {
+        throw new Error('Ticket não encontrado');
+      }
+      
+      if (ticket.status !== 'waiting') {
+        throw new Error(`Este cliente já foi ${ticket.status === 'called' ? 'chamado' : 'atendido'}`);
+      }
+      
+      // Update the ticket status
+      const { error: updateError } = await supabase
         .from('queue_items')
         .update({ 
           status: 'called',
           is_called: true,
           called_at: new Date().toISOString(),
         })
-        .eq('id', ticketId);
+        .eq('id', ticketId)
+        .eq('status', 'waiting'); // Double check status to prevent race conditions
       
-      if (error) throw error;
+      if (updateError) throw updateError;
+      
+      return ticket;
     },
-    onSuccess: () => {
+    onSuccess: (ticket) => {
       queryClient.invalidateQueries({ queryKey: ['queue-items'] });
       queryClient.invalidateQueries({ queryKey: ['today-queue'] });
       toast({
-        title: 'Cliente chamado!',
-        description: 'Aguardando comparecimento...',
+        title: `${ticket.ticket_number} chamado!`,
+        description: `Aguardando ${ticket.customer_name}...`,
       });
     },
     onError: (error: Error) => {
