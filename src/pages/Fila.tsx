@@ -8,24 +8,33 @@ import { PublicQueueList } from '@/components/queue/PublicQueueList';
 import { BarberStatusCards } from '@/components/queue/BarberStatusCards';
 import { ActiveServicesDisplay } from '@/components/queue/ActiveServicesDisplay';
 import { useQueueSettingsRealtime } from '@/hooks/useQueueRealtime';
-import { getMyTicket, clearMyTicket } from '@/lib/antiAbuse';
+import { getMyTicket, clearMyTicket, validateStoredTicket } from '@/lib/antiAbuse';
 import { requestNotificationPermission } from '@/lib/notifications';
-import { Users } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { Users, Loader2 } from 'lucide-react';
 
 const Fila = () => {
   const [myTicketId, setMyTicketId] = useState<string | null>(null);
+  const [isValidating, setIsValidating] = useState(true);
   
   // Enable realtime updates for settings only (barbers uses polling for reliability)
   useQueueSettingsRealtime();
   
-  // Check for existing ticket on mount
+  // Check and validate existing ticket on mount
   useEffect(() => {
-    const savedTicket = getMyTicket();
-    if (savedTicket) {
-      setMyTicketId(savedTicket);
-      // Request notification permission
-      requestNotificationPermission();
-    }
+    const validateTicket = async () => {
+      setIsValidating(true);
+      const validTicketId = await validateStoredTicket(supabase);
+      setMyTicketId(validTicketId);
+      
+      if (validTicketId) {
+        // Request notification permission
+        requestNotificationPermission();
+      }
+      setIsValidating(false);
+    };
+    
+    validateTicket();
   }, []);
   
   const handleJoinSuccess = () => {
@@ -94,7 +103,12 @@ const Fila = () => {
           >
             {/* Left Column - My Ticket or Join */}
             <div>
-              {myTicketId ? (
+              {isValidating ? (
+                <div className="flex flex-col items-center justify-center p-8 sm:p-10 bg-gradient-to-br from-card to-card/50 border border-border/50 rounded-2xl backdrop-blur-sm shadow-lg">
+                  <Loader2 size={32} className="text-primary animate-spin mb-4" />
+                  <p className="text-muted-foreground text-sm">Verificando...</p>
+                </div>
+              ) : myTicketId ? (
                 <MyTicketCard ticketId={myTicketId} onLeave={handleLeave} />
               ) : (
                 <div className="flex flex-col items-center justify-center p-8 sm:p-10 bg-gradient-to-br from-card to-card/50 border border-border/50 rounded-2xl backdrop-blur-sm shadow-lg">
