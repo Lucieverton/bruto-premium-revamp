@@ -86,15 +86,22 @@ export const Navbar = () => {
   }, []);
 
   const navLinks = [
-    { href: '#sobre', label: 'Sobre nós' },
-    { href: '#portfolio', label: 'Nosso Trabalho' },
-    { href: '#precos', label: 'Tabela de Preços' },
-    { href: '#contato', label: 'Contato' },
+    { href: '#sobre', label: 'Sobre nós', isRoute: false },
+    { href: '#portfolio', label: 'Nosso Trabalho', isRoute: false },
+    { href: '#precos', label: 'Tabela de Preços', isRoute: false },
+    { href: '#contato', label: 'Contato', isRoute: false },
+    { href: '#/fila', label: 'Fila Virtual', isRoute: true },
   ];
 
-  const handleLinkClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+  const handleLinkClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string, isRoute: boolean) => {
     e.preventDefault();
     setIsOpen(false);
+    
+    if (isRoute) {
+      // For HashRouter routes, navigate directly
+      window.location.href = href;
+      return;
+    }
     
     const targetId = href.replace('#', '');
     const targetElement = document.getElementById(targetId);
@@ -180,7 +187,7 @@ export const Navbar = () => {
                     >
                       <a
                         href={link.href}
-                        onClick={(e) => handleLinkClick(e, link.href)}
+                        onClick={(e) => handleLinkClick(e, link.href, link.isRoute)}
                         className="block text-foreground hover:text-primary transition-all duration-200 text-base font-medium py-3 px-4 hover:bg-primary/10 border-b border-border/20 last:border-b-0"
                       >
                         {link.label}

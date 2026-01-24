@@ -31,9 +31,13 @@ export const QueueStatus = () => {
         </div>
         
         {settings && (
-          <div className="flex items-center gap-2 text-muted-foreground text-sm">
-            <Clock size={16} />
-            <span>Horário: {settings.opening_time} - {settings.closing_time}</span>
+          <div className="flex flex-col sm:flex-row items-center gap-2 text-muted-foreground text-sm">
+            <div className="flex items-center gap-2">
+              <Clock size={16} />
+              <span>Horário: {settings.opening_time} - {settings.closing_time}</span>
+            </div>
+            <span className="hidden sm:inline">•</span>
+            <span className="text-xs">Agora: {currentTime}</span>
           </div>
         )}
       </div>

@@ -87,8 +87,11 @@ export const QueueJoinForm = ({ onSuccess }: QueueJoinFormProps) => {
     return (
       <div className="bg-card border border-border rounded-lg p-6 text-center">
         <h3 className="text-xl font-bold text-red-500 mb-2">Fila Fechada</h3>
-        <p className="text-muted-foreground">
-          A fila abre às {settings?.opening_time || '09:00'}. Volte mais tarde!
+        <p className="text-muted-foreground mb-4">
+          A fila abre às {settings?.opening_time || '09:00'} e fecha às {settings?.closing_time || '19:00'}.
+        </p>
+        <p className="text-sm text-muted-foreground">
+          Horário atual: {currentTime}
         </p>
       </div>
     );
@@ -158,11 +161,12 @@ export const QueueJoinForm = ({ onSuccess }: QueueJoinFormProps) => {
         
         <div className="space-y-2">
           <Label>Barbeiro preferido</Label>
-          <Select onValueChange={(value) => setValue('barber_id', value)}>
+          <Select onValueChange={(value) => setValue('barber_id', value === 'any' ? undefined : value)}>
             <SelectTrigger className="bg-background">
               <SelectValue placeholder="Qualquer barbeiro disponível" />
             </SelectTrigger>
             <SelectContent>
+              <SelectItem value="any">Qualquer barbeiro disponível</SelectItem>
               {barbers?.filter(b => b.is_available).map((barber) => (
                 <SelectItem key={barber.id} value={barber.id}>
                   {barber.display_name}
