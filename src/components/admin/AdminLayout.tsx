@@ -32,7 +32,7 @@ const navItems = [
 ];
 
 export const AdminLayout = ({ children }: AdminLayoutProps) => {
-  const { user, isAdmin, loading, signOut } = useAuth();
+  const { user, isAdmin, loading, isAdminLoading, signOut } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -46,12 +46,14 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
   }, [user, loading, navigate]);
 
   useEffect(() => {
-    if (!loading && user && !isAdmin) {
+    // Only redirect if we're done loading AND we know the user is not admin
+    if (!loading && !isAdminLoading && user && !isAdmin) {
       navigate('/');
     }
-  }, [user, isAdmin, loading, navigate]);
+  }, [user, isAdmin, loading, isAdminLoading, navigate]);
 
-  if (loading) {
+  // Show loading while checking auth or admin status
+  if (loading || isAdminLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" />

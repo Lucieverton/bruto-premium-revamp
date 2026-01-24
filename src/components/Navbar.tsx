@@ -14,11 +14,13 @@ export const Navbar = () => {
   const lastClickTime = useRef(Date.now());
   const navigate = useNavigate();
 
-  // Secret admin access - 5 clicks on logo
+  // Secret admin access - 5 rapid clicks on logo
   const handleLogoClick = (e: React.MouseEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     const now = Date.now();
     
+    // Reset counter if more than 3 seconds passed
     if (now - lastClickTime.current > 3000) {
       setClickCount(1);
     } else {
@@ -27,7 +29,7 @@ export const Navbar = () => {
     lastClickTime.current = now;
     
     // Visual hint at 3rd click
-    if (clickCount >= 2) {
+    if (clickCount >= 2 && clickCount < 4) {
       setShowHint(true);
       setTimeout(() => setShowHint(false), 200);
     }
@@ -36,7 +38,18 @@ export const Navbar = () => {
     if (clickCount >= 4) {
       navigate('/admin/login');
       setClickCount(0);
+      return;
     }
+  };
+
+  // Single click to go home (delayed to allow for rapid clicks)
+  const handleLogoSingleClick = () => {
+    // Only navigate home if not in the middle of rapid clicks
+    setTimeout(() => {
+      if (clickCount === 0 || Date.now() - lastClickTime.current > 500) {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }, 300);
   };
 
   useEffect(() => {
@@ -104,7 +117,10 @@ export const Navbar = () => {
           <div className="flex items-center justify-between h-20 md:h-24 lg:h-28">
             {/* Logo with secret admin access */}
             <button 
-              onClick={handleLogoClick}
+              onClick={(e) => {
+                handleLogoClick(e);
+                handleLogoSingleClick();
+              }}
               className="flex-shrink-0 group bg-transparent border-none cursor-pointer"
               aria-label="Logo Barbearia Brutos"
             >
