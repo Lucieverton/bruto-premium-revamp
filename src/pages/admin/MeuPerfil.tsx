@@ -1,15 +1,20 @@
-import { Loader2, UserCheck, UserX, Sparkles } from 'lucide-react';
+import { Loader2, UserCheck, UserX, Sparkles, Settings } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { BarberEarningsCard } from '@/components/admin/BarberEarningsCard';
+import { AvatarUpload } from '@/components/profile/AvatarUpload';
+import { ChangePasswordForm } from '@/components/profile/ChangePasswordForm';
+import { ChangeEmailForm } from '@/components/profile/ChangeEmailForm';
 
 const MeuPerfil = () => {
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -61,6 +66,12 @@ const MeuPerfil = () => {
     },
   });
 
+  const handleAvatarUpdate = (newUrl: string) => {
+    queryClient.invalidateQueries({ queryKey: ['my-barber-profile'] });
+    queryClient.invalidateQueries({ queryKey: ['barbers'] });
+    queryClient.invalidateQueries({ queryKey: ['public-barbers'] });
+  };
+
   if (isLoading) {
     return (
       <AdminLayout>
@@ -91,14 +102,25 @@ const MeuPerfil = () => {
     <AdminLayout>
       <div className="p-4 sm:p-6 space-y-4 sm:space-y-6 max-w-4xl">
         {/* Header */}
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-primary/10 rounded-xl">
-            <Sparkles className="text-primary" size={24} />
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-primary/10 rounded-xl">
+              <Sparkles className="text-primary" size={24} />
+            </div>
+            <div>
+              <h1 className="font-display text-xl sm:text-2xl uppercase">Meu Perfil</h1>
+              <p className="text-sm text-muted-foreground">Gerencie sua disponibilidade e acompanhe seus ganhos</p>
+            </div>
           </div>
-          <div>
-            <h1 className="font-display text-xl sm:text-2xl uppercase">Meu Perfil</h1>
-            <p className="text-sm text-muted-foreground">Gerencie sua disponibilidade e acompanhe seus ganhos</p>
-          </div>
+          
+          {isAdmin && (
+            <Button variant="outline" size="sm" asChild>
+              <Link to="/admin/configuracoes">
+                <Settings size={16} className="mr-2" />
+                Configurações
+              </Link>
+            </Button>
+          )}
         </div>
 
         {/* Profile Card */}
@@ -106,10 +128,14 @@ const MeuPerfil = () => {
           <div className="absolute top-0 right-0 w-40 h-40 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
           
           <CardHeader className="relative z-10">
-            <CardTitle className="text-xl flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-lg">
-                {barber.display_name.charAt(0).toUpperCase()}
-              </div>
+            <CardTitle className="text-xl flex items-center gap-4">
+              <AvatarUpload
+                barberId={barber.id}
+                avatarUrl={barber.avatar_url}
+                displayName={barber.display_name}
+                onUploadSuccess={handleAvatarUpdate}
+                size="lg"
+              />
               <div>
                 {barber.display_name}
                 {barber.specialty && (
@@ -123,13 +149,13 @@ const MeuPerfil = () => {
             {/* Availability Toggle */}
             <div className={`flex items-center justify-between p-4 rounded-xl border transition-all ${
               barber.is_available 
-                ? 'bg-green-500/10 border-green-500/30' 
+                ? 'bg-success/10 border-success/30' 
                 : 'bg-muted/50 border-border'
             }`}>
               <div className="flex items-center gap-3">
                 {barber.is_available ? (
-                  <div className="p-2 bg-green-500/20 rounded-lg">
-                    <UserCheck size={20} className="text-green-500" />
+                  <div className="p-2 bg-success/20 rounded-lg">
+                    <UserCheck size={20} className="text-success" />
                   </div>
                 ) : (
                   <div className="p-2 bg-muted rounded-lg">
@@ -173,6 +199,19 @@ const MeuPerfil = () => {
           barberName={barber.display_name}
           commissionPercentage={barber.commission_percentage}
         />
+
+        {/* Account Settings Section */}
+        <div className="space-y-4">
+          <h2 className="font-display text-lg uppercase flex items-center gap-2">
+            <Settings size={18} className="text-primary" />
+            Configurações da Conta
+          </h2>
+          
+          <div className="grid gap-4 md:grid-cols-2">
+            <ChangeEmailForm currentEmail={user?.email || ''} />
+            <ChangePasswordForm />
+          </div>
+        </div>
       </div>
     </AdminLayout>
   );
