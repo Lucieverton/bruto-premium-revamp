@@ -260,6 +260,18 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      barber_complete_service: {
+        Args: {
+          p_payment_method?: string
+          p_price_charged: number
+          p_ticket_id: string
+        }
+        Returns: boolean
+      }
+      barber_start_service: {
+        Args: { p_barber_id: string; p_ticket_id: string }
+        Returns: boolean
+      }
       get_active_services_public: {
         Args: never
         Returns: {
@@ -271,6 +283,20 @@ export type Database = {
           service_id: string
           service_status: string
           started_at: string
+          ticket_number: string
+        }[]
+      }
+      get_barber_queue: {
+        Args: { p_barber_id: string }
+        Returns: {
+          called_at: string
+          created_at: string
+          customer_name: string
+          customer_phone: string
+          id: string
+          priority: string
+          service_id: string
+          status: string
           ticket_number: string
         }[]
       }
@@ -322,6 +348,10 @@ export type Database = {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
+        Returns: boolean
+      }
+      update_barber_status: {
+        Args: { p_barber_id: string; p_is_available: boolean; p_status: string }
         Returns: boolean
       }
     }
