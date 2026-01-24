@@ -10,11 +10,7 @@ export const Footer = () => {
     { href: '#servicos', label: 'Serviços' },
     { href: '#precos', label: 'Tabela de Preços' },
     { href: '#contato', label: 'Contato' },
-    { 
-      href: 'https://filaparacorteoficial.lovable.app/fila/barbearia-brutos-1759232212817', 
-      label: 'Fila Virtual',
-      external: true
-    },
+    { href: '#/fila', label: 'Fila Virtual' },
   ];
 
   return (
@@ -68,7 +64,6 @@ export const Footer = () => {
               <a
                 key={link.href}
                 href={link.href}
-                {...(link.external && { target: '_blank', rel: 'noopener noreferrer' })}
                 className="text-muted-foreground hover:text-foreground transition-colors duration-300 text-sm md:text-base relative group"
               >
                 {link.label}
