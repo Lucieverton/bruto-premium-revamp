@@ -15,47 +15,73 @@ const AdminLogin = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
-  const { signIn, user, isAdmin, loading: authLoading, isAdminLoading } = useAuth();
+  const { signIn, user, userRole, loading: authLoading, isAdminLoading } = useAuth();
 
-  // Redirect if already logged in as admin
+  // Redirect if already logged in as admin or barber
   useEffect(() => {
-    if (!authLoading && !isAdminLoading && user && isAdmin) {
+    if (!authLoading && !isAdminLoading && user && (userRole === 'admin' || userRole === 'barber')) {
       navigate('/admin');
     }
-  }, [user, isAdmin, authLoading, isAdminLoading, navigate]);
+  }, [user, userRole, authLoading, isAdminLoading, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setLoading(true);
 
-    const { data, error: signInError } = await signIn(email, password);
+    try {
+      const { data, error: signInError } = await signIn(email, password);
 
-    if (signInError) {
-      setError('Email ou senha incorretos');
-      setLoading(false);
-      return;
-    }
-
-    // Verify if user is admin before navigating
-    if (data?.user) {
-      const { data: roleData } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', data.user.id)
-        .eq('role', 'admin')
-        .maybeSingle();
-
-      if (!roleData) {
-        setError('Acesso negado. Você não tem permissão de administrador.');
-        await supabase.auth.signOut();
+      if (signInError) {
+        setError('Email ou senha incorretos');
         setLoading(false);
         return;
       }
 
-      navigate('/admin');
-    } else {
-      setError('Erro ao autenticar. Tente novamente.');
+      // Verify if user has admin or barber role before navigating
+      if (data?.user) {
+        // Check admin role first
+        const { data: adminRoleData } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', data.user.id)
+          .eq('role', 'admin')
+          .maybeSingle();
+
+        if (adminRoleData) {
+          // Small delay to ensure context updates
+          await new Promise(resolve => setTimeout(resolve, 150));
+          navigate('/admin');
+          return;
+        }
+
+        // Check barber role
+        const { data: barberRoleData } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', data.user.id)
+          .eq('role', 'barber')
+          .maybeSingle();
+
+        if (barberRoleData) {
+          // Small delay to ensure context updates
+          await new Promise(resolve => setTimeout(resolve, 150));
+          navigate('/admin');
+          return;
+        }
+
+        // No valid role found
+        setError('Acesso negado. Você não tem permissão de funcionário.');
+        await supabase.auth.signOut();
+        setLoading(false);
+        return;
+      } else {
+        setError('Erro ao autenticar. Tente novamente.');
+        setLoading(false);
+      }
+    } catch (err) {
+      console.error('Login error:', err);
+      setError('Erro inesperado. Tente novamente.');
       setLoading(false);
     }
   };
