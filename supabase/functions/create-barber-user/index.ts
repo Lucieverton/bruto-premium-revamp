@@ -1,9 +1,23 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+// Allowed origins for CORS - restrict to production domain and preview URLs
+const ALLOWED_ORIGINS = [
+  'https://barbeariabrutos.lovable.app',
+  'https://id-preview--db9a0e4b-44e5-4af7-b1f0-8924af68e6d6.lovable.app',
+];
+
+function getCorsHeaders(origin: string | null): Record<string, string> {
+  // Check if origin is allowed
+  const allowedOrigin = origin && ALLOWED_ORIGINS.some(allowed => 
+    origin === allowed || origin.endsWith('.lovable.app')
+  ) ? origin : ALLOWED_ORIGINS[0];
+  
+  return {
+    'Access-Control-Allow-Origin': allowedOrigin,
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  };
+}
 
 interface CreateBarberRequest {
   email: string;
@@ -12,7 +26,14 @@ interface CreateBarberRequest {
   specialty?: string;
 }
 
+// Rate limiting: max 10 barber creations per admin per hour
+const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1 hour
+const RATE_LIMIT_MAX = 10;
+
 Deno.serve(async (req) => {
+  const origin = req.headers.get('Origin');
+  const corsHeaders = getCorsHeaders(origin);
+
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -62,6 +83,27 @@ Deno.serve(async (req) => {
       return new Response(
         JSON.stringify({ error: 'Apenas administradores podem criar funcionários' }),
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // RATE LIMITING: Check recent barber creations by this admin
+    const oneHourAgo = new Date(Date.now() - RATE_LIMIT_WINDOW_MS).toISOString();
+    const { data: recentCreations, error: rateLimitError } = await adminClient
+      .from('audit_logs')
+      .select('id')
+      .eq('actor_id', callerId)
+      .eq('action', 'create_barber_user')
+      .gte('created_at', oneHourAgo);
+
+    if (rateLimitError) {
+      console.error('[create-barber-user] Rate limit check failed:', rateLimitError);
+    }
+
+    if (recentCreations && recentCreations.length >= RATE_LIMIT_MAX) {
+      console.log(`[create-barber-user] Rate limit exceeded for admin ${callerId}`);
+      return new Response(
+        JSON.stringify({ error: 'Limite de criações excedido. Tente novamente mais tarde.' }),
+        { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
@@ -161,6 +203,26 @@ Deno.serve(async (req) => {
       );
     }
 
+    // AUDIT LOGGING: Record this admin action
+    const { error: auditError } = await adminClient
+      .from('audit_logs')
+      .insert({
+        actor_id: callerId,
+        action: 'create_barber_user',
+        target_type: 'barber',
+        target_id: barberData.id,
+        details: {
+          email: email,
+          display_name: display_name,
+          user_id: newUser.user.id,
+        },
+      });
+
+    if (auditError) {
+      console.error(`[create-barber-user] Failed to create audit log:`, auditError);
+      // Don't fail the request for audit log errors, just log it
+    }
+
     console.log(`[create-barber-user] SUCCESS - Barber created: ${display_name} (${email}) by admin ${callerId}`);
 
     return new Response(
@@ -174,6 +236,8 @@ Deno.serve(async (req) => {
 
   } catch (error) {
     console.error('Unexpected error:', error);
+    const origin = req.headers.get('Origin');
+    const corsHeaders = getCorsHeaders(origin);
     return new Response(
       JSON.stringify({ error: 'Erro interno do servidor' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
