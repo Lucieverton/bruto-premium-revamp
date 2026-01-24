@@ -8,7 +8,8 @@ import {
   Settings, 
   LogOut,
   Menu,
-  X
+  X,
+  User
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
@@ -23,7 +24,8 @@ interface AdminLayoutProps {
   children: ReactNode;
 }
 
-const navItems = [
+// Full nav items for admins
+const adminNavItems = [
   { href: '/admin', icon: LayoutDashboard, label: 'Fila' },
   { href: '/admin/barbeiros', icon: Users, label: 'Barbeiros' },
   { href: '/admin/servicos', icon: Scissors, label: 'Serviços' },
@@ -31,8 +33,14 @@ const navItems = [
   { href: '/admin/configuracoes', icon: Settings, label: 'Configurações' },
 ];
 
+// Limited nav items for barbers
+const barberNavItems = [
+  { href: '/admin', icon: LayoutDashboard, label: 'Fila' },
+  { href: '/admin/meu-perfil', icon: User, label: 'Meu Perfil' },
+];
+
 export const AdminLayout = ({ children }: AdminLayoutProps) => {
-  const { user, isAdmin, loading, isAdminLoading, signOut } = useAuth();
+  const { user, userRole, isAdmin, isBarber, loading, isAdminLoading, signOut } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -46,13 +54,13 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
   }, [user, loading, navigate]);
 
   useEffect(() => {
-    // Only redirect if we're done loading AND we know the user is not admin
-    if (!loading && !isAdminLoading && user && !isAdmin) {
+    // Only redirect if we're done loading AND we know the user has no valid role
+    if (!loading && !isAdminLoading && user && !isAdmin && !isBarber) {
       navigate('/');
     }
-  }, [user, isAdmin, loading, isAdminLoading, navigate]);
+  }, [user, isAdmin, isBarber, loading, isAdminLoading, navigate]);
 
-  // Show loading while checking auth or admin status
+  // Show loading while checking auth or role status
   if (loading || isAdminLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -61,7 +69,7 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
     );
   }
 
-  if (!user || !isAdmin) {
+  if (!user || (!isAdmin && !isBarber)) {
     return null;
   }
 
@@ -71,6 +79,12 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
   };
 
   const isQueueActive = settings?.is_active ?? true;
+
+  // Select appropriate nav items based on role
+  const navItems = isAdmin ? adminNavItems : barberNavItems;
+
+  // Get role display name
+  const roleLabel = isAdmin ? 'Administrador' : 'Barbeiro';
 
   return (
     <div className="min-h-screen bg-background">
@@ -87,13 +101,15 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
           <img src={logo} alt="Brutos" className="h-8 w-auto" />
         </div>
 
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground hidden sm:block">Fila:</span>
-          <Switch
-            checked={isQueueActive}
-            onCheckedChange={(checked) => toggleQueue.mutate(checked)}
-          />
-        </div>
+        {isAdmin && (
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground hidden sm:block">Fila:</span>
+            <Switch
+              checked={isQueueActive}
+              onCheckedChange={(checked) => toggleQueue.mutate(checked)}
+            />
+          </div>
+        )}
       </header>
 
       {/* Sidebar Overlay */}
@@ -114,7 +130,7 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
             <img src={logo} alt="Brutos" className="h-10 w-auto" />
             <div>
               <div className="font-display text-lg uppercase">Brutos</div>
-              <div className="text-xs text-muted-foreground">Dashboard</div>
+              <div className="text-xs text-muted-foreground">{roleLabel}</div>
             </div>
           </div>
         </div>
@@ -142,19 +158,21 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
         </nav>
 
         <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-border">
-          <div className="flex items-center justify-between mb-4">
-            <span className="text-sm text-muted-foreground">Fila</span>
-            <div className="flex items-center gap-2">
-              <div className={cn(
-                'w-2 h-2 rounded-full',
-                isQueueActive ? 'bg-green-500' : 'bg-red-500'
-              )} />
-              <Switch
-                checked={isQueueActive}
-                onCheckedChange={(checked) => toggleQueue.mutate(checked)}
-              />
+          {isAdmin && (
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-sm text-muted-foreground">Fila</span>
+              <div className="flex items-center gap-2">
+                <div className={cn(
+                  'w-2 h-2 rounded-full',
+                  isQueueActive ? 'bg-green-500' : 'bg-red-500'
+                )} />
+                <Switch
+                  checked={isQueueActive}
+                  onCheckedChange={(checked) => toggleQueue.mutate(checked)}
+                />
+              </div>
             </div>
-          </div>
+          )}
 
           <div className="text-sm text-muted-foreground mb-2">
             {user.email}

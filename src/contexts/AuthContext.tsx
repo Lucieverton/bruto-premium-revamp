@@ -1,12 +1,14 @@
 import React, { createContext, useContext, ReactNode } from 'react';
-import { useAuth as useAuthHook } from '@/hooks/useAuth';
+import { useAuth as useAuthHook, UserRole } from '@/hooks/useAuth';
 import { User, Session } from '@supabase/supabase-js';
 
 interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
+  userRole: UserRole;
   isAdmin: boolean;
+  isBarber: boolean;
   isAdminLoading: boolean;
   signIn: (email: string, password: string) => Promise<{ error?: { message: string }; data?: any }>;
   signOut: () => Promise<void>;

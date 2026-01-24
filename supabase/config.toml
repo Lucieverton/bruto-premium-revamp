@@ -1,1 +1,4 @@
 project_id = "ezvqqvkvyrriozgegrgn"
+
+[functions.create-barber-user]
+verify_jwt = false

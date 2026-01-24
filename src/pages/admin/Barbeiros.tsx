@@ -1,14 +1,16 @@
 import { useState } from 'react';
-import { Plus, Pencil, Trash2, Loader2, UserCheck, UserX } from 'lucide-react';
+import { Plus, Pencil, Trash2, Loader2, UserCheck, UserX, Mail, Lock } from 'lucide-react';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -34,15 +36,19 @@ interface Barber {
   is_available: boolean;
   is_active: boolean;
   avatar_url: string | null;
+  user_id: string | null;
 }
 
 const AdminBarbeiros = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingBarber, setEditingBarber] = useState<Barber | null>(null);
   const [deleteBarber, setDeleteBarber] = useState<Barber | null>(null);
+  const [createMode, setCreateMode] = useState<'simple' | 'with-login'>('simple');
   const [formData, setFormData] = useState({
     display_name: '',
     specialty: '',
+    email: '',
+    password: '',
   });
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -59,7 +65,7 @@ const AdminBarbeiros = () => {
     },
   });
 
-  const createMutation = useMutation({
+  const createSimpleMutation = useMutation({
     mutationFn: async (data: { display_name: string; specialty: string }) => {
       const { error } = await supabase.from('barbers').insert({
         display_name: data.display_name,
@@ -75,6 +81,48 @@ const AdminBarbeiros = () => {
     },
     onError: (error: Error) => {
       toast({ title: 'Erro ao adicionar', description: error.message, variant: 'destructive' });
+    },
+  });
+
+  const createWithLoginMutation = useMutation({
+    mutationFn: async (data: { display_name: string; specialty: string; email: string; password: string }) => {
+      const { data: session } = await supabase.auth.getSession();
+      if (!session.session) throw new Error('Não autenticado');
+
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-barber-user`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.session.access_token}`,
+          },
+          body: JSON.stringify({
+            email: data.email,
+            password: data.password,
+            display_name: data.display_name,
+            specialty: data.specialty || null,
+          }),
+        }
+      );
+
+      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result.error || 'Erro ao criar funcionário');
+      }
+      return result;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-barbers'] });
+      setIsDialogOpen(false);
+      resetForm();
+      toast({ 
+        title: 'Funcionário criado com sucesso!',
+        description: 'O barbeiro pode fazer login com o email e senha cadastrados.'
+      });
+    },
+    onError: (error: Error) => {
+      toast({ title: 'Erro ao criar funcionário', description: error.message, variant: 'destructive' });
     },
   });
 
@@ -131,7 +179,8 @@ const AdminBarbeiros = () => {
   });
 
   const resetForm = () => {
-    setFormData({ display_name: '', specialty: '' });
+    setFormData({ display_name: '', specialty: '', email: '', password: '' });
+    setCreateMode('simple');
   };
 
   const handleEdit = (barber: Barber) => {
@@ -139,6 +188,8 @@ const AdminBarbeiros = () => {
     setFormData({
       display_name: barber.display_name,
       specialty: barber.specialty || '',
+      email: '',
+      password: '',
     });
     setIsDialogOpen(true);
   };
@@ -146,11 +197,21 @@ const AdminBarbeiros = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (editingBarber) {
-      updateMutation.mutate({ id: editingBarber.id, data: formData });
+      updateMutation.mutate({ 
+        id: editingBarber.id, 
+        data: { 
+          display_name: formData.display_name,
+          specialty: formData.specialty || null,
+        } 
+      });
+    } else if (createMode === 'with-login') {
+      createWithLoginMutation.mutate(formData);
     } else {
-      createMutation.mutate(formData);
+      createSimpleMutation.mutate(formData);
     }
   };
+
+  const isPending = createSimpleMutation.isPending || createWithLoginMutation.isPending || updateMutation.isPending;
 
   return (
     <AdminLayout>
@@ -173,41 +234,140 @@ const AdminBarbeiros = () => {
                 Novo Barbeiro
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="max-w-md">
               <DialogHeader>
                 <DialogTitle>{editingBarber ? 'Editar Barbeiro' : 'Novo Barbeiro'}</DialogTitle>
+                {!editingBarber && (
+                  <DialogDescription>
+                    Adicione um barbeiro simples ou crie um funcionário com acesso ao sistema.
+                  </DialogDescription>
+                )}
               </DialogHeader>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Nome</Label>
-                  <Input
-                    id="name"
-                    value={formData.display_name}
-                    onChange={(e) => setFormData({ ...formData, display_name: e.target.value })}
-                    placeholder="Nome do barbeiro"
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="specialty">Especialidade</Label>
-                  <Input
-                    id="specialty"
-                    value={formData.specialty}
-                    onChange={(e) => setFormData({ ...formData, specialty: e.target.value })}
-                    placeholder="Ex: Corte clássico, Barba..."
-                  />
-                </div>
-                <Button
-                  type="submit"
-                  className="w-full"
-                  disabled={createMutation.isPending || updateMutation.isPending}
-                >
-                  {(createMutation.isPending || updateMutation.isPending) && (
-                    <Loader2 className="animate-spin mr-2" size={18} />
-                  )}
-                  {editingBarber ? 'Salvar Alterações' : 'Adicionar Barbeiro'}
-                </Button>
-              </form>
+
+              {!editingBarber ? (
+                <Tabs value={createMode} onValueChange={(v) => setCreateMode(v as 'simple' | 'with-login')}>
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="simple">Simples</TabsTrigger>
+                    <TabsTrigger value="with-login">Com Login</TabsTrigger>
+                  </TabsList>
+                  
+                  <TabsContent value="simple">
+                    <form onSubmit={handleSubmit} className="space-y-4 mt-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="name">Nome</Label>
+                        <Input
+                          id="name"
+                          value={formData.display_name}
+                          onChange={(e) => setFormData({ ...formData, display_name: e.target.value })}
+                          placeholder="Nome do barbeiro"
+                          required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="specialty">Especialidade</Label>
+                        <Input
+                          id="specialty"
+                          value={formData.specialty}
+                          onChange={(e) => setFormData({ ...formData, specialty: e.target.value })}
+                          placeholder="Ex: Corte clássico, Barba..."
+                        />
+                      </div>
+                      <Button type="submit" className="w-full" disabled={isPending}>
+                        {isPending && <Loader2 className="animate-spin mr-2" size={18} />}
+                        Adicionar Barbeiro
+                      </Button>
+                    </form>
+                  </TabsContent>
+
+                  <TabsContent value="with-login">
+                    <form onSubmit={handleSubmit} className="space-y-4 mt-4">
+                      <div className="bg-muted/50 p-3 rounded-lg text-sm text-muted-foreground mb-4">
+                        <p className="font-medium text-foreground mb-1">Funcionário com acesso</p>
+                        <p>Este barbeiro poderá fazer login no sistema para gerenciar a fila e seus atendimentos.</p>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="name-login">Nome</Label>
+                        <Input
+                          id="name-login"
+                          value={formData.display_name}
+                          onChange={(e) => setFormData({ ...formData, display_name: e.target.value })}
+                          placeholder="Nome do funcionário"
+                          required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="specialty-login">Especialidade</Label>
+                        <Input
+                          id="specialty-login"
+                          value={formData.specialty}
+                          onChange={(e) => setFormData({ ...formData, specialty: e.target.value })}
+                          placeholder="Ex: Corte clássico, Barba..."
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="email">
+                          <Mail size={14} className="inline mr-1" />
+                          Email de acesso
+                        </Label>
+                        <Input
+                          id="email"
+                          type="email"
+                          value={formData.email}
+                          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                          placeholder="funcionario@barbearia.com"
+                          required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="password">
+                          <Lock size={14} className="inline mr-1" />
+                          Senha
+                        </Label>
+                        <Input
+                          id="password"
+                          type="password"
+                          value={formData.password}
+                          onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                          placeholder="Mínimo 6 caracteres"
+                          minLength={6}
+                          required
+                        />
+                      </div>
+                      <Button type="submit" className="w-full" disabled={isPending}>
+                        {isPending && <Loader2 className="animate-spin mr-2" size={18} />}
+                        Criar Funcionário
+                      </Button>
+                    </form>
+                  </TabsContent>
+                </Tabs>
+              ) : (
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-name">Nome</Label>
+                    <Input
+                      id="edit-name"
+                      value={formData.display_name}
+                      onChange={(e) => setFormData({ ...formData, display_name: e.target.value })}
+                      placeholder="Nome do barbeiro"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-specialty">Especialidade</Label>
+                    <Input
+                      id="edit-specialty"
+                      value={formData.specialty}
+                      onChange={(e) => setFormData({ ...formData, specialty: e.target.value })}
+                      placeholder="Ex: Corte clássico, Barba..."
+                    />
+                  </div>
+                  <Button type="submit" className="w-full" disabled={isPending}>
+                    {isPending && <Loader2 className="animate-spin mr-2" size={18} />}
+                    Salvar Alterações
+                  </Button>
+                </form>
+              )}
             </DialogContent>
           </Dialog>
         </div>
@@ -222,7 +382,14 @@ const AdminBarbeiros = () => {
               <Card key={barber.id} className={!barber.is_active ? 'opacity-50' : ''}>
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
-                    <CardTitle className="text-lg">{barber.display_name}</CardTitle>
+                    <div className="flex items-center gap-2">
+                      <CardTitle className="text-lg">{barber.display_name}</CardTitle>
+                      {barber.user_id && (
+                        <span className="text-xs bg-primary/20 text-primary px-2 py-0.5 rounded-full">
+                          Login
+                        </span>
+                      )}
+                    </div>
                     <div className="flex items-center gap-2">
                       <Button
                         variant="ghost"
@@ -282,6 +449,11 @@ const AdminBarbeiros = () => {
               <AlertDialogTitle>Remover barbeiro?</AlertDialogTitle>
               <AlertDialogDescription>
                 Esta ação não pode ser desfeita. O barbeiro "{deleteBarber?.display_name}" será removido permanentemente.
+                {deleteBarber?.user_id && (
+                  <span className="block mt-2 text-destructive">
+                    Atenção: Este barbeiro possui login no sistema. A conta de acesso também será desvinculada.
+                  </span>
+                )}
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
