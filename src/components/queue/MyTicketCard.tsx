@@ -124,7 +124,7 @@ export const MyTicketCard = ({ ticketId, onLeave }: MyTicketCardProps) => {
 
   return (
     <div className={cn(
-      'relative border-2 rounded-lg p-6 transition-all duration-300',
+      'relative border-2 rounded-xl sm:rounded-lg p-4 sm:p-6 transition-all duration-300',
       statusConfig.bg,
       statusConfig.pulse && 'animate-pulse'
     )}>
@@ -133,78 +133,78 @@ export const MyTicketCard = ({ ticketId, onLeave }: MyTicketCardProps) => {
           variant="ghost"
           size="icon"
           onClick={handleLeave}
-          className="absolute top-2 right-2 text-muted-foreground hover:text-destructive"
+          className="absolute top-1.5 right-1.5 sm:top-2 sm:right-2 text-muted-foreground hover:text-destructive h-8 w-8 sm:h-10 sm:w-10"
         >
-          <X size={20} />
+          <X size={18} />
         </Button>
       )}
       
       {/* Next in line banner */}
       {isNextInLine && (
-        <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
-          <div className="flex items-center gap-1.5 bg-green-500 text-white px-4 py-1.5 rounded-full text-sm font-bold shadow-lg animate-bounce">
-            <Bell size={14} className="animate-pulse" />
+        <div className="absolute -top-2.5 sm:-top-3 left-1/2 -translate-x-1/2 z-10">
+          <div className="flex items-center gap-1 sm:gap-1.5 bg-green-500 text-white px-3 sm:px-4 py-1 sm:py-1.5 rounded-full text-xs sm:text-sm font-bold shadow-lg animate-bounce">
+            <Bell size={12} className="animate-pulse" />
             Você é o próximo!
           </div>
         </div>
       )}
       
-      <div className="text-center mb-6">
-        <div className={cn('inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold mb-4', statusConfig.text, 'bg-background/50')}>
-          <Ticket size={16} />
+      <div className="text-center mb-4 sm:mb-6">
+        <div className={cn('inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-bold mb-3 sm:mb-4', statusConfig.text, 'bg-background/50')}>
+          <Ticket size={14} />
           {statusConfig.label}
         </div>
         
-        <div className="font-display text-5xl md:text-6xl text-primary mb-2">
+        <div className="font-display text-4xl sm:text-5xl md:text-6xl text-primary mb-1 sm:mb-2">
           {ticket.ticket_number}
         </div>
         
-        <div className="text-muted-foreground">
+        <div className="text-muted-foreground text-sm sm:text-base truncate px-2">
           {ticket.customer_name}
         </div>
       </div>
       
-      <div className="grid grid-cols-3 gap-3">
-        <div className="bg-background/50 rounded-lg p-3 text-center">
-          <div className="text-muted-foreground text-xs mb-1">Posição</div>
+      <div className="grid grid-cols-3 gap-2 sm:gap-3">
+        <div className="bg-background/50 rounded-lg p-2 sm:p-3 text-center">
+          <div className="text-muted-foreground text-[10px] sm:text-xs mb-0.5 sm:mb-1">Posição</div>
           <div className={cn(
-            'text-2xl font-bold',
+            'text-xl sm:text-2xl font-bold',
             isNextInLine ? 'text-green-500' : 'text-primary'
           )}>
             {ticket.status === 'waiting' ? `${position}º` : '-'}
           </div>
         </div>
         
-        <div className="bg-background/50 rounded-lg p-3 text-center">
-          <div className="text-muted-foreground text-xs mb-1">Esperando</div>
-          <div className="text-xl font-bold flex items-center justify-center gap-1">
-            <Clock size={16} className="text-primary" />
-            {timeWaiting}
+        <div className="bg-background/50 rounded-lg p-2 sm:p-3 text-center">
+          <div className="text-muted-foreground text-[10px] sm:text-xs mb-0.5 sm:mb-1">Esperando</div>
+          <div className="text-lg sm:text-xl font-bold flex items-center justify-center gap-0.5 sm:gap-1">
+            <Clock size={14} className="text-primary" />
+            <span className="truncate">{timeWaiting}</span>
           </div>
         </div>
         
-        <div className="bg-background/50 rounded-lg p-3 text-center">
-          <div className="text-muted-foreground text-xs mb-1">Estimado</div>
-          <div className="text-xl font-bold flex items-center justify-center gap-1">
-            <Timer size={16} className="text-blue-400" />
-            ~{estimatedMinutes}min
+        <div className="bg-background/50 rounded-lg p-2 sm:p-3 text-center">
+          <div className="text-muted-foreground text-[10px] sm:text-xs mb-0.5 sm:mb-1">Estimado</div>
+          <div className="text-lg sm:text-xl font-bold flex items-center justify-center gap-0.5 sm:gap-1">
+            <Timer size={14} className="text-blue-400" />
+            <span>~{estimatedMinutes}min</span>
           </div>
         </div>
       </div>
       
       {ticket.status === 'called' && (
-        <div className="mt-6 p-4 bg-green-500/30 rounded-lg text-center">
-          <MapPin className="w-8 h-8 mx-auto mb-2 text-green-500" />
-          <p className="font-bold text-green-400">
+        <div className="mt-4 sm:mt-6 p-3 sm:p-4 bg-green-500/30 rounded-lg text-center">
+          <MapPin className="w-6 h-6 sm:w-8 sm:h-8 mx-auto mb-1.5 sm:mb-2 text-green-500" />
+          <p className="font-bold text-green-400 text-sm sm:text-base">
             Dirija-se ao balcão!
           </p>
         </div>
       )}
       
       {ticket.priority === 'preferencial' && (
-        <div className="mt-4 text-center">
-          <span className="inline-flex items-center gap-1 text-sm bg-purple-500/20 text-purple-400 px-3 py-1 rounded-full">
-            <Star size={14} /> Atendimento Preferencial
+        <div className="mt-3 sm:mt-4 text-center">
+          <span className="inline-flex items-center gap-1 text-xs sm:text-sm bg-purple-500/20 text-purple-400 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full">
+            <Star size={12} /> Atendimento Preferencial
           </span>
         </div>
       )}

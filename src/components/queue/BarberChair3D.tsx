@@ -30,10 +30,10 @@ interface BarberChair3DProps {
 }
 
 // Animated Hair Clipper SVG Component
-const AnimatedClipper = () => (
+const AnimatedClipper = ({ size = 24 }: { size?: number }) => (
   <motion.svg
-    width="32"
-    height="32"
+    width={size}
+    height={size}
     viewBox="0 0 24 24"
     fill="none"
     xmlns="http://www.w3.org/2000/svg"
@@ -150,11 +150,11 @@ export const BarberChair3D = ({ item, barber, className }: BarberChair3DProps) =
           <img 
             src={cadeiraChamando} 
             alt="Cadeira de barbearia"
-            className="w-full max-w-[180px] sm:max-w-[200px] mx-auto h-auto drop-shadow-2xl rounded-lg ring-2 ring-success ring-offset-2 ring-offset-background"
+            className="w-full max-w-[140px] sm:max-w-[180px] mx-auto h-auto drop-shadow-2xl rounded-lg ring-2 ring-success ring-offset-2 ring-offset-background"
             style={{ filter: 'drop-shadow(0 20px 40px rgba(0,0,0,0.4))' }}
           />
           <motion.div
-            className="absolute -top-1 -right-1 w-10 h-10 rounded-full bg-success text-success-foreground flex items-center justify-center text-lg font-bold shadow-xl border-2 border-background"
+            className="absolute -top-1 -right-1 w-7 h-7 sm:w-10 sm:h-10 rounded-full bg-success text-success-foreground flex items-center justify-center text-sm sm:text-lg font-bold shadow-xl border-2 border-background"
             animate={{ scale: [1, 1.2, 1] }}
             transition={{ duration: 0.8, repeat: Infinity }}
           >
@@ -163,29 +163,29 @@ export const BarberChair3D = ({ item, barber, className }: BarberChair3DProps) =
         </motion.div>
 
         <motion.div
-          className="mt-4 text-center"
+          className="mt-3 sm:mt-4 text-center"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
         >
           <motion.div 
-            className="font-medium text-success text-sm mb-1"
+            className="font-medium text-success text-xs sm:text-sm mb-1"
             animate={{ opacity: [0.8, 1, 0.8] }}
             transition={{ duration: 1.5, repeat: Infinity }}
           >
             Obrigado pela preferência!
           </motion.div>
-          <div className="font-display text-lg sm:text-xl font-bold text-foreground">
+          <div className="font-display text-base sm:text-lg font-bold text-foreground">
             {firstName}, é a sua vez!
           </div>
           {barber && (
             <motion.div 
-              className="mt-2 text-sm bg-success/20 text-success px-4 py-2 rounded-full inline-flex items-center gap-1.5 font-medium"
+              className="mt-2 text-xs sm:text-sm bg-success/20 text-success px-3 sm:px-4 py-1.5 rounded-full inline-flex items-center gap-1 sm:gap-1.5 font-medium"
               animate={{ scale: [1, 1.03, 1] }}
               transition={{ duration: 1, repeat: Infinity }}
             >
-              <span className="text-base">💈</span> 
-              <span>{barber.display_name} está à sua espera!</span>
+              <span className="text-sm sm:text-base">💈</span> 
+              <span className="truncate max-w-[120px] sm:max-w-none">{barber.display_name} está à sua espera!</span>
             </motion.div>
           )}
         </motion.div>
@@ -204,7 +204,7 @@ export const BarberChair3D = ({ item, barber, className }: BarberChair3DProps) =
     >
       {/* Barber Profile with Animated Ring */}
       {barber && (
-        <div className="relative mb-4">
+        <div className="relative mb-3 sm:mb-4">
           {/* Animated outer ring */}
           <motion.div
             className="absolute inset-0 rounded-full border-2 border-primary/50"
@@ -217,16 +217,16 @@ export const BarberChair3D = ({ item, barber, className }: BarberChair3DProps) =
               repeat: Infinity,
               ease: 'easeOut',
             }}
-            style={{ width: '80px', height: '80px', top: '-4px', left: '-4px' }}
+            style={{ width: '60px', height: '60px', top: '-4px', left: '-4px' }}
           />
           
           {/* Barber Avatar */}
           <motion.div
-            className="w-[72px] h-[72px] rounded-full border-3 border-primary bg-gradient-to-br from-primary to-primary/80 shadow-xl overflow-hidden"
+            className="w-[52px] h-[52px] sm:w-[72px] sm:h-[72px] rounded-full border-2 sm:border-3 border-primary bg-gradient-to-br from-primary to-primary/80 shadow-xl overflow-hidden"
             animate={{
               boxShadow: [
                 '0 0 0 0 hsl(var(--primary) / 0.4)',
-                '0 0 0 10px hsl(var(--primary) / 0)',
+                '0 0 0 8px hsl(var(--primary) / 0)',
               ],
             }}
             transition={{ duration: 1.5, repeat: Infinity }}
@@ -238,7 +238,7 @@ export const BarberChair3D = ({ item, barber, className }: BarberChair3DProps) =
                 className="w-full h-full object-cover"
               />
             ) : (
-              <div className="w-full h-full flex items-center justify-center text-primary-foreground font-bold text-xl">
+              <div className="w-full h-full flex items-center justify-center text-primary-foreground font-bold text-base sm:text-xl">
                 {getBarberInitials(barber.display_name)}
               </div>
             )}
@@ -246,11 +246,11 @@ export const BarberChair3D = ({ item, barber, className }: BarberChair3DProps) =
 
           {/* Animated Clipper Icon */}
           <motion.div
-            className="absolute -bottom-2 -right-2 bg-background rounded-full p-1.5 shadow-lg border border-border"
+            className="absolute -bottom-1 -right-1 sm:-bottom-2 sm:-right-2 bg-background rounded-full p-1 sm:p-1.5 shadow-lg border border-border"
             animate={{ scale: [1, 1.1, 1] }}
             transition={{ duration: 1, repeat: Infinity }}
           >
-            <AnimatedClipper />
+            <AnimatedClipper size={20} />
           </motion.div>
         </div>
       )}
@@ -263,22 +263,22 @@ export const BarberChair3D = ({ item, barber, className }: BarberChair3DProps) =
         transition={{ delay: 0.2 }}
       >
         {/* Client Name */}
-        <div className="font-display text-xl font-bold text-foreground mb-1">
+        <div className="font-display text-base sm:text-lg font-bold text-foreground mb-0.5 sm:mb-1 truncate max-w-[120px] sm:max-w-none">
           {firstName}
         </div>
 
         {/* Barber Name */}
         {barber && (
-          <div className="text-sm text-muted-foreground flex items-center justify-center gap-1">
+          <div className="text-xs sm:text-sm text-muted-foreground flex items-center justify-center gap-1">
             <span>com</span>
-            <span className="text-primary font-semibold">{barber.display_name}</span>
+            <span className="text-primary font-semibold truncate max-w-[80px] sm:max-w-none">{barber.display_name}</span>
           </div>
         )}
         
         {/* Elapsed Time */}
         {elapsedMinutes !== null && (
           <motion.div
-            className="mt-3 text-xs bg-primary/15 text-primary px-4 py-1.5 rounded-full inline-flex items-center gap-1.5 font-medium"
+            className="mt-2 sm:mt-3 text-[10px] sm:text-xs bg-primary/15 text-primary px-2.5 sm:px-4 py-1 sm:py-1.5 rounded-full inline-flex items-center gap-1 sm:gap-1.5 font-medium"
             animate={{ opacity: [0.7, 1, 0.7] }}
             transition={{ duration: 2, repeat: Infinity }}
           >

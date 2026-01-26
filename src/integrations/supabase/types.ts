@@ -147,6 +147,24 @@ export type Database = {
         }
         Relationships: []
       }
+      queue_entry_log: {
+        Row: {
+          created_at: string
+          customer_phone: string
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          customer_phone: string
+          id?: string
+        }
+        Update: {
+          created_at?: string
+          customer_phone?: string
+          id?: string
+        }
+        Relationships: []
+      }
       queue_items: {
         Row: {
           barber_id: string | null
@@ -444,6 +462,7 @@ export type Database = {
         Args: { p_barber_id: string; p_ticket_id: string }
         Returns: boolean
       }
+      cleanup_old_entry_logs: { Args: never; Returns: undefined }
       get_active_services_public: {
         Args: never
         Returns: {

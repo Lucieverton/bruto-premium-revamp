@@ -25,15 +25,15 @@ export const PublicQueueList = () => {
   }
 
   return (
-    <div className="bg-card border border-border rounded-lg p-4 sm:p-6">
-      <h3 className="font-display text-lg sm:text-xl uppercase mb-3 sm:mb-4 text-center">Fila Atual</h3>
+    <div className="bg-card border border-border rounded-lg p-4 sm:p-5">
+      <h3 className="font-display text-base sm:text-lg uppercase mb-3 text-center">Fila Atual</h3>
       
       {waitingQueue.length === 0 ? (
-        <p className="text-center text-muted-foreground py-6 sm:py-8 text-sm sm:text-base">
+        <p className="text-center text-muted-foreground py-4 sm:py-6 text-sm">
           Nenhum cliente na fila. Seja o primeiro!
         </p>
       ) : (
-        <div className="space-y-2">
+        <div className="space-y-1.5 sm:space-y-2">
           <AnimatePresence mode="popLayout">
             {waitingQueue.map((item, index) => {
               const isMe = item.id === myTicketId;
@@ -53,21 +53,21 @@ export const PublicQueueList = () => {
                     layout: { type: 'spring', stiffness: 200, damping: 25 }
                   }}
                   className={cn(
-                    'relative p-3 sm:p-4 rounded-lg transition-all duration-300',
-                    isMe && 'ring-2 ring-primary bg-primary/10 shadow-lg',
+                    'relative p-2.5 sm:p-3 rounded-lg transition-all duration-300',
+                    isMe && 'ring-2 ring-primary bg-primary/10 shadow-md',
                     isFirst && !isMe && 'bg-success/10 border border-success/30',
                     !isMe && !isFirst && 'bg-background/50 border border-border/50'
                   )}
                 >
                   {/* Position Badge */}
-                  <div className="flex items-start gap-3">
+                  <div className="flex items-start gap-2 sm:gap-3">
                     {/* Order Number */}
                     <div className={cn(
-                      'flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center font-bold text-sm sm:text-base',
+                      'flex-shrink-0 w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center font-bold text-xs sm:text-sm',
                       isFirst ? 'bg-success text-success-foreground' : 'bg-muted text-muted-foreground'
                     )}>
                       {isFirst ? (
-                        <Crown size={18} />
+                        <Crown size={14} />
                       ) : (
                         index + 1
                       )}
@@ -76,10 +76,10 @@ export const PublicQueueList = () => {
                     {/* Info */}
                     <div className="flex-1 min-w-0">
                       {/* Name Row */}
-                      <div className="flex items-center gap-2 mb-1">
-                        <User size={14} className="text-muted-foreground flex-shrink-0" />
+                      <div className="flex items-center gap-1.5 sm:gap-2 mb-0.5">
+                        <User size={12} className="text-muted-foreground flex-shrink-0" />
                         <span className={cn(
-                          'font-medium truncate text-sm sm:text-base',
+                          'font-medium truncate text-xs sm:text-sm',
                           isMe && 'text-primary'
                         )}>
                           {item.customer_name_masked}
@@ -87,18 +87,18 @@ export const PublicQueueList = () => {
                         </span>
                         
                         {item.priority === 'preferencial' && (
-                          <span className="text-[10px] sm:text-xs bg-purple-500/20 text-purple-400 px-1.5 py-0.5 rounded flex-shrink-0">
+                          <span className="text-[9px] sm:text-[10px] bg-purple-500/20 text-purple-400 px-1 py-0.5 rounded flex-shrink-0">
                             ⭐ Pref.
                           </span>
                         )}
                       </div>
                       
                       {/* Service & Barber Row */}
-                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs sm:text-sm text-muted-foreground">
+                      <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] sm:text-xs text-muted-foreground">
                         {item.service_name && (
                           <span className="flex items-center gap-1">
-                            <Scissors size={12} />
-                            {item.service_name}
+                            <Scissors size={10} />
+                            <span className="truncate max-w-[100px] sm:max-w-none">{item.service_name}</span>
                           </span>
                         )}
                         
@@ -112,7 +112,7 @@ export const PublicQueueList = () => {
                       {/* First Position Message */}
                       {isFirst && isMe && (
                         <motion.div 
-                          className="mt-2 text-xs sm:text-sm font-bold text-success"
+                          className="mt-1.5 text-[10px] sm:text-xs font-bold text-success"
                           initial={{ opacity: 0, y: -5 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ delay: 0.2 }}
@@ -123,7 +123,7 @@ export const PublicQueueList = () => {
                       
                       {isFirst && !isMe && (
                         <motion.div 
-                          className="mt-2 text-xs sm:text-sm font-medium text-success/80"
+                          className="mt-1.5 text-[10px] sm:text-xs font-medium text-success/80"
                           animate={{ opacity: [0.7, 1, 0.7] }}
                           transition={{ duration: 2, repeat: Infinity }}
                         >
