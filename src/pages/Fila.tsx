@@ -94,39 +94,42 @@ const Fila = () => {
             <QueueStatus />
           </motion.div>
           
-          {/* Main Content Grid */}
+          {/* Main Content - My Ticket or Join (FIRST) */}
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
-            className="grid grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-6"
+            className="mb-5 sm:mb-6"
           >
-            {/* Left Column - My Ticket or Join */}
-            <div>
-              {isValidating ? (
-                <div className="flex flex-col items-center justify-center p-8 sm:p-10 bg-gradient-to-br from-card to-card/50 border border-border/50 rounded-2xl backdrop-blur-sm shadow-lg">
-                  <Loader2 size={32} className="text-primary animate-spin mb-4" />
-                  <p className="text-muted-foreground text-sm">Verificando...</p>
-                </div>
-              ) : myTicketId ? (
+            {isValidating ? (
+              <div className="flex flex-col items-center justify-center p-6 sm:p-8 bg-gradient-to-br from-card to-card/50 border border-border/50 rounded-xl sm:rounded-2xl backdrop-blur-sm shadow-lg max-w-md mx-auto">
+                <Loader2 size={28} className="text-primary animate-spin mb-3" />
+                <p className="text-muted-foreground text-sm">Verificando...</p>
+              </div>
+            ) : myTicketId ? (
+              <div className="max-w-lg mx-auto">
                 <MyTicketCard ticketId={myTicketId} onLeave={handleLeave} />
-              ) : (
-                <div className="flex flex-col items-center justify-center p-8 sm:p-10 bg-gradient-to-br from-card to-card/50 border border-border/50 rounded-2xl backdrop-blur-sm shadow-lg">
-                  <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-5">
-                    <Users size={28} className="text-primary" />
-                  </div>
-                  <p className="text-muted-foreground mb-6 text-center text-sm sm:text-base max-w-xs">
-                    Clique no botão abaixo para entrar na fila virtual e ser atendido
-                  </p>
-                  <QueueJoinButton onSuccess={handleJoinSuccess} />
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center p-6 sm:p-8 bg-gradient-to-br from-card to-card/50 border border-border/50 rounded-xl sm:rounded-2xl backdrop-blur-sm shadow-lg max-w-md mx-auto">
+                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                  <Users size={24} className="text-primary" />
                 </div>
-              )}
-            </div>
-            
-            {/* Right Column - Queue List */}
-            <div>
-              <PublicQueueList />
-            </div>
+                <p className="text-muted-foreground mb-5 text-center text-sm sm:text-base max-w-xs">
+                  Clique no botão abaixo para entrar na fila virtual e ser atendido
+                </p>
+                <QueueJoinButton onSuccess={handleJoinSuccess} />
+              </div>
+            )}
+          </motion.div>
+          
+          {/* Queue List (AFTER Join Section = "Fila Atual" after "Fila Aberta") */}
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+          >
+            <PublicQueueList />
           </motion.div>
         </div>
       </main>
