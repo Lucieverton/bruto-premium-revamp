@@ -22,6 +22,7 @@ export const hasStoredTicket = (): boolean => {
 };
 
 // Validate if the stored ticket is still active (not completed/cancelled)
+// Returns the ticket ID if valid, null if ticket should be cleared
 export const validateStoredTicket = async (supabase: any): Promise<string | null> => {
   const ticketId = getMyTicket();
   if (!ticketId) return null;
@@ -34,23 +35,29 @@ export const validateStoredTicket = async (supabase: any): Promise<string | null
       .single();
     
     if (error || !data) {
+      // Ticket not found - clear and allow new entry
       clearMyTicket();
       return null;
     }
     
-    // Active statuses - client is still in queue
+    // Only these statuses mean the client is STILL in queue
     const activeStatuses = ['waiting', 'called', 'in_progress'];
     
     if (activeStatuses.includes(data.status)) {
       return ticketId;
     }
     
-    // Ticket is completed, cancelled, or no_show - clear it
+    // Ticket is completed, cancelled, or no_show - clear it so they can re-enter
     clearMyTicket();
     return null;
   } catch {
-    // On error, clear for safety
+    // On error, clear for safety to allow re-entry
     clearMyTicket();
     return null;
   }
+};
+
+// Force clear ticket (manual exit from queue)
+export const forceLeaveQueue = (): void => {
+  clearMyTicket();
 };

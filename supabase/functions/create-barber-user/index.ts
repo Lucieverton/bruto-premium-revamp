@@ -24,6 +24,7 @@ interface CreateBarberRequest {
   password: string;
   display_name: string;
   specialty?: string;
+  commission_percentage?: number;
 }
 
 // Rate limiting: max 10 barber creations per admin per hour
@@ -108,7 +109,7 @@ Deno.serve(async (req) => {
     }
 
     // Parse request body
-    const { email, password, display_name, specialty }: CreateBarberRequest = await req.json();
+    const { email, password, display_name, specialty, commission_percentage }: CreateBarberRequest = await req.json();
 
     console.log(`[create-barber-user] Admin ${callerId} attempting to create barber with email: ${email}`);
 
@@ -168,6 +169,7 @@ Deno.serve(async (req) => {
         user_id: newUser.user.id,
         display_name,
         specialty: specialty || null,
+        commission_percentage: commission_percentage ?? 50,
       })
       .select()
       .single();

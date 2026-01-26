@@ -89,7 +89,7 @@ const AdminBarbeiros = () => {
   });
 
   const createWithLoginMutation = useMutation({
-    mutationFn: async (data: { display_name: string; specialty: string; email: string; password: string }) => {
+    mutationFn: async (data: { display_name: string; specialty: string; email: string; password: string; commission_percentage: string }) => {
       const { data: session } = await supabase.auth.getSession();
       if (!session.session) throw new Error('Não autenticado');
 
@@ -106,6 +106,7 @@ const AdminBarbeiros = () => {
             password: data.password,
             display_name: data.display_name,
             specialty: data.specialty || null,
+            commission_percentage: parseFloat(data.commission_percentage) || 50,
           }),
         }
       );
@@ -315,17 +316,17 @@ const AdminBarbeiros = () => {
                   <TabsContent value="with-login">
                     <form onSubmit={handleSubmit} className="space-y-4 mt-4">
                       <div className="bg-muted/50 p-3 rounded-lg text-sm text-muted-foreground mb-4">
-                        <p className="font-medium text-foreground mb-1">Funcionário com acesso</p>
-                        <p>Este barbeiro poderá fazer login no sistema para gerenciar a fila e seus atendimentos.</p>
+                        <p className="font-medium text-foreground mb-1">Funcionário com acesso ao painel</p>
+                        <p>O funcionário poderá fazer login com o email e senha que você definir. Ele poderá alterar a senha depois.</p>
                       </div>
                       
                       <div className="space-y-2">
-                        <Label htmlFor="name-login">Nome</Label>
+                        <Label htmlFor="name-login">Nome do Funcionário</Label>
                         <Input
                           id="name-login"
                           value={formData.display_name}
                           onChange={(e) => setFormData({ ...formData, display_name: e.target.value })}
-                          placeholder="Nome do funcionário"
+                          placeholder="Nome completo"
                           required
                         />
                       </div>
@@ -337,6 +338,23 @@ const AdminBarbeiros = () => {
                           onChange={(e) => setFormData({ ...formData, specialty: e.target.value })}
                           placeholder="Ex: Corte clássico, Barba..."
                         />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="commission-login">Comissão (%)</Label>
+                        <div className="flex items-center gap-2">
+                          <Input
+                            id="commission-login"
+                            type="number"
+                            min="0"
+                            max="100"
+                            step="0.5"
+                            value={formData.commission_percentage}
+                            onChange={(e) => setFormData({ ...formData, commission_percentage: e.target.value })}
+                            placeholder="50"
+                            className="w-24"
+                          />
+                          <span className="text-muted-foreground">%</span>
+                        </div>
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="email">
@@ -355,21 +373,24 @@ const AdminBarbeiros = () => {
                       <div className="space-y-2">
                         <Label htmlFor="password">
                           <Lock size={14} className="inline mr-1" />
-                          Senha
+                          Senha inicial
                         </Label>
                         <Input
                           id="password"
                           type="password"
                           value={formData.password}
                           onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                          placeholder="Mínimo 6 caracteres"
-                          minLength={6}
+                          placeholder="Mínimo 8 caracteres com 1 número"
+                          minLength={8}
                           required
                         />
+                        <p className="text-xs text-muted-foreground">
+                          Informe esta senha ao funcionário. Ele pode alterá-la em "Configurações da Conta".
+                        </p>
                       </div>
                       <Button type="submit" className="w-full" disabled={isPending}>
                         {isPending && <Loader2 className="animate-spin mr-2" size={18} />}
-                        Criar Funcionário
+                        Criar Funcionário com Acesso
                       </Button>
                     </form>
                   </TabsContent>
