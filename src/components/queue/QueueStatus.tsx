@@ -9,17 +9,13 @@ export const QueueStatus = () => {
   const inProgressCount = stats?.in_progress_count || 0;
   const avgWaitTime = stats?.avg_wait_minutes || 20;
   
-  const isOpen = settings?.is_active ?? true;
+  // Queue open status is based ONLY on the toggle - time is just informational
+  const isQueueOpen = settings?.is_active ?? true;
+  
   const now = new Date();
   const currentHour = now.getHours();
   const currentMinute = now.getMinutes();
   const currentTime = `${currentHour.toString().padStart(2, '0')}:${currentMinute.toString().padStart(2, '0')}`;
-  
-  const isWithinHours = settings 
-    ? currentTime >= settings.opening_time && currentTime < settings.closing_time
-    : true;
-  
-  const isQueueOpen = isOpen && isWithinHours;
 
   return (
     <div className="bg-card border border-border rounded-lg p-4 sm:p-6 mb-4 sm:mb-6">
