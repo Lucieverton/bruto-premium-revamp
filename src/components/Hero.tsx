@@ -31,9 +31,7 @@ export const Hero = () => {
 
       {/* Conteúdo principal - Melhor posicionamento mobile */}
       <div className="relative z-10 text-center px-4 sm:px-5 max-w-4xl mx-auto mt-auto mb-24 md:mt-0 md:mb-0">
-        <h1 className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl uppercase tracking-wider text-foreground mb-3 md:mb-4 drop-shadow-lg">
-          Brutos Barbearia
-        </h1>
+        
         
       </div>
 
