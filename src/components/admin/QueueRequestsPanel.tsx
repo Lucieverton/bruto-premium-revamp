@@ -15,13 +15,14 @@ import {
   useApproveQueueRequest, 
   useRejectQueueRequest 
 } from '@/hooks/useQueueRequests';
-import { useServices, useBarbers } from '@/hooks/useQueue';
+import { useServices } from '@/hooks/useQueue';
+import { useAdminBarbers } from '@/hooks/useAdminBarbers';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export const QueueRequestsPanel = () => {
   const { data: requests, isLoading } = usePendingQueueRequests();
   const { data: services } = useServices();
-  const { data: barbers } = useBarbers();
+  const { data: barbers } = useAdminBarbers();
   const approveRequest = useApproveQueueRequest();
   const rejectRequest = useRejectQueueRequest();
   

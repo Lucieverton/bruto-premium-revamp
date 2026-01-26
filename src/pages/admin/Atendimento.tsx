@@ -28,7 +28,8 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useTodayQueue, useServices, useBarbers } from '@/hooks/useQueue';
+import { useTodayQueue, useServices } from '@/hooks/useQueue';
+import { useAdminBarbers } from '@/hooks/useAdminBarbers';
 import { useBarberStartService, useBarberCompleteService } from '@/hooks/useBarberQueue';
 import { useQueueRealtime, useBarbersRealtime, useQueueTransfersRealtime } from '@/hooks/useQueueRealtime';
 import { RequestQueueEntryForm } from '@/components/admin/RequestQueueEntryForm';
@@ -70,7 +71,7 @@ const Atendimento = () => {
   // Fetch today's queue
   const { data: queue, isLoading: queueLoading } = useTodayQueue();
   const { data: services } = useServices();
-  const { data: allBarbers } = useBarbers();
+  const { data: allBarbers } = useAdminBarbers();
 
   // Mutations
   const startService = useBarberStartService();

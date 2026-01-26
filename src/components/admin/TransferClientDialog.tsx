@@ -12,7 +12,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useBarbers } from '@/hooks/useQueue';
+import { useAdminBarbers } from '@/hooks/useAdminBarbers';
 import { useTransferClient } from '@/hooks/useQueueTransfers';
 
 interface TransferClientDialogProps {
@@ -32,13 +32,12 @@ export const TransferClientDialog = ({
   const [selectedBarberId, setSelectedBarberId] = useState<string>('');
   const [reason, setReason] = useState('');
   
-  const { data: barbers } = useBarbers();
+  const { data: barbers } = useAdminBarbers();
   const transferClient = useTransferClient();
 
-  // Filter out current barber and inactive ones
+  // Filter out current barber
   const availableBarbers = barbers?.filter(b => 
-    b.id !== currentBarberId && 
-    b.is_available
+    b.id !== currentBarberId
   ) || [];
 
   const handleTransfer = () => {
@@ -113,9 +112,11 @@ export const TransferClientDialog = ({
                   {availableBarbers.map((barber) => (
                     <SelectItem key={barber.id} value={barber.id}>
                       <div className="flex items-center gap-2">
-                        <User size={14} />
+                        <span className={`w-2 h-2 rounded-full ${
+                          barber.status === 'online' ? 'bg-green-500' : 
+                          barber.status === 'busy' ? 'bg-orange-500' : 'bg-gray-400'
+                        }`} />
                         {barber.display_name}
-                        <span className="text-xs text-green-500">(disponível)</span>
                       </div>
                     </SelectItem>
                   ))}

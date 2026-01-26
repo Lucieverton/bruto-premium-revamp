@@ -485,12 +485,14 @@ export type Database = {
         Args: never
         Returns: {
           barber_id: string
+          barber_name: string
           called_at: string
           created_at: string
           customer_name_masked: string
           id: string
           priority: string
           service_id: string
+          service_name: string
           status: string
           ticket_number: string
         }[]
