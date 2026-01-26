@@ -336,19 +336,21 @@ export const useJoinQueue = () => {
   });
 };
 
-// Leave queue mutation
+// Leave queue mutation - uses secure RPC to bypass RLS
 export const useLeaveQueue = () => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   
   return useMutation({
     mutationFn: async (ticketId: string) => {
-      const { error } = await supabase
-        .from('queue_items')
-        .update({ status: 'cancelled', completed_at: new Date().toISOString() })
-        .eq('id', ticketId);
+      const { data, error } = await supabase.rpc('leave_queue', {
+        p_ticket_id: ticketId
+      });
       
       if (error) throw error;
+      if (!data) throw new Error('Não foi possível sair da fila');
+      
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['queue-items'] });
@@ -356,9 +358,17 @@ export const useLeaveQueue = () => {
       queryClient.invalidateQueries({ queryKey: ['public-queue'] });
       queryClient.invalidateQueries({ queryKey: ['queue-stats'] });
       queryClient.invalidateQueries({ queryKey: ['active-services-public'] });
+      queryClient.invalidateQueries({ queryKey: ['queue-item'] });
       toast({
         title: 'Você saiu da fila',
         description: 'Esperamos vê-lo em breve!',
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Erro ao sair da fila',
+        description: error.message,
+        variant: 'destructive',
       });
     },
   });
