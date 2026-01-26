@@ -195,7 +195,7 @@ const AdminBarbeiros = () => {
 
   const resetForm = () => {
     setFormData({ display_name: '', specialty: '', email: '', password: '', commission_percentage: '50' });
-    setCreateMode('simple');
+    setCreateMode('with-login'); // Default to "with-login" so employees can access the system
   };
 
   const handleEdit = (barber: Barber) => {
@@ -262,10 +262,14 @@ const AdminBarbeiros = () => {
               </DialogHeader>
 
               {!editingBarber ? (
-                <Tabs value={createMode} onValueChange={(v) => setCreateMode(v as 'simple' | 'with-login')}>
+                <Tabs value={createMode} onValueChange={(v) => setCreateMode(v as 'simple' | 'with-login')} defaultValue="with-login">
                   <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="simple">Simples</TabsTrigger>
-                    <TabsTrigger value="with-login">Com Login</TabsTrigger>
+                    <TabsTrigger value="simple" className="text-xs sm:text-sm">
+                      📋 Apenas Registro
+                    </TabsTrigger>
+                    <TabsTrigger value="with-login" className="text-xs sm:text-sm">
+                      🔐 Com Acesso ao Sistema
+                    </TabsTrigger>
                   </TabsList>
                   
                   <TabsContent value="simple">
