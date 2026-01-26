@@ -8,7 +8,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAddWalkIn } from '@/hooks/useAdminQueue';
-import { useServices, useBarbers } from '@/hooks/useQueue';
+import { useServices } from '@/hooks/useQueue';
+import { useAvailableBarbers } from '@/hooks/useAdminBarbers';
 
 const formSchema = z.object({
   customer_name: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres'),
@@ -23,7 +24,7 @@ type FormData = z.infer<typeof formSchema>;
 export const AddWalkInForm = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { data: services } = useServices();
-  const { data: barbers } = useBarbers();
+  const { data: barbers, isLoading: barbersLoading } = useAvailableBarbers();
   const addWalkIn = useAddWalkIn();
 
   const {
@@ -122,12 +123,18 @@ export const AddWalkInForm = () => {
             <Label className="text-xs sm:text-sm">Barbeiro</Label>
             <Select onValueChange={(value) => setValue('barber_id', value)}>
               <SelectTrigger className="bg-background h-9 sm:h-10 text-sm">
-                <SelectValue placeholder="Qualquer" />
+                <SelectValue placeholder={barbersLoading ? "Carregando..." : "Qualquer"} />
               </SelectTrigger>
               <SelectContent>
-                {barbers?.filter(b => b.is_available).map((barber) => (
+                {barbers?.map((barber) => (
                   <SelectItem key={barber.id} value={barber.id}>
-                    {barber.display_name}
+                    <span className="flex items-center gap-2">
+                      <span className={`w-2 h-2 rounded-full ${
+                        barber.status === 'online' ? 'bg-green-500' : 
+                        barber.status === 'busy' ? 'bg-orange-500' : 'bg-gray-400'
+                      }`} />
+                      {barber.display_name}
+                    </span>
                   </SelectItem>
                 ))}
               </SelectContent>

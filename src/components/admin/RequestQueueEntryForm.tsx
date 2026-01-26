@@ -9,7 +9,8 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useCreateQueueRequest, useMyQueueRequests } from '@/hooks/useQueueRequests';
-import { useServices, useBarbers } from '@/hooks/useQueue';
+import { useServices } from '@/hooks/useQueue';
+import { useAdminBarbers } from '@/hooks/useAdminBarbers';
 import { cn } from '@/lib/utils';
 
 const formSchema = z.object({
@@ -29,7 +30,7 @@ interface RequestQueueEntryFormProps {
 export const RequestQueueEntryForm = ({ barberId }: RequestQueueEntryFormProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const { data: services } = useServices();
-  const { data: barbers } = useBarbers();
+  const { data: barbers } = useAdminBarbers();
   const { data: myRequests } = useMyQueueRequests();
   const createRequest = useCreateQueueRequest();
 
@@ -175,9 +176,15 @@ export const RequestQueueEntryForm = ({ barberId }: RequestQueueEntryFormProps) 
                       <SelectValue placeholder="Qualquer" />
                     </SelectTrigger>
                     <SelectContent>
-                      {barbers?.filter(b => b.is_available).map((barber) => (
+                      {barbers?.map((barber) => (
                         <SelectItem key={barber.id} value={barber.id}>
-                          {barber.display_name}
+                          <span className="flex items-center gap-2">
+                            <span className={`w-2 h-2 rounded-full ${
+                              barber.status === 'online' ? 'bg-green-500' : 
+                              barber.status === 'busy' ? 'bg-orange-500' : 'bg-gray-400'
+                            }`} />
+                            {barber.display_name}
+                          </span>
                         </SelectItem>
                       ))}
                     </SelectContent>

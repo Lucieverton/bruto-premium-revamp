@@ -57,6 +57,8 @@ export interface PublicQueueItem {
   service_id: string | null;
   barber_id: string | null;
   customer_name_masked: string;
+  service_name: string | null;
+  barber_name: string | null;
 }
 
 // Queue position result from secure RPC

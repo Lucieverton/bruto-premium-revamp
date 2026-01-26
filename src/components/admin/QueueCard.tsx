@@ -20,7 +20,8 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { QueueItem, useServices, useBarbers } from '@/hooks/useQueue';
+import { QueueItem, useServices } from '@/hooks/useQueue';
+import { useAdminBarbers } from '@/hooks/useAdminBarbers';
 import { 
   useCallClient, 
   useStartService, 
@@ -42,7 +43,7 @@ export const QueueCard = ({ item }: QueueCardProps) => {
   const [selectedServiceId, setSelectedServiceId] = useState(item.service_id || '');
   
   const { data: services } = useServices();
-  const { data: barbers } = useBarbers();
+  const { data: barbers } = useAdminBarbers();
   
   const callClient = useCallClient();
   const startService = useStartService();
@@ -195,9 +196,15 @@ export const QueueCard = ({ item }: QueueCardProps) => {
                 <SelectValue placeholder="Barbeiro..." />
               </SelectTrigger>
               <SelectContent>
-                {barbers?.filter(b => b.is_available).map((b) => (
+                {barbers?.map((b) => (
                   <SelectItem key={b.id} value={b.id}>
-                    {b.display_name}
+                    <span className="flex items-center gap-2">
+                      <span className={`w-2 h-2 rounded-full ${
+                        b.status === 'online' ? 'bg-green-500' : 
+                        b.status === 'busy' ? 'bg-orange-500' : 'bg-gray-400'
+                      }`} />
+                      {b.display_name}
+                    </span>
                   </SelectItem>
                 ))}
               </SelectContent>

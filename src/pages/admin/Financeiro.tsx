@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAttendanceRecords, useFinancialMetrics, useBarbersWithCommission } from '@/hooks/useFinancial';
-import { useBarbers, useServices } from '@/hooks/useQueue';
+import { useServices } from '@/hooks/useQueue';
+import { useAdminBarbers } from '@/hooks/useAdminBarbers';
 import { AnnualChart } from '@/components/admin/AnnualChart';
 import { 
   DollarSign, 
@@ -37,7 +38,7 @@ const AdminFinanceiro = () => {
   
   const { data: records, isLoading } = useAttendanceRecords(dateRange, selectedBarber === 'all' ? undefined : selectedBarber);
   const metrics = useFinancialMetrics(dateRange, selectedBarber === 'all' ? undefined : selectedBarber);
-  const { data: barbers } = useBarbers();
+  const { data: barbers } = useAdminBarbers();
   const { data: barbersWithCommission } = useBarbersWithCommission();
   const { data: services } = useServices();
   

@@ -10,8 +10,6 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { BarberEarningsCard } from '@/components/admin/BarberEarningsCard';
 import { AvatarUpload } from '@/components/profile/AvatarUpload';
-import { ChangePasswordForm } from '@/components/profile/ChangePasswordForm';
-import { ChangeEmailForm } from '@/components/profile/ChangeEmailForm';
 
 const MeuPerfil = () => {
   const { user, isAdmin } = useAuth();
@@ -218,19 +216,6 @@ const MeuPerfil = () => {
           barberName={barber.display_name}
           commissionPercentage={barber.commission_percentage}
         />
-
-        {/* Account Settings Section */}
-        <div className="space-y-4">
-          <h2 className="font-display text-lg uppercase flex items-center gap-2">
-            <Settings size={18} className="text-primary" />
-            Configurações da Conta
-          </h2>
-          
-          <div className="grid gap-4 md:grid-cols-2">
-            <ChangeEmailForm currentEmail={user?.email || ''} />
-            <ChangePasswordForm />
-          </div>
-        </div>
       </div>
     </AdminLayout>
   );

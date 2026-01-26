@@ -1,4 +1,5 @@
-import { useTodayQueue, useBarbers } from '@/hooks/useQueue';
+import { useTodayQueue } from '@/hooks/useQueue';
+import { useAdminBarbers } from '@/hooks/useAdminBarbers';
 import { QueueCard } from './QueueCard';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Phone, Play, CheckCircle, Clock } from 'lucide-react';
@@ -9,7 +10,7 @@ type ColumnType = 'waiting' | 'called' | 'inProgress' | 'completed';
 
 export const QueueKanban = () => {
   const { data: queue, isLoading } = useTodayQueue();
-  const { data: barbers } = useBarbers();
+  const { data: barbers } = useAdminBarbers();
   const [activeTab, setActiveTab] = useState<ColumnType>('waiting');
   
   const waiting = queue?.filter(q => q.status === 'waiting') || [];

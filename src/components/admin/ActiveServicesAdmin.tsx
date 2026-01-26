@@ -1,12 +1,13 @@
 import { Play, User } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useTodayQueue, useBarbers, useServices } from '@/hooks/useQueue';
+import { useTodayQueue, useServices } from '@/hooks/useQueue';
+import { useAdminBarbers } from '@/hooks/useAdminBarbers';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
 export const ActiveServicesAdmin = () => {
   const { data: queue } = useTodayQueue();
-  const { data: barbers } = useBarbers();
+  const { data: barbers } = useAdminBarbers();
   const { data: services } = useServices();
   
   // Get active services (called + in_progress)

@@ -39,6 +39,7 @@ const barberNavItems = [
   { href: '/admin/atendimento', icon: Play, label: 'Atendimento' },
   { href: '/admin', icon: LayoutDashboard, label: 'Fila' },
   { href: '/admin/meu-perfil', icon: User, label: 'Meu Perfil' },
+  { href: '/admin/conta', icon: Settings, label: 'Configurações' },
 ];
 
 export const AdminLayout = ({ children }: AdminLayoutProps) => {
