@@ -73,9 +73,9 @@ const AdminFinanceiro = () => {
   const barberColors = ['#22c55e', '#3b82f6', '#f97316', '#8b5cf6', '#ef4444', '#06b6d4'];
   
   const profitDistributionData = [
-    { name: 'Lucro Barbearia', value: metrics.shopProfit, color: 'hsl(43, 96%, 56%)' },
+    { name: 'Lucro da Barbearia', value: metrics.shopProfit, color: 'hsl(43, 96%, 56%)' },
     ...barberChartData.map((barberData, index) => ({
-      name: `${barberData.name} (Comissão)`,
+      name: `${barberData.name}`,
       value: barberData.comissao,
       color: barberColors[index % barberColors.length],
     }))
@@ -294,7 +294,7 @@ const AdminFinanceiro = () => {
                   />
                   <Legend 
                     wrapperStyle={{ fontSize: '11px' }}
-                    formatter={(value) => <span className="text-muted-foreground">{value}</span>}
+                    formatter={(value) => <span style={{ color: 'hsl(0, 0%, 70%)' }}>{value}</span>}
                   />
                 </PieChart>
               </ResponsiveContainer>
@@ -339,7 +339,7 @@ const AdminFinanceiro = () => {
                   />
                   <Legend 
                     wrapperStyle={{ fontSize: '10px' }}
-                    formatter={(value) => <span className="text-muted-foreground truncate max-w-[80px] inline-block">{value}</span>}
+                    formatter={(value) => <span style={{ color: 'hsl(0, 0%, 70%)' }} className="truncate max-w-[80px] inline-block">{value}</span>}
                   />
                 </PieChart>
               </ResponsiveContainer>
