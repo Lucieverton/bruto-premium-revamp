@@ -11,6 +11,7 @@ export interface AdminBarber {
   status: string;
   commission_percentage: number;
   user_id: string | null;
+  can_add_clients_directly: boolean;
 }
 
 // Fetch all barbers for admin operations (requires authentication)

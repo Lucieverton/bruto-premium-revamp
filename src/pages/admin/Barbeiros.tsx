@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Pencil, Trash2, Loader2, UserCheck, UserX, Mail, Lock } from 'lucide-react';
+import { Plus, Pencil, Trash2, Loader2, UserCheck, UserX, Mail, Lock, Users } from 'lucide-react';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -39,6 +39,7 @@ interface Barber {
   user_id: string | null;
   commission_percentage: number;
   status: 'online' | 'away' | 'offline';
+  can_add_clients_directly: boolean;
 }
 
 const AdminBarbeiros = () => {
@@ -52,6 +53,7 @@ const AdminBarbeiros = () => {
     email: '',
     password: '',
     commission_percentage: '50',
+    can_add_clients_directly: false,
   });
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -194,7 +196,7 @@ const AdminBarbeiros = () => {
   });
 
   const resetForm = () => {
-    setFormData({ display_name: '', specialty: '', email: '', password: '', commission_percentage: '50' });
+    setFormData({ display_name: '', specialty: '', email: '', password: '', commission_percentage: '50', can_add_clients_directly: false });
     setCreateMode('with-login'); // Default to "with-login" so employees can access the system
   };
 
@@ -206,6 +208,7 @@ const AdminBarbeiros = () => {
       email: '',
       password: '',
       commission_percentage: String(barber.commission_percentage || 50),
+      can_add_clients_directly: barber.can_add_clients_directly || false,
     });
     setIsDialogOpen(true);
   };
@@ -219,6 +222,7 @@ const AdminBarbeiros = () => {
           display_name: formData.display_name,
           specialty: formData.specialty || null,
           commission_percentage: parseFloat(formData.commission_percentage) || 50,
+          can_add_clients_directly: formData.can_add_clients_directly,
         } 
       });
     } else if (createMode === 'with-login') {
@@ -440,6 +444,28 @@ const AdminBarbeiros = () => {
                       Porcentagem do valor cobrado que vai para o barbeiro
                     </p>
                   </div>
+                  
+                  {/* Permission Toggle - Only shown when editing */}
+                  {editingBarber?.user_id && (
+                    <div className="space-y-3 pt-3 border-t border-border">
+                      <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                        <div className="flex items-center gap-2">
+                          <Users size={18} className="text-primary" />
+                          <div>
+                            <p className="text-sm font-medium">Liberar Entrada Direta</p>
+                            <p className="text-xs text-muted-foreground">
+                              Permite adicionar clientes na fila sem aprovação do admin
+                            </p>
+                          </div>
+                        </div>
+                        <Switch
+                          checked={formData.can_add_clients_directly}
+                          onCheckedChange={(checked) => setFormData({ ...formData, can_add_clients_directly: checked })}
+                        />
+                      </div>
+                    </div>
+                  )}
+                  
                   <Button type="submit" className="w-full" disabled={isPending}>
                     {isPending && <Loader2 className="animate-spin mr-2" size={18} />}
                     Salvar Alterações
@@ -496,6 +522,14 @@ const AdminBarbeiros = () => {
                     <span className="text-sm font-medium">Comissão:</span>
                     <span className="font-bold">{barber.commission_percentage}%</span>
                   </div>
+                  
+                  {/* Direct Queue Access Badge */}
+                  {barber.can_add_clients_directly && (
+                    <div className="flex items-center gap-2 bg-green-500/10 text-green-500 px-3 py-2 rounded-lg">
+                      <Users size={14} />
+                      <span className="text-sm font-medium">Pode adicionar clientes</span>
+                    </div>
+                  )}
                   
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">

@@ -108,6 +108,7 @@ export type Database = {
       barbers: {
         Row: {
           avatar_url: string | null
+          can_add_clients_directly: boolean
           commission_percentage: number
           created_at: string
           display_name: string
@@ -120,6 +121,7 @@ export type Database = {
         }
         Insert: {
           avatar_url?: string | null
+          can_add_clients_directly?: boolean
           commission_percentage?: number
           created_at?: string
           display_name: string
@@ -132,6 +134,7 @@ export type Database = {
         }
         Update: {
           avatar_url?: string | null
+          can_add_clients_directly?: boolean
           commission_percentage?: number
           created_at?: string
           display_name?: string

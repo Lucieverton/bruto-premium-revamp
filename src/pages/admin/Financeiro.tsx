@@ -242,7 +242,10 @@ const AdminFinanceiro = () => {
                       border: '1px solid hsl(var(--border))',
                       borderRadius: '12px',
                       boxShadow: '0 10px 40px rgba(0,0,0,0.5)',
+                      color: 'hsl(var(--foreground))',
                     }}
+                    labelStyle={{ color: 'hsl(var(--foreground))' }}
+                    itemStyle={{ color: 'hsl(var(--foreground))' }}
                     formatter={(value: number, name: string) => [
                       `R$ ${value.toFixed(0)}`,
                       name === 'faturamento' ? 'Faturamento' : 'Comissão'
@@ -285,16 +288,19 @@ const AdminFinanceiro = () => {
                     ))}
                   </Pie>
                   <Tooltip 
-                    formatter={(value: number) => `R$ ${value.toFixed(0)}`}
+                    formatter={(value: number) => [`R$ ${value.toFixed(0)}`, '']}
                     contentStyle={{ 
                       backgroundColor: 'hsl(var(--popover))', 
                       border: '1px solid hsl(var(--border))',
                       borderRadius: '12px',
+                      color: 'hsl(var(--foreground))',
                     }}
+                    labelStyle={{ color: 'hsl(var(--foreground))' }}
+                    itemStyle={{ color: 'hsl(var(--foreground))' }}
                   />
                   <Legend 
                     wrapperStyle={{ fontSize: '11px' }}
-                    formatter={(value) => <span style={{ color: 'hsl(0, 0%, 70%)' }}>{value}</span>}
+                    formatter={(value) => <span style={{ color: 'hsl(var(--muted-foreground))' }}>{value}</span>}
                   />
                 </PieChart>
               </ResponsiveContainer>
@@ -335,11 +341,14 @@ const AdminFinanceiro = () => {
                       backgroundColor: 'hsl(var(--popover))', 
                       border: '1px solid hsl(var(--border))',
                       borderRadius: '12px',
+                      color: 'hsl(var(--foreground))',
                     }}
+                    labelStyle={{ color: 'hsl(var(--foreground))' }}
+                    itemStyle={{ color: 'hsl(var(--foreground))' }}
                   />
                   <Legend 
                     wrapperStyle={{ fontSize: '10px' }}
-                    formatter={(value) => <span style={{ color: 'hsl(0, 0%, 70%)' }} className="truncate max-w-[80px] inline-block">{value}</span>}
+                    formatter={(value) => <span style={{ color: 'hsl(var(--muted-foreground))' }} className="truncate max-w-[80px] inline-block">{value}</span>}
                   />
                 </PieChart>
               </ResponsiveContainer>
