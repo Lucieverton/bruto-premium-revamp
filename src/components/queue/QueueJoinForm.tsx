@@ -74,26 +74,18 @@ export const QueueJoinForm = ({ onSuccess }: QueueJoinFormProps) => {
     return value;
   };
   
-  const now = new Date();
-  const currentHour = now.getHours();
-  const currentMinute = now.getMinutes();
-  const currentTime = `${currentHour.toString().padStart(2, '0')}:${currentMinute.toString().padStart(2, '0')}`;
-  
-  const isWithinHours = settings 
-    ? currentTime >= settings.opening_time && currentTime < settings.closing_time
-    : true;
-  
-  const isQueueOpen = (settings?.is_active ?? true) && isWithinHours;
+  // Queue is open if the toggle is ON - time is just informational
+  const isQueueOpen = settings?.is_active ?? true;
   
   if (!isQueueOpen) {
     return (
       <div className="bg-card border border-border rounded-lg p-6 text-center">
         <h3 className="text-xl font-bold text-red-500 mb-2">Fila Fechada</h3>
         <p className="text-muted-foreground mb-4">
-          A fila abre às {settings?.opening_time || '09:00'} e fecha às {settings?.closing_time || '19:00'}.
+          A fila está temporariamente fechada.
         </p>
         <p className="text-sm text-muted-foreground">
-          Horário atual: {currentTime}
+          Horário de funcionamento: {settings?.opening_time || '09:00'} - {settings?.closing_time || '19:00'}
         </p>
       </div>
     );
