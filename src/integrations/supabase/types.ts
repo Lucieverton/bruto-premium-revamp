@@ -556,6 +556,7 @@ export type Database = {
           ticket_number: string
         }[]
       }
+      leave_queue: { Args: { p_ticket_id: string }; Returns: boolean }
       reject_queue_request: {
         Args: { p_notes?: string; p_request_id: string }
         Returns: boolean
