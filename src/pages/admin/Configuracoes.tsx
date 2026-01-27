@@ -1,15 +1,17 @@
 import { useState, useEffect } from 'react';
-import { Clock, Users, Save, Loader2 } from 'lucide-react';
+import { Clock, Users, Save, Loader2, Settings } from 'lucide-react';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { useQueueSettings } from '@/hooks/useQueue';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { DeleteAttendanceDialog } from '@/components/admin/DeleteAttendanceDialog';
 
 const AdminConfiguracoes = () => {
   const { data: settings, isLoading } = useQueueSettings();
@@ -179,6 +181,19 @@ const AdminConfiguracoes = () => {
             Salvar Configurações
           </Button>
         </form>
+
+        {/* Separator */}
+        <Separator className="my-6" />
+
+        {/* Danger Zone */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <Settings size={16} />
+            <span className="text-sm font-medium uppercase tracking-wide">Zona de Perigo</span>
+          </div>
+          
+          <DeleteAttendanceDialog />
+        </div>
       </div>
     </AdminLayout>
   );
