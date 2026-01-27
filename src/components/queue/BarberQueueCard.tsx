@@ -64,7 +64,8 @@ export const BarberQueueCard = ({ barber, index, onJoinSuccess, hasActiveTicket 
   
   const status = getEffectiveStatus();
   const config = statusConfig[status];
-  const canJoinQueue = status === 'online' && !hasActiveTicket;
+  // Allow joining queue if barber is online OR busy (not offline/away) and user has no active ticket
+  const canJoinQueue = (status === 'online' || status === 'busy') && !hasActiveTicket;
   
   const handleFormSuccess = () => {
     setIsFormOpen(false);
