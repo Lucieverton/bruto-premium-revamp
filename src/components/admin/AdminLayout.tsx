@@ -38,6 +38,7 @@ const adminNavItems = [
 const barberNavItems = [
   { href: '/admin/atendimento', icon: Play, label: 'Atendimento' },
   { href: '/admin', icon: LayoutDashboard, label: 'Fila' },
+  { href: '/admin/meu-financeiro', icon: DollarSign, label: 'Financeiro' },
   { href: '/admin/meu-perfil', icon: User, label: 'Meu Perfil' },
   { href: '/admin/conta', icon: Settings, label: 'Configurações' },
 ];
