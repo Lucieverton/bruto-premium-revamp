@@ -1,4 +1,4 @@
-import { Loader2, UserCheck, UserX, Sparkles, Settings, DollarSign } from 'lucide-react';
+import { Loader2, UserCheck, UserX, Sparkles, Settings, DollarSign, Bell, BellRing } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { Switch } from '@/components/ui/switch';
@@ -9,6 +9,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { AvatarUpload } from '@/components/profile/AvatarUpload';
+import { useBarberQueueAlerts } from '@/hooks/useBarberQueueAlerts';
+import { motion } from 'framer-motion';
 
 const MeuPerfil = () => {
   const { user, isAdmin } = useAuth();
@@ -69,6 +71,22 @@ const MeuPerfil = () => {
     queryClient.invalidateQueries({ queryKey: ['my-barber-profile'] });
     queryClient.invalidateQueries({ queryKey: ['barbers'] });
     queryClient.invalidateQueries({ queryKey: ['public-barbers'] });
+  };
+
+  // Enable queue alerts for this barber
+  useBarberQueueAlerts(barber?.id || null);
+
+  // Request notification permission
+  const requestNotifications = async () => {
+    if ('Notification' in window) {
+      const permission = await Notification.requestPermission();
+      if (permission === 'granted') {
+        toast({
+          title: '🔔 Notificações ativadas!',
+          description: 'Você receberá alertas quando novos clientes entrarem na sua fila.',
+        });
+      }
+    }
   };
 
   if (isLoading) {
@@ -205,6 +223,35 @@ const MeuPerfil = () => {
                 </div>
               );
             })()}
+
+            {/* Notification Settings */}
+            <motion.div 
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="flex items-center justify-between p-4 rounded-xl border bg-gradient-to-r from-primary/5 to-primary/10 border-primary/20"
+            >
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-primary/20 rounded-lg">
+                  <BellRing size={20} className="text-primary" />
+                </div>
+                <div>
+                  <p className="font-medium">Alertas de Novos Clientes</p>
+                  <p className="text-sm text-muted-foreground">
+                    Receba notificações quando clientes entrarem na sua fila
+                  </p>
+                </div>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={requestNotifications}
+                className="border-primary/30 hover:bg-primary/10"
+              >
+                <Bell size={16} className="mr-2" />
+                Ativar
+              </Button>
+            </motion.div>
 
             {/* User Info */}
             <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
