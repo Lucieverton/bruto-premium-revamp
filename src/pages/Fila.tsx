@@ -2,16 +2,15 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { QueueHeader } from '@/components/queue/QueueHeader';
 import { QueueStatus } from '@/components/queue/QueueStatus';
-import { QueueJoinButton } from '@/components/queue/QueueJoinButton';
 import { MyTicketCard } from '@/components/queue/MyTicketCard';
 import { PublicQueueList } from '@/components/queue/PublicQueueList';
-import { BarberStatusCards } from '@/components/queue/BarberStatusCards';
+import { BarberSelectionGrid } from '@/components/queue/BarberSelectionGrid';
 import { ActiveServicesDisplay } from '@/components/queue/ActiveServicesDisplay';
 import { useQueueSettingsRealtime } from '@/hooks/useQueueRealtime';
 import { getMyTicket, clearMyTicket, validateStoredTicket } from '@/lib/antiAbuse';
 import { requestNotificationPermission } from '@/lib/notifications';
 import { supabase } from '@/integrations/supabase/client';
-import { Users, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 
 const Fila = () => {
   const [myTicketId, setMyTicketId] = useState<string | null>(null);
@@ -63,18 +62,46 @@ const Fila = () => {
               <span className="text-primary">Fila</span> Virtual
             </h1>
             <p className="text-sm sm:text-base text-muted-foreground max-w-md mx-auto">
-              Entre na fila de casa e acompanhe em tempo real
+              Escolha seu barbeiro e entre na fila de casa
             </p>
           </motion.div>
           
-          {/* Barbers Status */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-          >
-            <BarberStatusCards />
-          </motion.div>
+          {/* Loading State */}
+          {isValidating ? (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="flex flex-col items-center justify-center p-8 mb-6"
+            >
+              <Loader2 size={32} className="text-primary animate-spin mb-3" />
+              <p className="text-muted-foreground text-sm">Verificando...</p>
+            </motion.div>
+          ) : (
+            <>
+              {/* My Ticket (if exists) */}
+              {myTicketId && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mb-6 max-w-lg mx-auto"
+                >
+                  <MyTicketCard ticketId={myTicketId} onLeave={handleLeave} />
+                </motion.div>
+              )}
+              
+              {/* Barber Selection Grid with "Minha Fila" buttons */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+              >
+                <BarberSelectionGrid 
+                  onJoinSuccess={handleJoinSuccess}
+                  hasActiveTicket={!!myTicketId}
+                />
+              </motion.div>
+            </>
+          )}
           
           {/* Active Services with 3D Chair */}
           <motion.div
@@ -94,40 +121,11 @@ const Fila = () => {
             <QueueStatus />
           </motion.div>
           
-          {/* Main Content - My Ticket or Join (FIRST) */}
+          {/* Queue List */}
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
-            className="mb-5 sm:mb-6"
-          >
-            {isValidating ? (
-              <div className="flex flex-col items-center justify-center p-6 sm:p-8 bg-gradient-to-br from-card to-card/50 border border-border/50 rounded-xl sm:rounded-2xl backdrop-blur-sm shadow-lg max-w-md mx-auto">
-                <Loader2 size={28} className="text-primary animate-spin mb-3" />
-                <p className="text-muted-foreground text-sm">Verificando...</p>
-              </div>
-            ) : myTicketId ? (
-              <div className="max-w-lg mx-auto">
-                <MyTicketCard ticketId={myTicketId} onLeave={handleLeave} />
-              </div>
-            ) : (
-              <div className="flex flex-col items-center justify-center p-6 sm:p-8 bg-gradient-to-br from-card to-card/50 border border-border/50 rounded-xl sm:rounded-2xl backdrop-blur-sm shadow-lg max-w-md mx-auto">
-                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-                  <Users size={24} className="text-primary" />
-                </div>
-                <p className="text-muted-foreground mb-5 text-center text-sm sm:text-base max-w-xs">
-                  Clique no botão abaixo para entrar na fila virtual e ser atendido
-                </p>
-                <QueueJoinButton onSuccess={handleJoinSuccess} />
-              </div>
-            )}
-          </motion.div>
-          
-          {/* Queue List (AFTER Join Section = "Fila Atual" after "Fila Aberta") */}
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
           >
             <PublicQueueList />
           </motion.div>
