@@ -1,4 +1,4 @@
-import { Loader2, UserCheck, UserX, Sparkles, Settings } from 'lucide-react';
+import { Loader2, UserCheck, UserX, Sparkles, Settings, DollarSign } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { Switch } from '@/components/ui/switch';
@@ -8,7 +8,6 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { BarberEarningsCard } from '@/components/admin/BarberEarningsCard';
 import { AvatarUpload } from '@/components/profile/AvatarUpload';
 
 const MeuPerfil = () => {
@@ -113,14 +112,24 @@ const MeuPerfil = () => {
             </div>
           </div>
           
-          {isAdmin && (
-            <Button variant="outline" size="sm" asChild>
-              <Link to="/admin/configuracoes">
-                <Settings size={16} className="mr-2" />
-                Configurações
-              </Link>
-            </Button>
-          )}
+          <div className="flex gap-2">
+            {!isAdmin && (
+              <Button variant="outline" size="sm" asChild>
+                <Link to="/admin/meu-financeiro">
+                  <DollarSign size={16} className="mr-2" />
+                  Financeiro
+                </Link>
+              </Button>
+            )}
+            {isAdmin && (
+              <Button variant="outline" size="sm" asChild>
+                <Link to="/admin/configuracoes">
+                  <Settings size={16} className="mr-2" />
+                  Configurações
+                </Link>
+              </Button>
+            )}
+          </div>
         </div>
 
         {/* Profile Card */}
@@ -210,12 +219,6 @@ const MeuPerfil = () => {
           </CardContent>
         </Card>
 
-        {/* Earnings Section */}
-        <BarberEarningsCard 
-          barberId={barber.id} 
-          barberName={barber.display_name}
-          commissionPercentage={barber.commission_percentage}
-        />
       </div>
     </AdminLayout>
   );

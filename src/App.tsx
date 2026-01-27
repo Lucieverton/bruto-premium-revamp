@@ -13,6 +13,7 @@ import AdminBarbeiros from "./pages/admin/Barbeiros";
 import AdminServicos from "./pages/admin/Servicos";
 import AdminConfiguracoes from "./pages/admin/Configuracoes";
 import AdminMeuPerfil from "./pages/admin/MeuPerfil";
+import AdminMeuFinanceiro from "./pages/admin/MeuFinanceiro";
 import AdminAtendimento from "./pages/admin/Atendimento";
 import AdminContaConfig from "./pages/admin/ContaConfig";
 import NotFound from "./pages/NotFound";
@@ -36,6 +37,7 @@ const App = () => (
             <Route path="/admin/servicos" element={<AdminServicos />} />
             <Route path="/admin/configuracoes" element={<AdminConfiguracoes />} />
             <Route path="/admin/meu-perfil" element={<AdminMeuPerfil />} />
+            <Route path="/admin/meu-financeiro" element={<AdminMeuFinanceiro />} />
             <Route path="/admin/atendimento" element={<AdminAtendimento />} />
             <Route path="/admin/conta" element={<AdminContaConfig />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
