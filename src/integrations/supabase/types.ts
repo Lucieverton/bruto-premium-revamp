@@ -118,6 +118,7 @@ export type Database = {
           specialty: string | null
           status: string
           user_id: string | null
+          whatsapp_number: string | null
         }
         Insert: {
           avatar_url?: string | null
@@ -131,6 +132,7 @@ export type Database = {
           specialty?: string | null
           status?: string
           user_id?: string | null
+          whatsapp_number?: string | null
         }
         Update: {
           avatar_url?: string | null
@@ -144,6 +146,7 @@ export type Database = {
           specialty?: string | null
           status?: string
           user_id?: string | null
+          whatsapp_number?: string | null
         }
         Relationships: []
       }
@@ -525,6 +528,7 @@ export type Database = {
         Returns: {
           barber_id: string
           barber_name: string
+          barber_whatsapp: string
           called_at: string
           created_at: string
           customer_name_masked: string

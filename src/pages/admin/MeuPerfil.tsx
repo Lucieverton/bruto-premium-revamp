@@ -9,6 +9,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { AvatarUpload } from '@/components/profile/AvatarUpload';
+import { WhatsAppNumberForm } from '@/components/profile/WhatsAppNumberForm';
 import { useBarberQueueAlerts } from '@/hooks/useBarberQueueAlerts';
 import { motion } from 'framer-motion';
 
@@ -265,6 +266,12 @@ const MeuPerfil = () => {
             </div>
           </CardContent>
         </Card>
+
+        {/* WhatsApp Number Form */}
+        <WhatsAppNumberForm 
+          barberId={barber.id} 
+          currentNumber={barber.whatsapp_number as string | null} 
+        />
 
       </div>
     </AdminLayout>
