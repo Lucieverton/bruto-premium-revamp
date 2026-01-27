@@ -125,10 +125,10 @@ export default {
         },
         glow: {
           '0%, 100%': {
-            boxShadow: '0 0 8px rgba(255, 193, 7, 0.2)',
+            boxShadow: '0 0 8px rgba(180, 180, 180, 0.15)',
           },
           '50%': {
-            boxShadow: '0 0 24px rgba(255, 193, 7, 0.5)',
+            boxShadow: '0 0 24px rgba(200, 200, 200, 0.3)',
           },
         },
         bounce: {
