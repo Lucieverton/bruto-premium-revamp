@@ -80,13 +80,20 @@ const Atendimento = () => {
   const completeService = useBarberCompleteService();
   const callClient = useBarberCallClient();
 
-  // Filter queue items - PHASE 3: Only show clients assigned to this barber OR with no barber assigned
+  // Filter queue items - SECURITY: Only show clients assigned to this barber OR with no barber assigned
+  // Barbers can only see and manage their own clients - NOT other barbers' clients
   const waitingQueue = queue?.filter(q => 
     q.status === 'waiting' && 
     (q.barber_id === barber?.id || q.barber_id === null)
   ) || [];
   
-  const calledQueue = queue?.filter(q => q.status === 'called') || [];
+  // Called queue - ONLY show clients that belong to THIS barber or have no barber assigned
+  const calledQueue = queue?.filter(q => 
+    q.status === 'called' && 
+    (q.barber_id === barber?.id || q.barber_id === null)
+  ) || [];
+  
+  // In progress - ONLY show THIS barber's active services
   const myInProgress = queue?.filter(q => 
     q.status === 'in_progress' && q.barber_id === barber?.id
   ) || [];
