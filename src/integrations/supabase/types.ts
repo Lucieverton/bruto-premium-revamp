@@ -450,6 +450,23 @@ export type Database = {
         Args: { p_notes?: string; p_request_id: string }
         Returns: string
       }
+      barber_add_client_direct: {
+        Args: {
+          p_barber_id?: string
+          p_customer_name: string
+          p_customer_phone: string
+          p_priority?: string
+          p_service_id?: string
+        }
+        Returns: {
+          id: string
+          ticket_number: string
+        }[]
+      }
+      barber_call_client: {
+        Args: { p_barber_id: string; p_ticket_id: string }
+        Returns: boolean
+      }
       barber_complete_service: {
         Args: {
           p_payment_method?: string
