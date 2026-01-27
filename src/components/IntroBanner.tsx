@@ -14,11 +14,15 @@ export const IntroBanner = () => {
           <Button
             asChild
             size="lg"
-            className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold uppercase tracking-wide min-w-[200px] shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
+            className="group relative overflow-hidden bg-gradient-to-br from-[#e8e8e8] via-[#c0c0c0] to-[#a8a8a8] text-gray-900 font-bold uppercase tracking-wide min-w-[220px] shadow-[0_0_20px_rgba(192,192,192,0.4),0_4px_15px_rgba(0,0,0,0.3)] hover:shadow-[0_0_30px_rgba(220,220,220,0.6),0_6px_20px_rgba(0,0,0,0.4)] transition-all duration-500 hover:-translate-y-1 border border-white/30"
           >
             <Link to="/fila">
-              <Scissors className="mr-2" size={20} />
-              Entre na fila
+              {/* Chrome shine effect */}
+              <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-out" />
+              {/* Inner glow */}
+              <span className="absolute inset-[1px] rounded-md bg-gradient-to-b from-white/20 to-transparent pointer-events-none" />
+              <Scissors className="mr-2 relative z-10 drop-shadow-sm" size={20} />
+              <span className="relative z-10 drop-shadow-sm">Entre na fila</span>
             </Link>
           </Button>
           
