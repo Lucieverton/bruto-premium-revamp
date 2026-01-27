@@ -10,7 +10,8 @@ import {
   Sparkles,
   MessageCircle,
   Target,
-  Users
+  Users,
+  Bell
 } from 'lucide-react';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { Button } from '@/components/ui/button';
@@ -31,8 +32,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { useTodayQueue, useServices } from '@/hooks/useQueue';
 import { useAdminBarbers } from '@/hooks/useAdminBarbers';
 import { useBarberStartService, useBarberCompleteService } from '@/hooks/useBarberQueue';
+import { useBarberCallClient } from '@/hooks/useBarberDirectEntry';
 import { useQueueRealtime, useBarbersRealtime, useQueueTransfersRealtime } from '@/hooks/useQueueRealtime';
-import { RequestQueueEntryForm } from '@/components/admin/RequestQueueEntryForm';
+import { BarberQueueEntryForm } from '@/components/admin/BarberQueueEntryForm';
 import { TransferClientDialog } from '@/components/admin/TransferClientDialog';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -76,6 +78,7 @@ const Atendimento = () => {
   // Mutations
   const startService = useBarberStartService();
   const completeService = useBarberCompleteService();
+  const callClient = useBarberCallClient();
 
   // Filter queue items - PHASE 3: Only show clients assigned to this barber OR with no barber assigned
   const waitingQueue = queue?.filter(q => 
@@ -185,9 +188,12 @@ const Atendimento = () => {
           </div>
         </div>
 
-        {/* Request Queue Entry Form for Barbers */}
+        {/* Queue Entry Form for Barbers - now with direct entry support */}
         {barber && (
-          <RequestQueueEntryForm barberId={barber.id} />
+          <BarberQueueEntryForm 
+            barberId={barber.id} 
+            canAddDirectly={barber.can_add_clients_directly} 
+          />
         )}
         <AnimatePresence>
           {myInProgress.length > 0 && (
@@ -395,7 +401,7 @@ const Atendimento = () => {
                           )}
                         </div>
                         
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
                           {/* Transfer Button */}
                           <TransferClientDialog
                             queueItemId={item.id}
@@ -404,15 +410,30 @@ const Atendimento = () => {
                             ticketNumber={item.ticket_number}
                           />
                           
-                          {index === 0 && myInProgress.length === 0 && (
+                          {/* Call Client Button - separate from starting service */}
+                          {myInProgress.length === 0 && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => callClient.mutate({ ticketId: item.id, barberId: barber!.id })}
+                              disabled={callClient.isPending}
+                              className="border-yellow-500/50 text-yellow-600 hover:bg-yellow-500/10"
+                            >
+                              <Bell size={14} className="mr-1" />
+                              Chamar
+                            </Button>
+                          )}
+                          
+                          {/* Start Service Button */}
+                          {myInProgress.length === 0 && (
                             <Button
                               size="sm"
                               onClick={() => handleStartService(item.id)}
                               disabled={startService.isPending}
                               className="bg-green-600 hover:bg-green-700"
                             >
-                              <Phone size={14} className="mr-1" />
-                              Chamar e Iniciar
+                              <Play size={14} className="mr-1" />
+                              Iniciar
                             </Button>
                           )}
                         </div>
