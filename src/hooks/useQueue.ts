@@ -313,10 +313,15 @@ export const useJoinQueue = () => {
       
       // RPC returns array, get first item
       const ticket = Array.isArray(result) ? result[0] : result;
+
+      // Ensure the ticket is persisted immediately (avoids race conditions with UI re-renders)
+      if (ticket?.id) {
+        saveMyTicket(ticket.id);
+      }
+
       return ticket as { id: string; ticket_number: string };
     },
     onSuccess: (data) => {
-      saveMyTicket(data.id);
       queryClient.invalidateQueries({ queryKey: ['queue-items'] });
       queryClient.invalidateQueries({ queryKey: ['today-queue'] });
       queryClient.invalidateQueries({ queryKey: ['public-queue'] });

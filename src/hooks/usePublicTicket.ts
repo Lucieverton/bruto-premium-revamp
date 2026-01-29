@@ -6,12 +6,12 @@ import { usePublicQueue, type PublicQueueItem } from '@/hooks/useQueue';
  * This avoids reading protected tables directly (clients cannot SELECT queue_items).
  */
 export const usePublicTicket = (ticketId: string | null) => {
-  const { data: queue, isLoading, isError, error } = usePublicQueue();
+  const { data: queue, isLoading, isError, error, refetch, isFetching } = usePublicQueue();
 
   const ticket = useMemo<PublicQueueItem | null>(() => {
     if (!ticketId) return null;
     return queue?.find((q) => q.id === ticketId) ?? null;
   }, [queue, ticketId]);
 
-  return { ticket, isLoading, isError, error };
+  return { ticket, isLoading, isFetching, isError, error, refetch };
 };

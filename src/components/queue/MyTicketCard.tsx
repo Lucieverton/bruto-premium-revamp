@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
-import { Ticket, Clock, MapPin, X, Star, Bell, Timer } from 'lucide-react';
+import { Ticket, Clock, MapPin, X, Star, Bell, Timer, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLeaveQueue, useQueuePosition, useQueueStats } from '@/hooks/useQueue';
 import { usePublicTicket } from '@/hooks/usePublicTicket';
@@ -13,7 +13,7 @@ interface MyTicketCardProps {
 }
 
 export const MyTicketCard = ({ ticketId, onLeave }: MyTicketCardProps) => {
-  const { ticket, isLoading: ticketLoading } = usePublicTicket(ticketId);
+  const { ticket, isLoading: ticketLoading, isFetching, refetch } = usePublicTicket(ticketId);
   const { data: positionData } = useQueuePosition(ticketId);
   const { data: stats } = useQueueStats();
   const leaveQueue = useLeaveQueue();
@@ -88,16 +88,26 @@ export const MyTicketCard = ({ ticketId, onLeave }: MyTicketCardProps) => {
     );
   }
   
-  // If ticket is no longer in public queue (completed/cancelled/etc.), clear locally.
+  // If the public list is temporarily stale (right after joining), don't clear localStorage.
+  // Instead, trigger a refetch and show a small syncing state.
   useEffect(() => {
     if (ticketLoading) return;
     if (!ticket) {
-      clearMyTicket();
-      onLeave();
+      // One gentle refetch to pick up the newly created ticket
+      refetch();
     }
-  }, [ticket, ticketLoading, onLeave]);
+  }, [ticket, ticketLoading, refetch]);
 
-  if (!ticket) return null;
+  if (!ticket) {
+    return (
+      <div className="bg-card border border-border rounded-lg p-6">
+        <div className="flex items-center justify-center gap-2 text-muted-foreground">
+          <Loader2 className={cn('h-4 w-4', (ticketLoading || isFetching) && 'animate-spin')} />
+          <span className="text-sm">Sincronizando seu ticket...</span>
+        </div>
+      </div>
+    );
+  }
   
   const getStatusConfig = () => {
     switch (ticket.status) {
