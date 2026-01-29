@@ -9,10 +9,6 @@ export const PublicQueueList = () => {
   const { data: queue, isLoading } = usePublicQueue();
   const myTicketId = getMyTicket();
   
-  // Debug log to trace the issue
-  console.log('[PublicQueueList] myTicketId from localStorage:', myTicketId);
-  console.log('[PublicQueueList] Queue items:', queue?.map(q => ({ id: q.id, name: q.customer_name_masked, barber_whatsapp: q.barber_whatsapp })));
-  
   // Filter to show only waiting tickets (called/in_progress are shown in ActiveServices)
   const waitingQueue = queue?.filter(q => q.status === 'waiting').slice(0, 15) || [];
   
@@ -148,7 +144,7 @@ export const PublicQueueList = () => {
                         {item.barber_whatsapp ? (
                           <Button
                             size="sm"
-                            className="bg-green-600 hover:bg-green-700 text-white text-[10px] sm:text-xs gap-1 px-2 sm:px-3 h-8 sm:h-9"
+                            className="bg-success hover:bg-success/90 text-success-foreground text-[10px] sm:text-xs gap-1 px-2 sm:px-3 h-8 sm:h-9"
                             onClick={() => {
                               const message = encodeURIComponent(
                                 `Olá ${item.barber_name}! 👋\n\n` +

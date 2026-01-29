@@ -28,26 +28,26 @@ export const validateStoredTicket = async (supabase: any): Promise<string | null
   if (!ticketId) return null;
   
   try {
-    const { data, error } = await supabase
-      .from('queue_items')
-      .select('id, status')
-      .eq('id', ticketId)
-      .single();
-    
-    if (error || !data) {
-      // Ticket not found - clear and allow new entry
+    // IMPORTANT: Clients cannot read queue_items directly due to backend security.
+    // Use secure RPC to verify status without exposing PII.
+    const { data, error } = await supabase.rpc('get_queue_position', {
+      p_ticket_id: ticketId,
+    });
+
+    if (error) {
       clearMyTicket();
       return null;
     }
-    
-    // Only these statuses mean the client is STILL in queue
+
+    const row = (Array.isArray(data) ? data[0] : null) as
+      | { ticket_status?: string | null }
+      | null;
+
+    const status = row?.ticket_status ?? null;
     const activeStatuses = ['waiting', 'called', 'in_progress'];
-    
-    if (activeStatuses.includes(data.status)) {
-      return ticketId;
-    }
-    
-    // Ticket is completed, cancelled, or no_show - clear it so they can re-enter
+
+    if (status && activeStatuses.includes(status)) return ticketId;
+
     clearMyTicket();
     return null;
   } catch {
