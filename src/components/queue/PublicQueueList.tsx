@@ -60,7 +60,7 @@ export const PublicQueueList = () => {
                     !isMe && !isFirst && 'bg-background/50 border border-border/50'
                   )}
                 >
-                  {/* Position Badge */}
+                  {/* Main content with WhatsApp button on right */}
                   <div className="flex items-start gap-2 sm:gap-3">
                     {/* Order Number */}
                     <div className={cn(
@@ -131,34 +131,34 @@ export const PublicQueueList = () => {
                           Próximo a ser chamado
                         </motion.div>
                       )}
-
-                      {/* WhatsApp Button - Only for the client's own ticket */}
-                      {isMe && item.barber_whatsapp && item.barber_name && (
-                        <motion.div
-                          initial={{ opacity: 0, scale: 0.9 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          transition={{ delay: 0.3 }}
-                          className="mt-2"
-                        >
-                          <Button
-                            size="sm"
-                            className="w-full bg-green-600 hover:bg-green-700 text-white text-xs gap-1.5"
-                            onClick={() => {
-                              const message = encodeURIComponent(
-                                `Olá ${item.barber_name}! 👋\n\n` +
-                                `Estou na fila (${item.ticket_number}) - Posição ${index + 1}\n` +
-                                `${item.service_name ? `Serviço: ${item.service_name}\n` : ''}` +
-                                `\nAguardando atendimento! 💈`
-                              );
-                              window.open(`https://wa.me/55${item.barber_whatsapp}?text=${message}`, '_blank');
-                            }}
-                          >
-                            <MessageCircle size={14} />
-                            Chamar {item.barber_name} no WhatsApp
-                          </Button>
-                        </motion.div>
-                      )}
                     </div>
+
+                    {/* WhatsApp Button - Right side, only for client's own ticket */}
+                    {isMe && item.barber_whatsapp && item.barber_name && (
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: 0.3 }}
+                        className="flex-shrink-0"
+                      >
+                        <Button
+                          size="sm"
+                          className="bg-green-600 hover:bg-green-700 text-white text-[10px] sm:text-xs gap-1 px-2 sm:px-3 h-8 sm:h-9"
+                          onClick={() => {
+                            const message = encodeURIComponent(
+                              `Olá ${item.barber_name}! 👋\n\n` +
+                              `Estou na fila (${item.ticket_number}) - Posição ${index + 1}\n` +
+                              `${item.service_name ? `Serviço: ${item.service_name}\n` : ''}` +
+                              `\nAguardando atendimento! 💈`
+                            );
+                            window.open(`https://wa.me/55${item.barber_whatsapp}?text=${message}`, '_blank');
+                          }}
+                        >
+                          <MessageCircle size={14} />
+                          <span className="hidden sm:inline">Chamar</span>
+                        </Button>
+                      </motion.div>
+                    )}
                   </div>
                 </motion.div>
               );
