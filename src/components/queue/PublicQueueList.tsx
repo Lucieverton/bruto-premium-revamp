@@ -9,6 +9,10 @@ export const PublicQueueList = () => {
   const { data: queue, isLoading } = usePublicQueue();
   const myTicketId = getMyTicket();
   
+  // Debug log to trace the issue
+  console.log('[PublicQueueList] myTicketId from localStorage:', myTicketId);
+  console.log('[PublicQueueList] Queue items:', queue?.map(q => ({ id: q.id, name: q.customer_name_masked, barber_whatsapp: q.barber_whatsapp })));
+  
   // Filter to show only waiting tickets (called/in_progress are shown in ActiveServices)
   const waitingQueue = queue?.filter(q => q.status === 'waiting').slice(0, 15) || [];
   
@@ -134,29 +138,35 @@ export const PublicQueueList = () => {
                     </div>
 
                     {/* WhatsApp Button - Right side, only for client's own ticket */}
-                    {isMe && item.barber_whatsapp && item.barber_name && (
+                    {isMe && item.barber_name && (
                       <motion.div
                         initial={{ opacity: 0, scale: 0.9 }}
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ delay: 0.3 }}
                         className="flex-shrink-0"
                       >
-                        <Button
-                          size="sm"
-                          className="bg-green-600 hover:bg-green-700 text-white text-[10px] sm:text-xs gap-1 px-2 sm:px-3 h-8 sm:h-9"
-                          onClick={() => {
-                            const message = encodeURIComponent(
-                              `Olá ${item.barber_name}! 👋\n\n` +
-                              `Estou na fila (${item.ticket_number}) - Posição ${index + 1}\n` +
-                              `${item.service_name ? `Serviço: ${item.service_name}\n` : ''}` +
-                              `\nAguardando atendimento! 💈`
-                            );
-                            window.open(`https://wa.me/55${item.barber_whatsapp}?text=${message}`, '_blank');
-                          }}
-                        >
-                          <MessageCircle size={14} />
-                          <span className="hidden sm:inline">Chamar</span>
-                        </Button>
+                        {item.barber_whatsapp ? (
+                          <Button
+                            size="sm"
+                            className="bg-green-600 hover:bg-green-700 text-white text-[10px] sm:text-xs gap-1 px-2 sm:px-3 h-8 sm:h-9"
+                            onClick={() => {
+                              const message = encodeURIComponent(
+                                `Olá ${item.barber_name}! 👋\n\n` +
+                                `Estou na fila (${item.ticket_number}) - Posição ${index + 1}\n` +
+                                `${item.service_name ? `Serviço: ${item.service_name}\n` : ''}` +
+                                `\nAguardando atendimento! 💈`
+                              );
+                              window.open(`https://wa.me/55${item.barber_whatsapp}?text=${message}`, '_blank');
+                            }}
+                          >
+                            <MessageCircle size={14} />
+                            <span className="hidden sm:inline">Chamar</span>
+                          </Button>
+                        ) : (
+                          <span className="text-[9px] sm:text-[10px] text-muted-foreground italic">
+                            WhatsApp não disponível
+                          </span>
+                        )}
                       </motion.div>
                     )}
                   </div>
