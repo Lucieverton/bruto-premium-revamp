@@ -1,7 +1,8 @@
 import { useEffect, useState, useRef } from 'react';
 import { Ticket, Clock, MapPin, X, Star, Bell, Timer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useQueueItem, useLeaveQueue, useQueuePosition, useQueueStats } from '@/hooks/useQueue';
+import { useLeaveQueue, useQueuePosition, useQueueStats } from '@/hooks/useQueue';
+import { usePublicTicket } from '@/hooks/usePublicTicket';
 import { clearMyTicket } from '@/lib/antiAbuse';
 import { sendNotification } from '@/lib/notifications';
 import { cn } from '@/lib/utils';
@@ -12,7 +13,7 @@ interface MyTicketCardProps {
 }
 
 export const MyTicketCard = ({ ticketId, onLeave }: MyTicketCardProps) => {
-  const { data: ticket, isLoading: ticketLoading } = useQueueItem(ticketId);
+  const { ticket, isLoading: ticketLoading } = usePublicTicket(ticketId);
   const { data: positionData } = useQueuePosition(ticketId);
   const { data: stats } = useQueueStats();
   const leaveQueue = useLeaveQueue();
@@ -87,11 +88,16 @@ export const MyTicketCard = ({ ticketId, onLeave }: MyTicketCardProps) => {
     );
   }
   
-  if (!ticket || ticket.status === 'cancelled' || ticket.status === 'completed' || ticket.status === 'no_show') {
-    clearMyTicket();
-    onLeave();
-    return null;
-  }
+  // If ticket is no longer in public queue (completed/cancelled/etc.), clear locally.
+  useEffect(() => {
+    if (ticketLoading) return;
+    if (!ticket) {
+      clearMyTicket();
+      onLeave();
+    }
+  }, [ticket, ticketLoading, onLeave]);
+
+  if (!ticket) return null;
   
   const getStatusConfig = () => {
     switch (ticket.status) {
@@ -160,7 +166,7 @@ export const MyTicketCard = ({ ticketId, onLeave }: MyTicketCardProps) => {
         </div>
         
         <div className="text-muted-foreground text-sm sm:text-base truncate px-2">
-          {ticket.customer_name}
+          {ticket.customer_name_masked}
         </div>
       </div>
       
