@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { QueueHeader } from '@/components/queue/QueueHeader';
-import { QueueStatus } from '@/components/queue/QueueStatus';
 import { MyTicketCard } from '@/components/queue/MyTicketCard';
-import { PublicQueueList } from '@/components/queue/PublicQueueList';
-import { BarberSelectionGrid } from '@/components/queue/BarberSelectionGrid';
+import { BarbersPanel } from '@/components/queue/BarbersPanel';
+import { HeroStatsPanel } from '@/components/queue/HeroStatsPanel';
+import { QueueListPanel } from '@/components/queue/QueueListPanel';
 import { ActiveServicesDisplay } from '@/components/queue/ActiveServicesDisplay';
 import { useQueueSettingsRealtime } from '@/hooks/useQueueRealtime';
 import { getMyTicket, clearMyTicket, validateStoredTicket } from '@/lib/antiAbuse';
@@ -16,10 +16,8 @@ const Fila = () => {
   const [myTicketId, setMyTicketId] = useState<string | null>(null);
   const [isValidating, setIsValidating] = useState(true);
   
-  // Enable realtime updates for settings only (barbers uses polling for reliability)
   useQueueSettingsRealtime();
   
-  // Check and validate existing ticket on mount
   useEffect(() => {
     const validateTicket = async () => {
       setIsValidating(true);
@@ -27,7 +25,6 @@ const Fila = () => {
       setMyTicketId(validTicketId);
       
       if (validTicketId) {
-        // Request notification permission
         requestNotificationPermission();
       }
       setIsValidating(false);
@@ -37,7 +34,6 @@ const Fila = () => {
   }, []);
   
   const handleJoinSuccess = () => {
-    // Small delay to ensure localStorage was saved by the mutation
     setTimeout(() => {
       const savedTicket = getMyTicket();
       setMyTicketId(savedTicket);
@@ -53,85 +49,81 @@ const Fila = () => {
     <div className="min-h-[100svh] bg-background text-foreground">
       <QueueHeader />
       
-      <main className="py-6 sm:py-8 md:py-10 px-4 sm:px-6">
-        <div className="max-w-5xl mx-auto">
-          {/* Hero Section */}
-          <motion.div 
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-center mb-8 sm:mb-10"
-          >
-            <h1 className="font-display text-3xl sm:text-4xl md:text-5xl uppercase mb-2 sm:mb-3 tracking-wide">
-              <span className="text-primary">Fila</span> Virtual
-            </h1>
-            <p className="text-sm sm:text-base text-muted-foreground max-w-md mx-auto">
-              Escolha seu barbeiro e entre na fila de casa
-            </p>
-          </motion.div>
+      <main className="py-4 sm:py-6 lg:py-8 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto">
           
           {/* Loading State */}
           {isValidating ? (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="flex flex-col items-center justify-center p-8 mb-6"
+              className="flex flex-col items-center justify-center p-12"
             >
               <Loader2 size={32} className="text-primary animate-spin mb-3" />
               <p className="text-muted-foreground text-sm">Verificando...</p>
             </motion.div>
           ) : (
             <>
-              {/* My Ticket (if exists) */}
+              {/* My Ticket Card - Full width when active */}
               {myTicketId && (
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="mb-6 max-w-lg mx-auto"
+                  className="mb-6 max-w-lg mx-auto lg:max-w-xl"
                 >
                   <MyTicketCard ticketId={myTicketId} onLeave={handleLeave} />
                 </motion.div>
               )}
               
-              {/* Barber Selection Grid with "Minha Fila" buttons */}
+              {/* 3-Column Grid Layout - Desktop */}
+              {/* Mobile: Stack vertically, Desktop: 3 columns */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6 mb-6">
+                
+                {/* LEFT: Barbers Panel */}
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.1 }}
+                  className="lg:col-span-3 order-2 lg:order-1"
+                >
+                  <BarbersPanel 
+                    onJoinSuccess={handleJoinSuccess}
+                    hasActiveTicket={!!myTicketId}
+                  />
+                </motion.div>
+                
+                {/* CENTER: Hero + Stats */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="lg:col-span-5 order-1 lg:order-2"
+                >
+                  <div className="bg-card border border-border rounded-xl p-6 h-full">
+                    <HeroStatsPanel />
+                  </div>
+                </motion.div>
+                
+                {/* RIGHT: Queue List Panel */}
+                <motion.div
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.1 }}
+                  className="lg:col-span-4 order-3"
+                >
+                  <QueueListPanel />
+                </motion.div>
+              </div>
+              
+              {/* Active Services - Below the main grid */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 }}
+                transition={{ delay: 0.2 }}
               >
-                <BarberSelectionGrid 
-                  onJoinSuccess={handleJoinSuccess}
-                  hasActiveTicket={!!myTicketId}
-                />
+                <ActiveServicesDisplay />
               </motion.div>
             </>
           )}
-          
-          {/* Active Services with 3D Chair */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-          >
-            <ActiveServicesDisplay />
-          </motion.div>
-          
-          {/* Queue Status Bar */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-          >
-            <QueueStatus />
-          </motion.div>
-          
-          {/* Queue List */}
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-          >
-            <PublicQueueList />
-          </motion.div>
         </div>
       </main>
       
