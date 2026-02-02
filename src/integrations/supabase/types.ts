@@ -483,6 +483,7 @@ export type Database = {
         Returns: boolean
       }
       cleanup_old_entry_logs: { Args: never; Returns: undefined }
+      cleanup_stale_tickets: { Args: never; Returns: number }
       get_active_services_public: {
         Args: never
         Returns: {
