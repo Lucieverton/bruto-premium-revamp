@@ -9,80 +9,80 @@ import { QueueListPanel } from "@/components/queue/QueueListPanel";
 import { ActiveServicesDisplay } from "@/components/queue/ActiveServicesDisplay";
 
 const QueuePage = () => {
-  // Mantenha seus estados originais aqui (myTicketId, etc)
+  // Simulação de estado (mantenha sua lógica de ticket aqui)
   const myTicketId = null;
 
   return (
-    <div className="min-h-screen bg-[#050505] text-white overflow-x-hidden selection:bg-primary/30">
+    <div className="min-h-screen bg-[#050505] text-white overflow-x-hidden">
       <QueueHeader />
 
-      <main className="py-4 px-4 lg:px-6 max-w-[1600px] mx-auto">
-        {/* TÍTULO ÚNICO E ELEGANTE NO TOPO */}
-        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-10">
+      <main className="py-2 sm:py-6 px-4 lg:px-8 max-w-[1500px] mx-auto">
+        {/* HEADER ÚNICO: Removido repetições de "Fila Virtual" */}
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center mb-6 sm:mb-10"
+        >
           <h1 className="font-display text-4xl md:text-6xl uppercase tracking-tighter italic font-black">
             FILA <span className="text-primary">BRUTOS</span>
           </h1>
-          <p className="text-[10px] text-zinc-500 uppercase tracking-[0.4em] mt-2">
-            ACOMPANHE SEU ATENDIMENTO EM TEMPO REAL
+          <p className="text-[10px] text-zinc-500 uppercase tracking-[0.4em] mt-2 font-medium">
+            Sua vez com estilo • Tempo real
           </p>
         </motion.div>
 
-        {/* GRID PRINCIPAL: 3 | 6 | 3 */}
+        {/* GRID PRINCIPAL: Ajustado para proporção 3-6-3 no Desktop */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          {/* COLUNA ESQUERDA: BARBEIROS (Compacto e Sem Scroll Visível) */}
+          {/* COLUNA ESQUERDA: Barbeiros (Compacto e sem scrollbar visível) */}
           <aside className="lg:col-span-3 order-2 lg:order-1">
-            <div className="bg-zinc-900/40 border border-white/5 rounded-2xl overflow-hidden backdrop-blur-sm">
+            <div className="bg-zinc-900/30 border border-white/5 rounded-2xl overflow-hidden backdrop-blur-md">
               <div className="bg-white/5 p-3 text-center border-b border-white/5">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">
-                  Barbeiros Disponíveis
-                </span>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">Barbeiros</span>
               </div>
-              <div className="p-2 max-h-[70vh] overflow-y-auto scrollbar-hide">
-                <div className="scale-[0.92] origin-top">
+              <div className="p-2 max-h-[60vh] overflow-y-auto scrollbar-hide">
+                <div className="scale-[0.9] origin-top">
                   <BarbersPanel hasActiveTicket={!!myTicketId} />
                 </div>
               </div>
             </div>
           </aside>
 
-          {/* COLUNA CENTRAL: ATENDIMENTOS (O FOCO) */}
+          {/* COLUNA CENTRAL: Onde estava o "buraco" e as repetições */}
           <section className="lg:col-span-6 order-1 lg:order-2 flex flex-col gap-6">
             {myTicketId && (
-              <div className="max-w-md mx-auto w-full mb-2">
+              <div className="max-w-md mx-auto w-full">
                 <MyTicketCard ticketId={myTicketId} />
               </div>
             )}
 
-            {/* PAINEL DE ATENDIMENTO CENTRALIZADO */}
-            <div className="bg-zinc-900 border border-white/5 rounded-[2.5rem] p-6 sm:p-10 shadow-2xl flex flex-col items-center min-h-[480px]">
-              <div className="text-center mb-10">
-                <h2 className="text-xl font-bold uppercase tracking-tight text-white">Atendimentos em Andamento</h2>
-                <div className="h-1 w-12 bg-primary mx-auto mt-2 rounded-full" />
+            {/* CARD CENTRAL: Removido textos internos redundantes */}
+            <div className="bg-zinc-900/80 border border-primary/20 rounded-[2.5rem] p-6 sm:p-8 shadow-[0_0_50px_-12px_rgba(0,0,0,0.5)] flex flex-col items-center min-h-[400px]">
+              <div className="text-center mb-8">
+                <h2 className="text-lg font-bold uppercase tracking-widest text-white">Atendimentos em Andamento</h2>
+                <div className="h-0.5 w-16 bg-primary mx-auto mt-2 rounded-full opacity-50" />
               </div>
 
-              {/* WRAPPER DE CENTRALIZAÇÃO: Resolve o "buraco" lateral */}
+              {/* CENTRALIZAÇÃO FORÇADA: Se houver 1 atendimento, ele ficará no meio exato */}
               <div className="flex-1 w-full flex items-center justify-center">
-                <div className="w-full flex justify-center items-center">
+                <div className="w-full flex justify-center items-center overflow-visible">
                   <ActiveServicesDisplay />
                 </div>
               </div>
 
-              {/* STATS NA BASE DO CARD CENTRAL */}
+              {/* HERO STATS: Colocado na base para equilibrar o visual */}
               <div className="w-full mt-8 pt-8 border-t border-white/5">
                 <HeroStatsPanel />
               </div>
             </div>
           </section>
 
-          {/* COLUNA DIREITA: PRÓXIMOS (Compacto) */}
+          {/* COLUNA DIREITA: Fila (Compacto) */}
           <aside className="lg:col-span-3 order-3">
-            <div className="bg-zinc-900/40 border border-white/5 rounded-2xl overflow-hidden backdrop-blur-sm">
+            <div className="bg-zinc-900/30 border border-white/5 rounded-2xl overflow-hidden backdrop-blur-md">
               <div className="bg-white/5 p-3 text-center border-b border-white/5">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">
-                  Visão Geral da Fila
-                </span>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">Próximos da Fila</span>
               </div>
-              <div className="p-4 max-h-[70vh] overflow-y-auto scrollbar-hide">
+              <div className="p-3 max-h-[60vh] overflow-y-auto scrollbar-hide">
                 <div className="scale-[0.95] origin-top">
                   <QueueListPanel />
                 </div>
@@ -91,18 +91,26 @@ const QueuePage = () => {
           </aside>
         </div>
 
-        {/* RODAPÉ DE STATUS */}
-        <footer className="mt-8 flex justify-center opacity-70">
+        {/* STATUS FINAL */}
+        <footer className="mt-10 flex justify-center opacity-60">
           <QueueStatus />
         </footer>
       </main>
 
-      {/* ESTILO GLOBAL PARA OCULTAR BARRAS DE ROLAGEM */}
+      {/* CSS GLOBAL PARA LIMPAR O VISUAL */}
       <style
         dangerouslySetInnerHTML={{
           __html: `
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        /* Ajuste fino para o componente de cadeira quando estiver sozinho */
+        .flex-1 > div > div {
+          margin-left: auto !important;
+          margin-right: auto !important;
+          display: flex !important;
+          justify-content: center !important;
+        }
       `,
         }}
       />
