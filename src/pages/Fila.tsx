@@ -9,95 +9,102 @@ import { QueueListPanel } from "@/components/queue/QueueListPanel";
 import { ActiveServicesDisplay } from "@/components/queue/ActiveServicesDisplay";
 
 const QueuePage = () => {
-  // Simulação de estado (mantenha sua lógica original aqui)
+  // Mantenha seus hooks de estado e realtime aqui
   const myTicketId = null;
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen bg-[#0a0a0a] text-slate-100 overflow-x-hidden">
       <QueueHeader />
 
-      <main className="py-4 sm:py-8 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-[1400px] mx-auto">
-          {/* Header Minimalista para evitar repetição */}
-          <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-10">
-            <h1 className="font-display text-4xl md:text-6xl uppercase tracking-tighter italic">
-              FILA <span className="text-primary">BRUTOS</span>
-            </h1>
-            <p className="text-muted-foreground text-sm uppercase tracking-[0.2em] mt-2">
-              Acompanhamento em tempo real
-            </p>
+      <main className="py-2 sm:py-6 px-4 lg:px-8 max-w-[1600px] mx-auto">
+        {/* Header Compacto */}
+        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-6">
+          <h1 className="font-display text-3xl md:text-5xl uppercase tracking-tighter italic font-black">
+            FILA <span className="text-primary">BRUTOS</span>
+          </h1>
+          <p className="text-[10px] text-muted-foreground uppercase tracking-[0.3em]">
+            Gestão de Atendimento em Tempo Real
+          </p>
+        </motion.div>
+
+        {/* Grid Principal - Ajustado para evitar scroll */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6 items-start">
+          {/* ESQUERDA: Barbeiros (Compacto) */}
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="lg:col-span-3 order-2 lg:order-1"
+          >
+            <div className="bg-card/20 border border-white/5 rounded-xl overflow-hidden backdrop-blur-md">
+              <div className="bg-white/5 p-2 border-b border-white/5">
+                <h3 className="text-[10px] font-bold uppercase tracking-widest text-center text-slate-400">
+                  Barbeiros Disponíveis
+                </h3>
+              </div>
+              {/* Aplicando escala menor para evitar scroll lateral/vertical */}
+              <div className="p-2 max-h-[70vh] overflow-y-auto scrollbar-hide scale-[0.95] origin-top">
+                <BarbersPanel hasActiveTicket={!!myTicketId} />
+              </div>
+            </div>
           </motion.div>
 
-          {/* Grid Principal */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-8 items-start">
-            {/* ESQUERDA: Barbeiros (3 colunas) */}
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              className="lg:col-span-3 order-2 lg:order-1 h-full"
-            >
-              <div className="bg-card/30 border border-border/50 rounded-xl overflow-hidden backdrop-blur-sm">
-                <div className="bg-secondary/50 p-3 border-b border-border/50">
-                  <h3 className="text-xs font-bold uppercase tracking-widest text-center">Barbeiros Disponíveis</h3>
-                </div>
-                <div className="p-2">
-                  <BarbersPanel hasActiveTicket={!!myTicketId} />
-                </div>
+          {/* CENTRO: Atendimentos em Andamento (O Coração) */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="lg:col-span-6 order-1 lg:order-2 flex flex-col gap-4"
+          >
+            {/* Card do Usuário (se ativo) */}
+            {myTicketId && (
+              <div className="max-w-md mx-auto w-full">
+                <MyTicketCard ticketId={myTicketId} />
               </div>
-            </motion.div>
+            )}
 
-            {/* CENTRO: O Coração da Página (6 colunas) */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.98 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="lg:col-span-6 order-1 lg:order-2 flex flex-col gap-6"
-            >
-              {/* Card do Usuário (se existir) */}
-              {myTicketId && <MyTicketCard ticketId={myTicketId} />}
+            {/* Container Central de Atendimento */}
+            <div className="bg-gradient-to-b from-card/80 to-[#0a0a0a] border border-primary/30 rounded-3xl p-6 shadow-[0_0_50px_-12px_rgba(234,179,8,0.15)] relative min-h-[480px] flex flex-col items-center">
+              {/* Título Interno */}
+              <div className="text-center mb-8">
+                <span className="bg-primary/10 text-primary text-[10px] px-3 py-1 rounded-full font-bold uppercase tracking-widest border border-primary/20">
+                  Painel de Monitoramento
+                </span>
+                <h2 className="text-xl font-bold uppercase mt-3 tracking-tight">Atendimentos em Andamento</h2>
+              </div>
 
-              {/* Painel de Atendimento Centralizado */}
-              <div className="bg-gradient-to-b from-card to-background border border-primary/20 rounded-2xl p-6 shadow-2xl relative overflow-hidden min-h-[500px] flex flex-col justify-between">
-                <div className="absolute top-0 left-0 w-full h-1 bg-primary/30" />
-
-                <div className="text-center space-y-2 mb-4">
-                  <span className="text-[10px] font-black uppercase tracking-[0.4em] text-primary">Status Atual</span>
-                  <h2 className="text-xl font-bold uppercase">Atendimentos em Andamento</h2>
-                </div>
-
-                {/* Área da Cadeira e Nome do Cliente */}
-                <div className="flex-1 flex items-center justify-center py-4">
+              {/* Área Central: Onde a mágica do alinhamento acontece */}
+              <div className="flex-1 w-full flex flex-col items-center justify-center">
+                <div className="w-full transform transition-all duration-500 ease-in-out flex justify-center">
+                  {/* O ActiveServicesDisplay dentro de um flex-center garante que se houver só 1, ele fique no meio */}
                   <ActiveServicesDisplay />
                 </div>
-
-                {/* Stats no Rodapé do Card Central */}
-                <div className="mt-4 pt-6 border-t border-border/50">
-                  <HeroStatsPanel />
-                </div>
               </div>
-            </motion.div>
 
-            {/* DIREITA: Visão Geral (3 colunas) */}
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              className="lg:col-span-3 order-3 h-full"
-            >
-              <div className="bg-card/30 border border-border/50 rounded-xl overflow-hidden backdrop-blur-sm h-full">
-                <div className="bg-secondary/50 p-3 border-b border-border/50">
-                  <h3 className="text-xs font-bold uppercase tracking-widest text-center">Visão Geral da Fila</h3>
-                </div>
-                <div className="p-4">
-                  <QueueListPanel />
-                </div>
+              {/* Stats na Base */}
+              <div className="w-full mt-6 pt-6 border-t border-white/5">
+                <HeroStatsPanel />
               </div>
-            </motion.div>
-          </div>
+            </div>
+          </motion.div>
 
-          {/* Barra de Status Inferior */}
-          <footer className="mt-8">
-            <QueueStatus />
-          </footer>
+          {/* DIREITA: Fila (Compacto) */}
+          <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="lg:col-span-3 order-3">
+            <div className="bg-card/20 border border-white/5 rounded-xl overflow-hidden backdrop-blur-md">
+              <div className="bg-white/5 p-2 border-b border-white/5">
+                <h3 className="text-[10px] font-bold uppercase tracking-widest text-center text-slate-400">
+                  Próximos da Fila
+                </h3>
+              </div>
+              <div className="p-3 scale-[0.95] origin-top">
+                <QueueListPanel />
+              </div>
+            </div>
+          </motion.div>
         </div>
+
+        {/* Rodapé Status */}
+        <footer className="mt-6 opacity-80">
+          <QueueStatus />
+        </footer>
       </main>
     </div>
   );
