@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
-import { Ticket, Clock, MapPin, X, Star, Bell, Timer, Loader2 } from 'lucide-react';
+import { Ticket, Clock, MapPin, X, Star, Bell, Timer, Loader2, MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLeaveQueue, useQueuePosition, useQueueStats } from '@/hooks/useQueue';
 import { usePublicTicket } from '@/hooks/usePublicTicket';
@@ -221,6 +221,37 @@ export const MyTicketCard = ({ ticketId, onLeave }: MyTicketCardProps) => {
         <div className="mt-3 sm:mt-4 text-center">
           <span className="inline-flex items-center gap-1 text-xs sm:text-sm bg-purple-500/20 text-purple-400 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full">
             <Star size={12} /> Atendimento Preferencial
+          </span>
+        </div>
+      )}
+      
+      {/* WhatsApp Button - Always visible when barber has WhatsApp */}
+      {ticket.barber_name && ticket.barber_whatsapp && (
+        <div className="mt-4 sm:mt-5">
+          <Button
+            className="w-full bg-success hover:bg-success/90 text-success-foreground gap-2"
+            onClick={() => {
+              const message = encodeURIComponent(
+                `Olá ${ticket.barber_name}! 👋\n\n` +
+                `Meu ticket: ${ticket.ticket_number}\n` +
+                `${ticket.service_name ? `Serviço: ${ticket.service_name}\n` : ''}` +
+                `Status: ${ticket.status === 'waiting' ? 'Aguardando' : ticket.status === 'called' ? 'Chamado' : 'Em atendimento'}\n` +
+                `\nEstou acompanhando na fila virtual! 💈`
+              );
+              window.open(`https://wa.me/55${ticket.barber_whatsapp}?text=${message}`, '_blank');
+            }}
+          >
+            <MessageCircle size={18} />
+            Falar com {ticket.barber_name} no WhatsApp
+          </Button>
+        </div>
+      )}
+      
+      {/* Barber info when no WhatsApp available */}
+      {ticket.barber_name && !ticket.barber_whatsapp && (
+        <div className="mt-3 sm:mt-4 text-center">
+          <span className="text-xs sm:text-sm text-muted-foreground">
+            Barbeiro: <span className="text-foreground font-medium">{ticket.barber_name}</span>
           </span>
         </div>
       )}

@@ -37,8 +37,11 @@ const Fila = () => {
   }, []);
   
   const handleJoinSuccess = () => {
-    const savedTicket = getMyTicket();
-    setMyTicketId(savedTicket);
+    // Small delay to ensure localStorage was saved by the mutation
+    setTimeout(() => {
+      const savedTicket = getMyTicket();
+      setMyTicketId(savedTicket);
+    }, 100);
   };
   
   const handleLeave = () => {
