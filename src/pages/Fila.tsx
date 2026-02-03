@@ -44,7 +44,9 @@ const QueuePage = () => {
           <aside className="lg:col-span-3 order-2 lg:order-1">
             <div className="bg-card/60 border border-border rounded-2xl overflow-hidden backdrop-blur-sm h-full flex flex-col">
               <div className="bg-muted/50 px-4 py-3 text-center border-b border-border">
-                <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Barbeiros</span>
+                <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+                  ENTRE NA FILA!
+                </span>
               </div>
               <div className="p-3 flex-1 overflow-y-auto scrollbar-hide">
                 <BarbersPanel onJoinSuccess={handleJoinSuccess} hasActiveTicket={!!myTicketId} />
