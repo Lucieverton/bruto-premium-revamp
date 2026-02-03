@@ -44,9 +44,7 @@ const QueuePage = () => {
           <aside className="lg:col-span-3 order-2 lg:order-1">
             <div className="bg-card/60 border border-border rounded-2xl overflow-hidden backdrop-blur-sm h-full flex flex-col">
               <div className="bg-muted/50 px-4 py-3 text-center border-b border-border">
-                <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
-                  Barbeiros Disponíveis
-                </span>
+                <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Barbeiros</span>
               </div>
               <div className="p-3 flex-1 overflow-y-auto scrollbar-hide">
                 <BarbersPanel onJoinSuccess={handleJoinSuccess} hasActiveTicket={!!myTicketId} />
@@ -65,7 +63,9 @@ const QueuePage = () => {
             {/* CARD CENTRAL DE ATENDIMENTO */}
             <div className="bg-card border border-border rounded-2xl p-5 sm:p-6 shadow-xl flex flex-col min-h-[420px] relative overflow-hidden">
               <div className="text-center mb-5 z-10">
-                <h2 className="text-lg font-bold uppercase tracking-tight text-foreground">Atendimentos em Andamento</h2>
+                <h2 className="text-lg font-bold uppercase tracking-tight text-foreground">
+                  Atendimentos em Andamento
+                </h2>
                 <div className="h-0.5 w-10 bg-primary mx-auto mt-2 rounded-full" />
               </div>
 
