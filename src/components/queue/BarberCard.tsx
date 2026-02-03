@@ -104,24 +104,26 @@ export const BarberCard = ({ barber, index, onJoinSuccess, hasActiveTicket }: Ba
           {config.label}
         </div>
         
-        {/* Action Button */}
+        {/* Action Button - Hover suave e tipografia bold */}
         {canJoinQueue ? (
           <Button
             onClick={() => setIsFormOpen(true)}
             className={cn(
-              'w-full relative overflow-hidden group',
-              'bg-gradient-to-br from-[#e8e8e8] via-[#c0c0c0] to-[#a8a8a8]',
-              'text-gray-900 font-semibold text-sm',
-              'shadow-[0_0_10px_rgba(192,192,192,0.3),inset_0_1px_0_rgba(255,255,255,0.4)]',
-              'hover:shadow-[0_0_15px_rgba(220,220,220,0.5)]',
-              'border border-white/40'
+              'w-full relative overflow-hidden group h-9',
+              'bg-gradient-to-br from-zinc-200 via-zinc-300 to-zinc-400',
+              'text-zinc-900 font-bold text-sm',
+              'shadow-md hover:shadow-lg',
+              'border border-white/50',
+              'transition-all duration-300 ease-out',
+              'hover:from-zinc-100 hover:via-zinc-200 hover:to-zinc-300',
+              'hover:scale-[1.02] active:scale-[0.98]'
             )}
           >
-            <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-500 ease-out" />
-            <span className="relative z-10">Entrar</span>
+            <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/50 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-out" />
+            <span className="relative z-10 font-bold">Entrar</span>
           </Button>
         ) : hasActiveTicket && status !== 'offline' ? (
-          <div className="text-center text-xs text-muted-foreground py-2">
+          <div className="text-center text-xs text-muted-foreground py-2 font-medium">
             Já na fila
           </div>
         ) : (
