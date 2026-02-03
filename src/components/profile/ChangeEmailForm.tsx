@@ -44,11 +44,27 @@ export const ChangeEmailForm = ({ currentEmail }: ChangeEmailFormProps) => {
         email,
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase updateUser error:', error);
+        
+        // Handle specific error messages
+        let errorMessage = error.message;
+        if (error.message.includes('email_exists')) {
+          errorMessage = 'Este email já está em uso por outra conta.';
+        } else if (error.message.includes('same_password')) {
+          errorMessage = 'O novo email é igual ao atual.';
+        } else if (error.message.includes('rate_limit') || error.message.includes('429')) {
+          errorMessage = 'Muitas tentativas. Aguarde alguns minutos.';
+        } else if (error.message.includes('invalid')) {
+          errorMessage = 'Email inválido. Verifique o formato.';
+        }
+        
+        throw new Error(errorMessage);
+      }
 
       toast({
         title: 'Verifique seu email!',
-        description: 'Enviamos um link de confirmação para o novo email.',
+        description: 'Enviamos um link de confirmação para o novo email. Clique no link para confirmar a alteração.',
       });
 
       setEmail('');

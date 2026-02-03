@@ -53,22 +53,23 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Create client with user's token to verify they're admin
+    // Create client with user's token to verify they're authenticated
     const userClient = createClient(supabaseUrl, supabaseAnonKey, {
       global: { headers: { Authorization: authHeader } }
     });
 
-    const token = authHeader.replace('Bearer ', '');
-    const { data: claimsData, error: claimsError } = await userClient.auth.getClaims(token);
+    // FIXED: Use getUser() instead of getClaims() which doesn't exist
+    const { data: userData, error: userError } = await userClient.auth.getUser();
     
-    if (claimsError || !claimsData?.claims) {
+    if (userError || !userData?.user) {
+      console.error('[create-barber-user] Auth error:', userError?.message);
       return new Response(
-        JSON.stringify({ error: 'Token inválido' }),
+        JSON.stringify({ error: 'Token inválido ou expirado' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    const callerId = claimsData.claims.sub;
+    const callerId = userData.user.id;
 
     // Check if caller is admin using service role
     const adminClient = createClient(supabaseUrl, supabaseServiceKey);
@@ -133,7 +134,7 @@ Deno.serve(async (req) => {
 
     // Check if email already exists
     const { data: existingUsers } = await adminClient.auth.admin.listUsers();
-    const emailExists = existingUsers?.users?.some(u => u.email === email);
+    const emailExists = existingUsers?.users?.some(u => u.email?.toLowerCase() === email.toLowerCase());
     
     if (emailExists) {
       return new Response(
