@@ -28,7 +28,7 @@ const QueuePage = () => {
       <QueueHeader />
 
       <main className="py-6 px-4 lg:px-8 max-w-[1600px] mx-auto">
-        {/* TÍTULO PRINCIPAL - Sem repetição de "BRUTOS" */}
+        {/* TÍTULO PRINCIPAL - Sem repetição de "BRUTO'S" */}
         <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-8">
           <h1 className="font-display text-4xl md:text-5xl uppercase tracking-tight italic font-black">
             FILA <span className="text-primary">VIRTUAL</span>
