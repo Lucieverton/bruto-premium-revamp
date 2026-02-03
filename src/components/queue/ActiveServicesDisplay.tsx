@@ -1,38 +1,42 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { useActiveServicesPublic, usePublicBarbers } from '@/hooks/useQueue';
 import { BarberChair3D } from './BarberChair3D';
-import { Scissors } from 'lucide-react';
+import { Scissors, Armchair } from 'lucide-react';
 
 export const ActiveServicesDisplay = () => {
   const { data: activeServices } = useActiveServicesPublic();
   const { data: barbers } = usePublicBarbers();
 
+  // Estado vazio elegante
   if (!activeServices || activeServices.length === 0) {
-    return null;
+    return (
+      <div className="flex flex-col items-center justify-center py-8 text-center">
+        <Armchair size={48} className="text-muted-foreground/30 mb-3" />
+        <p className="text-sm text-muted-foreground">Nenhum atendimento no momento</p>
+        <p className="text-xs text-muted-foreground/60 mt-1">Os clientes em atendimento aparecerão aqui</p>
+      </div>
+    );
   }
 
+  // Centralização quando há apenas 1 atendimento
+  const isSingle = activeServices.length === 1;
+
   return (
-    <div className="mb-6 sm:mb-8">
-      <motion.h3 
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="text-sm font-medium text-muted-foreground mb-4 sm:mb-5 text-center flex items-center justify-center gap-2"
-      >
-        <Scissors size={16} className="text-primary" />
-        <span>Atendimentos em Andamento</span>
-      </motion.h3>
-      
-      {/* Grid layout: 2 columns on mobile, 2-4 columns on larger screens */}
-      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+    <div className="w-full">
+      {/* Grid responsivo: centraliza quando único, grid quando múltiplos */}
+      <div className={
+        isSingle 
+          ? "flex justify-center" 
+          : "grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4"
+      }>
         <AnimatePresence mode="popLayout">
           {activeServices.map((item, index) => {
             const barber = barbers?.find((b) => b.id === item.barber_id);
             
-            // Create a compatible object for BarberChair3D using only public data
             const displayItem = {
               id: item.id,
               ticket_number: item.ticket_number,
-              customer_name: item.customer_first_name, // Only first name (masked by RPC)
+              customer_name: item.customer_first_name,
               status: item.service_status,
               priority: item.priority,
               barber_id: item.barber_id,
@@ -43,11 +47,11 @@ export const ActiveServicesDisplay = () => {
               <motion.div
                 key={item.id}
                 layout
-                initial={{ opacity: 0, scale: 0.8 }}
+                initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.8 }}
-                transition={{ delay: index * 0.1 }}
-                className="bg-gradient-to-br from-card to-card/50 border border-border/50 rounded-xl sm:rounded-2xl p-3 sm:p-4 md:p-5 backdrop-blur-sm shadow-lg"
+                exit={{ opacity: 0, scale: 0.9 }}
+                transition={{ delay: index * 0.05 }}
+                className={`bg-gradient-to-br from-card to-muted/30 border border-border rounded-xl p-4 backdrop-blur-sm shadow-md ${isSingle ? 'w-full max-w-xs' : ''}`}
               >
                 <BarberChair3D
                   item={displayItem}
