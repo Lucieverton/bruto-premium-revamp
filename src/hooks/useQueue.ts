@@ -288,7 +288,7 @@ export const useActiveServicesPublic = () => {
   });
 };
 
-// Join queue mutation - uses secure RPC to bypass RLS
+// Join queue mutation - uses secure RPC to bypass RLS (supports multiple services)
 export const useJoinQueue = () => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -297,14 +297,18 @@ export const useJoinQueue = () => {
     mutationFn: async (data: {
       customer_name: string;
       customer_phone: string;
-      service_id?: string;
+      service_ids?: string[]; // Changed to array
+      service_id?: string; // Keep for backward compatibility
       barber_id?: string;
       priority?: string;
     }) => {
+      // Support both single service_id and array of service_ids
+      const serviceIds = data.service_ids || (data.service_id ? [data.service_id] : null);
+      
       const { data: result, error } = await supabase.rpc('join_queue', {
         p_customer_name: data.customer_name,
         p_customer_phone: data.customer_phone,
-        p_service_id: data.service_id || null,
+        p_service_ids: serviceIds,
         p_barber_id: data.barber_id || null,
         p_priority: data.priority || 'normal',
       });
@@ -327,6 +331,7 @@ export const useJoinQueue = () => {
       queryClient.invalidateQueries({ queryKey: ['public-queue'] });
       queryClient.invalidateQueries({ queryKey: ['queue-stats'] });
       queryClient.invalidateQueries({ queryKey: ['active-services-public'] });
+      queryClient.invalidateQueries({ queryKey: ['queue-item-services'] });
       toast({
         title: 'Você entrou na fila!',
         description: `Seu ticket é ${data.ticket_number}`,
@@ -335,6 +340,95 @@ export const useJoinQueue = () => {
     onError: (error: Error) => {
       toast({
         title: 'Erro ao entrar na fila',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+};
+
+// Interface for queue item service
+export interface QueueItemService {
+  service_id: string;
+  service_name: string;
+  price_at_time: number;
+}
+
+// Fetch services for a specific queue item
+export const useQueueItemServices = (queueItemId: string | null) => {
+  return useQuery({
+    queryKey: ['queue-item-services', queueItemId],
+    queryFn: async () => {
+      if (!queueItemId) return [];
+      
+      const { data, error } = await supabase.rpc('get_queue_item_services', {
+        p_queue_item_id: queueItemId
+      });
+      
+      if (error) throw error;
+      return data as QueueItemService[];
+    },
+    enabled: !!queueItemId,
+  });
+};
+
+// Add service to existing queue item
+export const useAddServiceToQueueItem = () => {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  
+  return useMutation({
+    mutationFn: async ({ queueItemId, serviceId }: { queueItemId: string; serviceId: string }) => {
+      const { data, error } = await supabase.rpc('add_service_to_queue_item', {
+        p_queue_item_id: queueItemId,
+        p_service_id: serviceId,
+      });
+      
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['queue-item-services', variables.queueItemId] });
+      toast({
+        title: 'Serviço adicionado!',
+        description: 'O serviço foi adicionado à comanda.',
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Erro ao adicionar serviço',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+};
+
+// Remove service from queue item
+export const useRemoveServiceFromQueueItem = () => {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  
+  return useMutation({
+    mutationFn: async ({ queueItemId, serviceId }: { queueItemId: string; serviceId: string }) => {
+      const { data, error } = await supabase.rpc('remove_service_from_queue_item', {
+        p_queue_item_id: queueItemId,
+        p_service_id: serviceId,
+      });
+      
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['queue-item-services', variables.queueItemId] });
+      toast({
+        title: 'Serviço removido',
+        description: 'O serviço foi removido da comanda.',
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Erro ao remover serviço',
         description: error.message,
         variant: 'destructive',
       });

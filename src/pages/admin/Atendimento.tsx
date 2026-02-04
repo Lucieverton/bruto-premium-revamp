@@ -29,23 +29,25 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useTodayQueue, useServices } from '@/hooks/useQueue';
+import { useTodayQueue, useServices, useQueueItemServices, useAddServiceToQueueItem, useRemoveServiceFromQueueItem } from '@/hooks/useQueue';
 import { useAdminBarbers } from '@/hooks/useAdminBarbers';
 import { useBarberStartService, useBarberCompleteService } from '@/hooks/useBarberQueue';
 import { useBarberCallClient } from '@/hooks/useBarberDirectEntry';
 import { useQueueRealtime, useBarbersRealtime, useQueueTransfersRealtime } from '@/hooks/useQueueRealtime';
 import { BarberQueueEntryForm } from '@/components/admin/BarberQueueEntryForm';
 import { TransferClientDialog } from '@/components/admin/TransferClientDialog';
+import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Plus, X, Trash2 } from 'lucide-react';
 
 const Atendimento = () => {
   const { user } = useAuth();
   const [showCompleteDialog, setShowCompleteDialog] = useState(false);
   const [selectedTicket, setSelectedTicket] = useState<string | null>(null);
-  const [selectedServiceId, setSelectedServiceId] = useState<string>('');
   const [priceCharged, setPriceCharged] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('');
+  const [showAddServiceSelect, setShowAddServiceSelect] = useState(false);
   
   // Enable realtime updates
   useQueueRealtime();
@@ -74,6 +76,11 @@ const Atendimento = () => {
   const { data: queue, isLoading: queueLoading } = useTodayQueue();
   const { data: services } = useServices();
   const { data: allBarbers } = useAdminBarbers();
+  
+  // Fetch services for selected ticket (for dialog)
+  const { data: ticketServices, refetch: refetchTicketServices } = useQueueItemServices(selectedTicket);
+  const addServiceToTicket = useAddServiceToQueueItem();
+  const removeServiceFromTicket = useRemoveServiceFromQueueItem();
 
   // Mutations
   const startService = useBarberStartService();
@@ -110,21 +117,60 @@ const Atendimento = () => {
     startService.mutate({ ticketId, barberId: barber.id });
   };
 
-  // Handle service selection in dialog - auto-fill price
-  const handleServiceSelect = (serviceId: string) => {
-    setSelectedServiceId(serviceId);
-    const svc = services?.find(s => s.id === serviceId);
-    if (svc) {
-      setPriceCharged(svc.price.toFixed(2).replace('.', ','));
+  // Calculate total from ticketServices
+  const calculateTotal = () => {
+    if (!ticketServices || ticketServices.length === 0) return 0;
+    return ticketServices.reduce((sum, s) => sum + Number(s.price_at_time), 0);
+  };
+
+  // Open complete dialog
+  const openCompleteDialog = (ticketId: string, initialServiceId?: string) => {
+    setSelectedTicket(ticketId);
+    const total = calculateTotal();
+    setPriceCharged(total > 0 ? total.toFixed(2).replace('.', ',') : '');
+    setShowAddServiceSelect(false);
+    setShowCompleteDialog(true);
+  };
+
+  // Handle adding extra service
+  const handleAddExtraService = (serviceId: string) => {
+    if (!selectedTicket) return;
+    addServiceToTicket.mutate(
+      { queueItemId: selectedTicket, serviceId },
+      {
+        onSuccess: () => {
+          refetchTicketServices();
+          setShowAddServiceSelect(false);
+        }
+      }
+    );
+  };
+
+  // Handle removing service
+  const handleRemoveService = (serviceId: string) => {
+    if (!selectedTicket) return;
+    removeServiceFromTicket.mutate(
+      { queueItemId: selectedTicket, serviceId },
+      { onSuccess: () => refetchTicketServices() }
+    );
+  };
+
+  // Update price when ticketServices changes
+  const updatePriceFromServices = () => {
+    if (ticketServices && ticketServices.length > 0) {
+      const total = ticketServices.reduce((sum, s) => sum + Number(s.price_at_time), 0);
+      setPriceCharged(total.toFixed(2).replace('.', ','));
     }
   };
 
   // Handle complete service
   const handleCompleteService = () => {
-    if (!selectedTicket || !selectedServiceId) return;
+    if (!selectedTicket) return;
     
-    const svc = services?.find(s => s.id === selectedServiceId);
-    const price = parseFloat(priceCharged.replace(',', '.')) || svc?.price || 0;
+    // Use the manual price or calculate from services
+    const price = parseFloat(priceCharged.replace(',', '.')) || calculateTotal();
+    
+    if (price <= 0) return;
     
     completeService.mutate({
       ticketId: selectedTicket,
@@ -136,8 +182,13 @@ const Atendimento = () => {
     setPriceCharged('');
     setPaymentMethod('');
     setSelectedTicket(null);
-    setSelectedServiceId('');
+    setShowAddServiceSelect(false);
   };
+
+  // Services not yet added to the ticket
+  const availableServicesToAdd = services?.filter(
+    s => !ticketServices?.some(ts => ts.service_id === s.id)
+  ) || [];
 
 
   if (barberLoading || queueLoading) {
@@ -261,19 +312,8 @@ const Atendimento = () => {
                         </div>
                         
                         <Button
-                          onClick={() => {
-                            setSelectedTicket(item.id);
-                            // Pre-fill with service if exists
-                            if (service) {
-                              setSelectedServiceId(service.id);
-                              setPriceCharged(service.price.toFixed(2).replace('.', ','));
-                            } else {
-                              setSelectedServiceId('');
-                              setPriceCharged('');
-                            }
-                            setShowCompleteDialog(true);
-                          }}
-                          className="bg-green-600 hover:bg-green-700"
+                          onClick={() => openCompleteDialog(item.id, service?.id)}
+                          className="bg-success hover:bg-success/90"
                         >
                           <CheckCircle size={16} className="mr-2" />
                           Finalizar
@@ -454,53 +494,130 @@ const Atendimento = () => {
         </Card>
       </div>
 
-      {/* Complete Dialog */}
+      {/* Complete Dialog - Updated for Multiple Services */}
       <Dialog open={showCompleteDialog} onOpenChange={setShowCompleteDialog}>
-        <DialogContent>
+        <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Finalizar Atendimento</DialogTitle>
           </DialogHeader>
           
           <div className="space-y-4">
-            {/* Service Selection - Required */}
+            {/* Current Services on Ticket */}
             <div className="space-y-2">
-              <Label>Serviço Realizado *</Label>
-              <Select value={selectedServiceId} onValueChange={handleServiceSelect}>
-                <SelectTrigger className="bg-background">
-                  <SelectValue placeholder="Selecione o serviço..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {services?.map((svc) => (
-                    <SelectItem key={svc.id} value={svc.id}>
-                      {svc.name} - R$ {svc.price.toFixed(2).replace('.', ',')}
-                    </SelectItem>
+              <div className="flex items-center justify-between">
+                <Label>Serviços na Comanda</Label>
+                {ticketServices && ticketServices.length > 0 && (
+                  <Badge variant="secondary" className="bg-primary/20 text-primary">
+                    {ticketServices.length} {ticketServices.length === 1 ? 'serviço' : 'serviços'}
+                  </Badge>
+                )}
+              </div>
+              
+              {ticketServices && ticketServices.length > 0 ? (
+                <div className="space-y-2">
+                  {ticketServices.map((ts) => (
+                    <div 
+                      key={ts.service_id}
+                      className="flex items-center justify-between bg-muted/50 rounded-lg p-3"
+                    >
+                      <div>
+                        <div className="font-medium text-sm">{ts.service_name}</div>
+                        <div className="text-sm text-primary font-semibold">
+                          R$ {Number(ts.price_at_time).toFixed(2).replace('.', ',')}
+                        </div>
+                      </div>
+                      {ticketServices.length > 1 && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleRemoveService(ts.service_id)}
+                          disabled={removeServiceFromTicket.isPending}
+                          className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                        >
+                          <Trash2 size={14} />
+                        </Button>
+                      )}
+                    </div>
                   ))}
-                </SelectContent>
-              </Select>
+                  
+                  {/* Total */}
+                  <div className="flex justify-between items-center pt-2 border-t border-border">
+                    <span className="font-medium">Total:</span>
+                    <span className="text-lg font-bold text-primary">
+                      R$ {ticketServices.reduce((sum, s) => sum + Number(s.price_at_time), 0).toFixed(2).replace('.', ',')}
+                    </span>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-sm text-muted-foreground bg-muted/30 rounded-lg p-3">
+                  Nenhum serviço adicionado. Adicione pelo menos um serviço.
+                </div>
+              )}
+            </div>
+
+            {/* Add Extra Service */}
+            <div className="space-y-2">
+              {!showAddServiceSelect ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowAddServiceSelect(true)}
+                  className="w-full"
+                  disabled={availableServicesToAdd.length === 0}
+                >
+                  <Plus size={14} className="mr-1" />
+                  Adicionar Serviço Extra
+                </Button>
+              ) : (
+                <div className="space-y-2">
+                  <Label className="text-sm">Selecione o serviço extra:</Label>
+                  <Select onValueChange={handleAddExtraService}>
+                    <SelectTrigger className="bg-background">
+                      <SelectValue placeholder="Escolha um serviço..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availableServicesToAdd.map((svc) => (
+                        <SelectItem key={svc.id} value={svc.id}>
+                          {svc.name} - R$ {svc.price.toFixed(2).replace('.', ',')}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowAddServiceSelect(false)}
+                  >
+                    Cancelar
+                  </Button>
+                </div>
+              )}
             </div>
             
-            {/* Show selected service info */}
-            {selectedServiceId && (() => {
-              const svc = services?.find(s => s.id === selectedServiceId);
-              return svc ? (
-                <div className="bg-primary/10 rounded-lg p-3 text-sm border border-primary/20">
-                  <div className="font-medium text-primary">{svc.name}</div>
-                  <div className="text-lg font-bold">R$ {svc.price.toFixed(2).replace('.', ',')}</div>
-                </div>
-              ) : null;
-            })()}
-            
             <div className="space-y-2">
-              <Label>Valor Cobrado</Label>
+              <Label>Valor Final</Label>
               <Input
                 placeholder="R$ 0,00"
                 value={priceCharged}
                 onChange={(e) => setPriceCharged(e.target.value)}
                 className="bg-background"
               />
-              <p className="text-xs text-muted-foreground">
-                Altere apenas se houver desconto ou acréscimo
-              </p>
+              <div className="flex items-center justify-between">
+                <p className="text-xs text-muted-foreground">
+                  Altere apenas se houver desconto ou acréscimo
+                </p>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={updatePriceFromServices}
+                  className="text-xs h-auto py-1"
+                >
+                  Recalcular
+                </Button>
+              </div>
             </div>
             
             <div className="space-y-2">
@@ -526,8 +643,8 @@ const Atendimento = () => {
             </Button>
             <Button 
               onClick={handleCompleteService}
-              disabled={completeService.isPending || !selectedServiceId || !paymentMethod}
-              className="bg-green-600 hover:bg-green-700"
+              disabled={completeService.isPending || !paymentMethod || (parseFloat(priceCharged.replace(',', '.')) || 0) <= 0}
+              className="bg-success hover:bg-success/90"
             >
               <CheckCircle size={16} className="mr-2" />
               Confirmar
