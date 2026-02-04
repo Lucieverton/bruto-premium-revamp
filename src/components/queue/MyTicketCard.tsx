@@ -71,6 +71,16 @@ export const MyTicketCard = ({ ticketId, onLeave }: MyTicketCardProps) => {
     const interval = setInterval(updateTime, 60000);
     return () => clearInterval(interval);
   }, [ticket?.created_at]);
+
+  // IMPORTANT: This useEffect MUST be before any conditional returns to follow Rules of Hooks
+  // If the public list is temporarily stale (right after joining), trigger a refetch
+  useEffect(() => {
+    if (ticketLoading) return;
+    if (!ticket) {
+      // One gentle refetch to pick up the newly created ticket
+      refetch();
+    }
+  }, [ticket, ticketLoading, refetch]);
   
   const handleLeave = async () => {
     if (confirm('Tem certeza que deseja sair da fila?')) {
@@ -87,16 +97,6 @@ export const MyTicketCard = ({ ticketId, onLeave }: MyTicketCardProps) => {
       </div>
     );
   }
-  
-  // If the public list is temporarily stale (right after joining), don't clear localStorage.
-  // Instead, trigger a refetch and show a small syncing state.
-  useEffect(() => {
-    if (ticketLoading) return;
-    if (!ticket) {
-      // One gentle refetch to pick up the newly created ticket
-      refetch();
-    }
-  }, [ticket, ticketLoading, refetch]);
 
   if (!ticket) {
     return (
