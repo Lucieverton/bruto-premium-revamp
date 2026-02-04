@@ -168,6 +168,45 @@ export type Database = {
         }
         Relationships: []
       }
+      queue_item_services: {
+        Row: {
+          created_at: string
+          id: string
+          price_at_time: number
+          queue_item_id: string
+          service_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          price_at_time: number
+          queue_item_id: string
+          service_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          price_at_time?: number
+          queue_item_id?: string
+          service_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "queue_item_services_queue_item_id_fkey"
+            columns: ["queue_item_id"]
+            isOneToOne: false
+            referencedRelation: "queue_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "queue_item_services_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       queue_items: {
         Row: {
           barber_id: string | null
@@ -436,6 +475,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      add_service_to_queue_item: {
+        Args: { p_queue_item_id: string; p_service_id: string }
+        Returns: boolean
+      }
       add_walkin_client: {
         Args: {
           p_barber_id?: string
@@ -541,6 +584,14 @@ export type Database = {
           ticket_number: string
         }[]
       }
+      get_queue_item_services: {
+        Args: { p_queue_item_id: string }
+        Returns: {
+          price_at_time: number
+          service_id: string
+          service_name: string
+        }[]
+      }
       get_queue_position: {
         Args: { p_ticket_id: string }
         Returns: {
@@ -565,22 +616,40 @@ export type Database = {
         }
         Returns: boolean
       }
-      join_queue: {
-        Args: {
-          p_barber_id?: string
-          p_customer_name: string
-          p_customer_phone: string
-          p_priority?: string
-          p_service_id?: string
-        }
-        Returns: {
-          id: string
-          ticket_number: string
-        }[]
-      }
+      join_queue:
+        | {
+            Args: {
+              p_barber_id?: string
+              p_customer_name: string
+              p_customer_phone: string
+              p_priority?: string
+              p_service_id?: string
+            }
+            Returns: {
+              id: string
+              ticket_number: string
+            }[]
+          }
+        | {
+            Args: {
+              p_barber_id?: string
+              p_customer_name: string
+              p_customer_phone: string
+              p_priority?: string
+              p_service_ids?: string[]
+            }
+            Returns: {
+              id: string
+              ticket_number: string
+            }[]
+          }
       leave_queue: { Args: { p_ticket_id: string }; Returns: boolean }
       reject_queue_request: {
         Args: { p_notes?: string; p_request_id: string }
+        Returns: boolean
+      }
+      remove_service_from_queue_item: {
+        Args: { p_queue_item_id: string; p_service_id: string }
         Returns: boolean
       }
       transfer_queue_client: {
