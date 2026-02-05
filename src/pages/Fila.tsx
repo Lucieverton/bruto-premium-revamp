@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { motion } from "framer-motion";
 import { QueueHeader } from "@/components/queue/QueueHeader";
 import { MyTicketCard } from "@/components/queue/MyTicketCard";
@@ -6,10 +6,23 @@ import { BarbersPanel } from "@/components/queue/BarbersPanel";
 import { HeroStatsPanel } from "@/components/queue/HeroStatsPanel";
 import { QueueListPanel } from "@/components/queue/QueueListPanel";
 import { ActiveServicesDisplay } from "@/components/queue/ActiveServicesDisplay";
-import { getMyTicket, clearMyTicket } from "@/lib/antiAbuse";
+import { getMyTicket, clearMyTicket, validateStoredTicket } from "@/lib/antiAbuse";
+import { supabase } from "@/integrations/supabase/client";
 
 const QueuePage = () => {
-  const [myTicketId, setMyTicketId] = useState<string | null>(() => getMyTicket());
+  const [myTicketId, setMyTicketId] = useState<string | null>(null);
+  const [isValidating, setIsValidating] = useState(true);
+
+  // Validate stored ticket on mount - clears completed/cancelled tickets
+  useEffect(() => {
+    const validateTicket = async () => {
+      setIsValidating(true);
+      const validTicketId = await validateStoredTicket(supabase);
+      setMyTicketId(validTicketId);
+      setIsValidating(false);
+    };
+    validateTicket();
+  }, []);
 
   const handleJoinSuccess = useCallback(() => {
     setTimeout(() => {
