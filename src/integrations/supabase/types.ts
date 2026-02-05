@@ -555,24 +555,15 @@ export type Database = {
         Args: { p_barber_id: string; p_ticket_id: string }
         Returns: boolean
       }
-      barber_complete_service:
-        | {
-            Args: {
-              p_payment_method?: string
-              p_price_charged: number
-              p_ticket_id: string
-            }
-            Returns: boolean
-          }
-        | {
-            Args: {
-              p_payment_method?: string
-              p_price_charged: number
-              p_services?: Json
-              p_ticket_id: string
-            }
-            Returns: boolean
-          }
+      barber_complete_service: {
+        Args: {
+          p_payment_method?: string
+          p_price_charged: number
+          p_services?: Json
+          p_ticket_id: string
+        }
+        Returns: boolean
+      }
       barber_start_service: {
         Args: { p_barber_id: string; p_ticket_id: string }
         Returns: boolean
