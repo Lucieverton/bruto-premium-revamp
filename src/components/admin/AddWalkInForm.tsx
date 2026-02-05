@@ -10,11 +10,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useAddWalkIn } from '@/hooks/useAdminQueue';
 import { useServices } from '@/hooks/useQueue';
 import { useAvailableBarbers } from '@/hooks/useAdminBarbers';
+import { MultiServiceSelector } from '@/components/queue/MultiServiceSelector';
 
 const formSchema = z.object({
   customer_name: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres'),
   customer_phone: z.string().min(10, 'Telefone deve ter pelo menos 10 dígitos'),
-  service_id: z.string().optional(),
   barber_id: z.string().optional(),
   priority: z.enum(['normal', 'preferencial']).default('normal'),
 });
@@ -23,6 +23,7 @@ type FormData = z.infer<typeof formSchema>;
 
 export const AddWalkInForm = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]);
   const { data: services } = useServices();
   const { data: barbers, isLoading: barbersLoading } = useAvailableBarbers();
   const addWalkIn = useAddWalkIn();
@@ -44,11 +45,12 @@ export const AddWalkInForm = () => {
     await addWalkIn.mutateAsync({
       customer_name: data.customer_name.trim(),
       customer_phone: data.customer_phone.replace(/\D/g, ''),
-      service_id: data.service_id || undefined,
+      service_ids: selectedServiceIds.length > 0 ? selectedServiceIds : undefined,
       barber_id: data.barber_id || undefined,
       priority: data.priority,
     });
     reset();
+    setSelectedServiceIds([]);
     setIsOpen(false);
   };
 
@@ -102,44 +104,38 @@ export const AddWalkInForm = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div className="space-y-1">
-            <Label className="text-xs sm:text-sm">Serviço</Label>
-            <Select onValueChange={(value) => setValue('service_id', value)}>
-              <SelectTrigger className="bg-background h-9 sm:h-10 text-sm">
-                <SelectValue placeholder="Opcional" />
-              </SelectTrigger>
-              <SelectContent>
-                {services?.map((service) => (
-                  <SelectItem key={service.id} value={service.id}>
-                    {service.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+        <div className="space-y-1">
+          <Label className="text-xs sm:text-sm">Serviços</Label>
+          {services && services.length > 0 && (
+            <MultiServiceSelector
+              services={services}
+              selectedIds={selectedServiceIds}
+              onChange={setSelectedServiceIds}
+              compact
+            />
+          )}
+        </div>
 
-          <div className="space-y-1">
-            <Label className="text-xs sm:text-sm">Barbeiro</Label>
-            <Select onValueChange={(value) => setValue('barber_id', value)}>
-              <SelectTrigger className="bg-background h-9 sm:h-10 text-sm">
-                <SelectValue placeholder={barbersLoading ? "Carregando..." : "Qualquer"} />
-              </SelectTrigger>
-              <SelectContent>
-                {barbers?.map((barber) => (
-                  <SelectItem key={barber.id} value={barber.id}>
-                    <span className="flex items-center gap-2">
-                      <span className={`w-2 h-2 rounded-full ${
-                        barber.status === 'online' ? 'bg-green-500' : 
-                        barber.status === 'busy' ? 'bg-orange-500' : 'bg-gray-400'
-                      }`} />
-                      {barber.display_name}
-                    </span>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+        <div className="space-y-1">
+          <Label className="text-xs sm:text-sm">Barbeiro</Label>
+          <Select onValueChange={(value) => setValue('barber_id', value)}>
+            <SelectTrigger className="bg-background h-9 sm:h-10 text-sm">
+              <SelectValue placeholder={barbersLoading ? "Carregando..." : "Qualquer"} />
+            </SelectTrigger>
+            <SelectContent>
+              {barbers?.map((barber) => (
+                <SelectItem key={barber.id} value={barber.id}>
+                  <span className="flex items-center gap-2">
+                    <span className={`w-2 h-2 rounded-full ${
+                      barber.status === 'online' ? 'bg-green-500' : 
+                      barber.status === 'busy' ? 'bg-orange-500' : 'bg-gray-400'
+                    }`} />
+                    {barber.display_name}
+                  </span>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         <div className="flex items-center gap-2">
@@ -159,7 +155,7 @@ export const AddWalkInForm = () => {
             type="button"
             variant="outline"
             size="sm"
-            onClick={() => { reset(); setIsOpen(false); }}
+            onClick={() => { reset(); setSelectedServiceIds([]); setIsOpen(false); }}
             className="flex-1"
           >
             Cancelar

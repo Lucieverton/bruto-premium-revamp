@@ -521,36 +521,64 @@ export type Database = {
         Args: { p_queue_item_id: string; p_service_id: string }
         Returns: boolean
       }
-      add_walkin_client: {
-        Args: {
-          p_barber_id?: string
-          p_customer_name: string
-          p_customer_phone: string
-          p_priority?: string
-          p_service_id?: string
-        }
-        Returns: {
-          id: string
-          ticket_number: string
-        }[]
-      }
+      add_walkin_client:
+        | {
+            Args: {
+              p_barber_id?: string
+              p_customer_name: string
+              p_customer_phone: string
+              p_priority?: string
+              p_service_id?: string
+            }
+            Returns: {
+              id: string
+              ticket_number: string
+            }[]
+          }
+        | {
+            Args: {
+              p_barber_id?: string
+              p_customer_name: string
+              p_customer_phone: string
+              p_priority?: string
+              p_service_ids?: string[]
+            }
+            Returns: {
+              id: string
+              ticket_number: string
+            }[]
+          }
       approve_queue_request: {
         Args: { p_notes?: string; p_request_id: string }
         Returns: string
       }
-      barber_add_client_direct: {
-        Args: {
-          p_barber_id?: string
-          p_customer_name: string
-          p_customer_phone: string
-          p_priority?: string
-          p_service_id?: string
-        }
-        Returns: {
-          id: string
-          ticket_number: string
-        }[]
-      }
+      barber_add_client_direct:
+        | {
+            Args: {
+              p_barber_id?: string
+              p_customer_name: string
+              p_customer_phone: string
+              p_priority?: string
+              p_service_id?: string
+            }
+            Returns: {
+              id: string
+              ticket_number: string
+            }[]
+          }
+        | {
+            Args: {
+              p_barber_id?: string
+              p_customer_name: string
+              p_customer_phone: string
+              p_priority?: string
+              p_service_ids?: string[]
+            }
+            Returns: {
+              id: string
+              ticket_number: string
+            }[]
+          }
       barber_call_client: {
         Args: { p_barber_id: string; p_ticket_id: string }
         Returns: boolean
@@ -680,33 +708,19 @@ export type Database = {
         }
         Returns: boolean
       }
-      join_queue:
-        | {
-            Args: {
-              p_barber_id?: string
-              p_customer_name: string
-              p_customer_phone: string
-              p_priority?: string
-              p_service_id?: string
-            }
-            Returns: {
-              id: string
-              ticket_number: string
-            }[]
-          }
-        | {
-            Args: {
-              p_barber_id?: string
-              p_customer_name: string
-              p_customer_phone: string
-              p_priority?: string
-              p_service_ids?: string[]
-            }
-            Returns: {
-              id: string
-              ticket_number: string
-            }[]
-          }
+      join_queue: {
+        Args: {
+          p_barber_id?: string
+          p_customer_name: string
+          p_customer_phone: string
+          p_priority?: string
+          p_service_ids?: string[]
+        }
+        Returns: {
+          id: string
+          ticket_number: string
+        }[]
+      }
       leave_queue: { Args: { p_ticket_id: string }; Returns: boolean }
       reject_queue_request: {
         Args: { p_notes?: string; p_request_id: string }

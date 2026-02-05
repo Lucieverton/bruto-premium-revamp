@@ -9,11 +9,11 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useJoinQueue, useServices, usePublicBarbers, useQueueSettings } from '@/hooks/useQueue';
 import { requestNotificationPermission } from '@/lib/notifications';
+import { MultiServiceSelector } from './MultiServiceSelector';
 
 const formSchema = z.object({
   customer_name: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres').max(100),
   customer_phone: z.string().min(10, 'Telefone deve ter pelo menos 10 dígitos').max(20),
-  service_id: z.string().optional(),
   barber_id: z.string().optional(),
   priority: z.enum(['normal', 'preferencial']).default('normal'),
 });
@@ -26,6 +26,7 @@ interface QueueJoinFormProps {
 
 export const QueueJoinForm = ({ onSuccess }: QueueJoinFormProps) => {
   const [showPreferencial, setShowPreferencial] = useState(false);
+  const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]);
   const { data: services } = useServices();
   const { data: barbers } = usePublicBarbers();
   const { data: settings } = useQueueSettings();
@@ -53,7 +54,7 @@ export const QueueJoinForm = ({ onSuccess }: QueueJoinFormProps) => {
       await joinQueue.mutateAsync({
         customer_name: data.customer_name.trim(),
         customer_phone: data.customer_phone.replace(/\D/g, ''),
-        service_id: data.service_id || undefined,
+        service_ids: selectedServiceIds.length > 0 ? selectedServiceIds : undefined,
         barber_id: data.barber_id || undefined,
         priority: data.priority,
       });
@@ -127,19 +128,14 @@ export const QueueJoinForm = ({ onSuccess }: QueueJoinFormProps) => {
         </div>
         
         <div className="space-y-2">
-          <Label>Serviço desejado</Label>
-          <Select onValueChange={(value) => setValue('service_id', value)}>
-            <SelectTrigger className="bg-background">
-              <SelectValue placeholder="Selecione um serviço (opcional)" />
-            </SelectTrigger>
-            <SelectContent>
-              {services?.map((service) => (
-                <SelectItem key={service.id} value={service.id}>
-                  {service.name} - R$ {service.price.toFixed(2).replace('.', ',')}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Label>Serviços desejados</Label>
+          {services && services.length > 0 && (
+            <MultiServiceSelector
+              services={services}
+              selectedIds={selectedServiceIds}
+              onChange={setSelectedServiceIds}
+            />
+          )}
         </div>
         
         <div className="space-y-2">
