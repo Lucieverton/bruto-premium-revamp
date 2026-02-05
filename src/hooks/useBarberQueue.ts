@@ -82,16 +82,19 @@ export const useBarberCompleteService = () => {
     mutationFn: async ({ 
       ticketId, 
       priceCharged, 
-      paymentMethod 
+      paymentMethod,
+      services
     }: { 
       ticketId: string; 
       priceCharged: number;
       paymentMethod?: string;
+      services?: Array<{ service_id: string; service_name: string; price_charged: number }>;
     }) => {
       const { data, error } = await supabase.rpc('barber_complete_service', {
         p_ticket_id: ticketId,
         p_price_charged: priceCharged,
-        p_payment_method: paymentMethod || null
+        p_payment_method: paymentMethod || null,
+        p_services: services ? JSON.stringify(services) : null
       });
       
       if (error) throw error;
@@ -108,6 +111,7 @@ export const useBarberCompleteService = () => {
       queryClient.invalidateQueries({ queryKey: ['my-barber-profile'] });
       queryClient.invalidateQueries({ queryKey: ['barbers'] });
       queryClient.invalidateQueries({ queryKey: ['public-barbers'] });
+      queryClient.invalidateQueries({ queryKey: ['queue-item-services'] });
       toast({
         title: 'Atendimento finalizado!',
         description: 'Registrado com sucesso.',

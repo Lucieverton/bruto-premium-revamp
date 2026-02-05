@@ -369,6 +369,7 @@ export const useQueueItemServices = (queueItemId: string | null) => {
       return data as QueueItemService[];
     },
     enabled: !!queueItemId,
+    staleTime: 0,
   });
 };
 

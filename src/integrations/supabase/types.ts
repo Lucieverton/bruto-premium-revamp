@@ -14,6 +14,48 @@ export type Database = {
   }
   public: {
     Tables: {
+      attendance_record_services: {
+        Row: {
+          attendance_record_id: string
+          created_at: string
+          id: string
+          price_charged: number
+          service_id: string
+          service_name: string
+        }
+        Insert: {
+          attendance_record_id: string
+          created_at?: string
+          id?: string
+          price_charged: number
+          service_id: string
+          service_name: string
+        }
+        Update: {
+          attendance_record_id?: string
+          created_at?: string
+          id?: string
+          price_charged?: number
+          service_id?: string
+          service_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attendance_record_services_attendance_record_id_fkey"
+            columns: ["attendance_record_id"]
+            isOneToOne: false
+            referencedRelation: "attendance_records"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attendance_record_services_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       attendance_records: {
         Row: {
           barber_id: string | null
@@ -513,14 +555,24 @@ export type Database = {
         Args: { p_barber_id: string; p_ticket_id: string }
         Returns: boolean
       }
-      barber_complete_service: {
-        Args: {
-          p_payment_method?: string
-          p_price_charged: number
-          p_ticket_id: string
-        }
-        Returns: boolean
-      }
+      barber_complete_service:
+        | {
+            Args: {
+              p_payment_method?: string
+              p_price_charged: number
+              p_ticket_id: string
+            }
+            Returns: boolean
+          }
+        | {
+            Args: {
+              p_payment_method?: string
+              p_price_charged: number
+              p_services?: Json
+              p_ticket_id: string
+            }
+            Returns: boolean
+          }
       barber_start_service: {
         Args: { p_barber_id: string; p_ticket_id: string }
         Returns: boolean
@@ -539,6 +591,19 @@ export type Database = {
           service_status: string
           started_at: string
           ticket_number: string
+        }[]
+      }
+      get_attendance_with_services: {
+        Args: { p_barber_id?: string; p_end_date: string; p_start_date: string }
+        Returns: {
+          barber_id: string
+          completed_at: string
+          customer_name: string
+          id: string
+          payment_method: string
+          price_charged: number
+          queue_item_id: string
+          services: Json
         }[]
       }
       get_barber_queue: {
@@ -590,6 +655,14 @@ export type Database = {
           price_at_time: number
           service_id: string
           service_name: string
+        }[]
+      }
+      get_queue_item_services_summary: {
+        Args: { p_queue_item_id: string }
+        Returns: {
+          services_list: string
+          total_price: number
+          total_services: number
         }[]
       }
       get_queue_position: {
