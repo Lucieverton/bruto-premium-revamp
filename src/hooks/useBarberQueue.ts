@@ -90,11 +90,12 @@ export const useBarberCompleteService = () => {
       paymentMethod?: string;
       services?: Array<{ service_id: string; service_name: string; price_charged: number }>;
     }) => {
+      // p_services must be sent as a native JS array/object, NOT a stringified JSON
       const { data, error } = await supabase.rpc('barber_complete_service', {
         p_ticket_id: ticketId,
         p_price_charged: priceCharged,
         p_payment_method: paymentMethod || null,
-        p_services: services ? JSON.stringify(services) : null
+        p_services: services && services.length > 0 ? services : null
       });
       
       if (error) throw error;
