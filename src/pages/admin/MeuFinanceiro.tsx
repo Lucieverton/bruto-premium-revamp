@@ -44,11 +44,18 @@ import {
 } from '@/components/ui/popover';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 
+// Interface for service in attendance
+interface AttendanceService {
+  service_id: string;
+  service_name: string;
+  price_charged: number;
+}
+
 // Interface for detailed attendance record
 interface DetailedAttendance {
   id: string;
   customer_name: string;
-  service_name: string | null;
+  services: AttendanceService[];
   price_charged: number;
   payment_method: string | null;
   completed_at: string;
@@ -79,7 +86,7 @@ const MeuFinanceiro = () => {
     enabled: !!user?.id,
   });
 
-  // Get daily attendance records
+  // Get daily attendance records with all services
   const { data: dailyRecords, isLoading: recordsLoading } = useQuery({
     queryKey: ['barber-daily-records', barber?.id, format(selectedDate, 'yyyy-MM-dd')],
     queryFn: async () => {
@@ -91,43 +98,27 @@ const MeuFinanceiro = () => {
       const endOfDay = new Date(selectedDate);
       endOfDay.setHours(23, 59, 59, 999);
       
+      // Use RPC to get attendance with all services
       const { data: records, error } = await supabase
-        .from('attendance_records')
-        .select(`
-          id,
-          customer_name,
-          service_id,
-          price_charged,
-          payment_method,
-          completed_at
-        `)
-        .eq('barber_id', barber.id)
-        .gte('completed_at', startOfDay.toISOString())
-        .lte('completed_at', endOfDay.toISOString())
-        .order('completed_at', { ascending: true });
+        .rpc('get_attendance_with_services', {
+          p_start_date: startOfDay.toISOString(),
+          p_end_date: endOfDay.toISOString(),
+          p_barber_id: barber.id,
+        });
       
       if (error) throw error;
-
-      // Get services for names
-      const serviceIds = records?.map(r => r.service_id).filter(Boolean) || [];
-      const { data: services } = await supabase
-        .from('services')
-        .select('id, name')
-        .in('id', serviceIds);
-      
-      const serviceMap = new Map(services?.map(s => [s.id, s.name]) || []);
       
       const commissionPct = barber.commission_percentage || 50;
       
-      return records?.map(r => ({
+      return (records || []).map(r => ({
         id: r.id,
         customer_name: r.customer_name,
-        service_name: r.service_id ? serviceMap.get(r.service_id) || 'Serviço' : 'Serviço',
+        services: (Array.isArray(r.services) ? r.services : []) as unknown as AttendanceService[],
         price_charged: Number(r.price_charged),
         payment_method: r.payment_method,
         completed_at: r.completed_at,
         commission: (Number(r.price_charged) * commissionPct) / 100,
-      })) as DetailedAttendance[] || [];
+      })) as DetailedAttendance[];
     },
     enabled: !!barber?.id,
   });
@@ -193,10 +184,13 @@ Minha Comissão: R$ ${dailyTotals.totalCommission.toFixed(2)}
     dailyRecords.forEach((record, index) => {
       const time = format(new Date(record.completed_at), 'HH:mm');
       const payment = formatPaymentMethod(record.payment_method);
+      const servicesText = record.services.length > 0 
+        ? record.services.map(s => s.service_name).join(', ')
+        : 'Serviço';
       
       content += `
 ${index + 1}. ${record.customer_name}
-   Serviço: ${record.service_name}
+   Serviços: ${servicesText}
    Horário: ${time}
    Valor: R$ ${record.price_charged.toFixed(2)}
    Comissão: R$ ${record.commission.toFixed(2)}
@@ -472,9 +466,20 @@ Gerado em: ${format(new Date(), "dd/MM/yyyy 'às' HH:mm")}
                           </TableCell>
                           <TableCell className="font-medium">{record.customer_name}</TableCell>
                           <TableCell>
-                            <div className="flex items-center gap-2">
-                              <Scissors size={14} className="text-muted-foreground" />
-                              {record.service_name}
+                            <div className="space-y-1">
+                              {record.services.length > 0 ? (
+                                record.services.map((svc, idx) => (
+                                  <div key={idx} className="flex items-center gap-2 text-sm">
+                                    <Scissors size={12} className="text-muted-foreground flex-shrink-0" />
+                                    <span className="truncate">{svc.service_name}</span>
+                                    <span className="text-xs text-muted-foreground whitespace-nowrap">
+                                      (R$ {Number(svc.price_charged).toFixed(2)})
+                                    </span>
+                                  </div>
+                                ))
+                              ) : (
+                                <span className="text-muted-foreground">Serviço</span>
+                              )}
                             </div>
                           </TableCell>
                           <TableCell className="font-medium">
