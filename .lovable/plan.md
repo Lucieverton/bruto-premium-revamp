@@ -1,145 +1,140 @@
 
-# Plano de Correção: Fila Virtual - WhatsApp e Entrada na Fila
+# Analise Completa do Sistema de Multi-Servicos
 
-## Problemas Identificados
+## Situacao Atual
 
-### 1. Tickets Antigos Bloqueando Novos Clientes
-Um ticket do dia **24/01/2026** (Lucieverton, A-016) ainda está com status `in_progress` no dia **02/02/2026**. A função `join_queue` não considera a data - se alguém usar o mesmo telefone, recebe o erro "Você já está na fila".
-
-**Causa Raiz**: A fila deveria zerar diariamente, mas tickets antigos ficam pendentes bloqueando novas entradas.
-
-### 2. Botão WhatsApp Não Aparece na "Fila Atual"
-A lógica atual está correta (`isMe && barber_whatsapp`), porém:
-- O `localStorage` do cliente pode não ter o ticket salvo (race condition já corrigida anteriormente)
-- A lista "Fila Atual" filtra apenas tickets com status `waiting` - se o cliente foi chamado ou está em atendimento, o botão desaparece
-
-**Causa Raiz**: O botão só aparece para tickets com status `waiting`, mas desaparece assim que o status muda para `called` ou `in_progress`.
-
-### 3. Sincronização da Página com localStorage
-Quando o cliente entra na fila, o `handleJoinSuccess` em `Fila.tsx` lê o ticket do `localStorage` imediatamente. Se houver qualquer delay, o `myTicketId` não é atualizado e o cliente não vê "(você)" nem o botão WhatsApp.
+Apos analise detalhada do codigo, banco de dados e fluxos, identifiquei os seguintes pontos criticos:
 
 ---
 
-## Soluções Propostas
+## PROBLEMAS ENCONTRADOS
 
-### Solução 1: Atualizar RPC `join_queue` para Filtrar por Data
-Modificar a verificação de ticket ativo para considerar apenas tickets do **dia atual**:
+### 1. Funcao `join_queue` Duplicada (CRITICO)
+No banco de dados existem **DUAS versoes** da funcao `join_queue`:
+- `join_queue(text, text, uuid, uuid, text)` - aceita **um** service_id (legada)
+- `join_queue(text, text, uuid[], uuid, text)` - aceita **array** de service_ids (nova)
 
-```sql
--- Verificar APENAS tickets do dia de hoje
-SELECT COUNT(*) INTO v_active_ticket
-FROM queue_items
-WHERE customer_phone = v_phone_normalized
-AND status IN ('waiting', 'called', 'in_progress')
-AND created_at::date = CURRENT_DATE;  -- <- Adicionar este filtro
-```
+Isso causa o **mesmo erro PGRST203** que tivemos com `barber_complete_service`. Dependendo de como o frontend chama, pode usar a versao errada e nao popular a tabela `queue_item_services`.
 
-### Solução 2: Criar RPC para Limpar Tickets Antigos
-Adicionar uma função que pode ser chamada pelo admin para finalizar tickets pendentes de dias anteriores:
+### 2. Formularios com Logica de Servico Unico
+Tres formularios ainda usam a logica de servico unico:
+- `QueueJoinForm.tsx` - envia `service_id` ao inves de `service_ids[]`
+- `AddWalkInForm.tsx` - envia `service_id` ao inves de `service_ids[]`
+- `BarberQueueEntryForm.tsx` - envia `service_id` ao inves de `service_ids[]`
 
-```sql
-CREATE FUNCTION cleanup_stale_tickets() 
-RETURNS integer AS $$
-DECLARE v_count integer;
-BEGIN
-  UPDATE queue_items
-  SET status = 'cancelled', completed_at = now()
-  WHERE status IN ('waiting', 'called', 'in_progress')
-  AND created_at::date < CURRENT_DATE;
-  
-  GET DIAGNOSTICS v_count = ROW_COUNT;
-  RETURN v_count;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-```
+### 3. RPCs Administrativas Desatualizadas
+- `add_walkin_client` - nao suporta multiplos servicos
+- `barber_add_client_direct` - nao suporta multiplos servicos
 
-### Solução 3: Corrigir Sincronização do Estado no Frontend
-Atualizar `Fila.tsx` para garantir que o `myTicketId` seja atualizado **imediatamente** após entrar na fila, sem depender de `localStorage`:
+### 4. Financeiro Nao Mostra Servicos Detalhados
+- `MeuFinanceiro.tsx` - mostra apenas `service_name` (primeiro servico do registro)
+- `useFinancial.ts` - nao utiliza `get_attendance_with_services` para detalhar
 
-```typescript
-// Fila.tsx - Modificar handleJoinSuccess
-const handleJoinSuccess = () => {
-  // Pequeno delay para garantir que localStorage foi salvo
-  setTimeout(() => {
-    const savedTicket = getMyTicket();
-    setMyTicketId(savedTicket);
-  }, 100);
-};
-```
-
-### Solução 4: Expandir Visibilidade do Botão WhatsApp
-Como o cliente quer ver o botão enquanto está na "Fila Atual", e a lista filtra apenas `waiting`, precisamos garantir que:
-
-1. O botão apareça no `MyTicketCard` também (já está visível lá quando implementado)
-2. A lista "Fila Atual" continue mostrando apenas quem está aguardando
-3. O cliente pode ver seu botão WhatsApp **no seu card pessoal** mesmo após ser chamado
+### 5. Dados Inconsistentes no Banco
+Evidencia:
+- Ticket "Teste 2" (A-002): `service_count: 0`, mas `service_id` preenchido
+- Ticket "Teste 1" (A-001): `service_count: 2`, corretamente populado
+- `attendance_record_services`: vazio (services nao foram registrados na finalizacao)
 
 ---
 
-## Arquivos a Modificar
+## PLANO DE CORRECAO
 
-| Arquivo | Alteração |
+### Fase 1: Corrigir Banco de Dados
+
+**Migracao SQL:**
+```text
+1. Remover funcao legada join_queue(text, text, uuid, uuid, text)
+2. Atualizar add_walkin_client para aceitar uuid[] de service_ids
+3. Atualizar barber_add_client_direct para aceitar uuid[] de service_ids
+```
+
+### Fase 2: Atualizar Formularios de Entrada
+
+**QueueJoinForm.tsx:**
+- Converter para suportar selecao de multiplos servicos (igual BarberQueueForm)
+- Usar `service_ids: string[]` ao inves de `service_id: string`
+
+**AddWalkInForm.tsx:**
+- Adicionar selecao multipla de servicos
+- Calcular total automaticamente
+- Enviar array de service_ids
+
+**BarberQueueEntryForm.tsx:**
+- Adicionar selecao multipla de servicos
+- Atualizar hook `useBarberDirectEntry` para aceitar array
+
+### Fase 3: Atualizar Hooks
+
+**useAdminQueue.ts:**
+- Atualizar `useAddWalkIn` para enviar `p_service_ids` como array
+
+**useBarberDirectEntry.ts:**
+- Atualizar para enviar `p_service_ids` como array
+
+**useQueue.ts:**
+- Garantir que fallback para `service_id` unico ainda popule `queue_item_services`
+
+### Fase 4: Corrigir Financeiro
+
+**MeuFinanceiro.tsx:**
+- Buscar servicos detalhados usando `get_attendance_with_services`
+- Exibir lista de servicos por atendimento
+
+**useFinancial.ts:**
+- Criar hook para buscar attendance com services detalhados
+
+---
+
+## FLUXO CORRIGIDO
+
+```text
+CLIENTE/BARBEIRO/ADMIN
+        |
+        v
+[Seleciona 1+ Servicos]
+        |
+        v
+[Calcula Total Automatico]
+        |
+        v
+[join_queue(service_ids[])]
+        |
+        v
+[queue_item_services]  <-- Todos servicos salvos
+        |
+        v
+[Barbeiro Inicia/Finaliza]
+        |
+        v
+[barber_complete_service(services[])]
+        |
+        v
+[attendance_record_services]  <-- Detalhado no financeiro
+```
+
+---
+
+## ARQUIVOS A MODIFICAR
+
+| Arquivo | Alteracao |
 |---------|-----------|
-| `supabase/migrations/` | Nova migration para atualizar `join_queue` RPC |
-| `src/pages/Fila.tsx` | Corrigir sincronização do `handleJoinSuccess` |
-| `src/components/queue/MyTicketCard.tsx` | Adicionar botão WhatsApp para contato com barbeiro |
-| `src/hooks/useQueue.ts` | Adicionar interface `barber_whatsapp` ao `PublicQueueItem` (já existe) |
+| Migracao SQL | Remover join_queue legada, atualizar RPCs |
+| `src/components/queue/QueueJoinForm.tsx` | Multi-servico (igual BarberQueueForm) |
+| `src/components/admin/AddWalkInForm.tsx` | Multi-servico |
+| `src/components/admin/BarberQueueEntryForm.tsx` | Multi-servico |
+| `src/hooks/useAdminQueue.ts` | Atualizar useAddWalkIn |
+| `src/hooks/useBarberDirectEntry.ts` | Atualizar para array |
+| `src/pages/admin/MeuFinanceiro.tsx` | Mostrar servicos detalhados |
 
 ---
 
-## Detalhes Técnicos
+## RESULTADOS ESPERADOS
 
-### Migration SQL Completa
-
-```sql
--- 1. Atualizar join_queue para filtrar por data
-CREATE OR REPLACE FUNCTION public.join_queue(...)
-  -- Dentro da função, modificar:
-  -- CHECK IF CUSTOMER ALREADY HAS AN ACTIVE TICKET TODAY
-  SELECT COUNT(*) INTO v_active_ticket
-  FROM queue_items
-  WHERE customer_phone = v_phone_normalized
-  AND status IN ('waiting', 'called', 'in_progress')
-  AND created_at::date = CURRENT_DATE;  -- Apenas hoje
-...
-
--- 2. Criar função de limpeza para admin
-CREATE FUNCTION public.cleanup_stale_tickets()...
-
--- 3. Cancelar tickets antigos existentes
-UPDATE queue_items
-SET status = 'cancelled', completed_at = now()
-WHERE status IN ('waiting', 'called', 'in_progress')
-AND created_at::date < CURRENT_DATE;
-```
-
-### Modificação no MyTicketCard
-Adicionar um botão WhatsApp no card pessoal do cliente, que funciona independentemente de onde ele está na fila:
-
-```tsx
-// MyTicketCard.tsx - Adicionar após informações do ticket
-{ticket.barber_name && ticket.barber_whatsapp && (
-  <Button onClick={handleWhatsAppClick}>
-    <MessageCircle /> Falar com {ticket.barber_name}
-  </Button>
-)}
-```
-
----
-
-## Ordem de Implementação
-
-1. **Primeiro**: Migration SQL para corrigir a lógica da RPC e cancelar tickets antigos
-2. **Segundo**: Atualizar `Fila.tsx` para melhor sincronização
-3. **Terceiro**: Adicionar botão WhatsApp no `MyTicketCard.tsx`
-4. **Quarto**: Testar end-to-end entrando na fila e verificando visibilidade do botão
-
----
-
-## Resultado Esperado
-
-Após as correções:
-- Clientes não serão bloqueados por tickets de dias anteriores
-- O botão WhatsApp aparecerá no card pessoal do cliente (MyTicketCard)
-- O botão WhatsApp continuará aparecendo na lista "Fila Atual" para tickets com status `waiting`
-- A experiência será consistente em dispositivos móveis e desktop
+1. Cliente pode selecionar 1, 2, 3... N servicos
+2. Precos calculados automaticamente da tabela `services`
+3. Todos os servicos salvos em `queue_item_services`
+4. Barbeiros e admins veem lista completa de servicos
+5. Finalizacao registra cada servico em `attendance_record_services`
+6. Financeiro mostra extrato detalhado por servico
+7. Consistencia de dados garantida em todo o fluxo
