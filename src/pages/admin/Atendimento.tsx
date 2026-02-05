@@ -40,6 +40,8 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, X, Trash2 } from 'lucide-react';
+import { useEffect } from 'react';
+import { QueueItemServicesDisplay } from '@/components/admin/QueueItemServicesDisplay';
 
 const Atendimento = () => {
   const { user } = useAuth();
@@ -81,6 +83,14 @@ const Atendimento = () => {
   const { data: ticketServices, refetch: refetchTicketServices } = useQueueItemServices(selectedTicket);
   const addServiceToTicket = useAddServiceToQueueItem();
   const removeServiceFromTicket = useRemoveServiceFromQueueItem();
+
+  // Auto-update price when services change or dialog opens
+  useEffect(() => {
+    if (showCompleteDialog && ticketServices && ticketServices.length > 0) {
+      const total = ticketServices.reduce((sum, s) => sum + Number(s.price_at_time), 0);
+      setPriceCharged(total.toFixed(2).replace('.', ','));
+    }
+  }, [ticketServices, showCompleteDialog]);
 
   // Mutations
   const startService = useBarberStartService();
@@ -126,10 +136,12 @@ const Atendimento = () => {
   // Open complete dialog
   const openCompleteDialog = (ticketId: string, initialServiceId?: string) => {
     setSelectedTicket(ticketId);
-    const total = calculateTotal();
-    setPriceCharged(total > 0 ? total.toFixed(2).replace('.', ',') : '');
+    // Price will be set by useEffect when ticketServices loads
+    setPriceCharged('');
     setShowAddServiceSelect(false);
     setShowCompleteDialog(true);
+    // Trigger refetch of ticket services
+    refetchTicketServices();
   };
 
   // Handle adding extra service
@@ -172,10 +184,18 @@ const Atendimento = () => {
     
     if (price <= 0) return;
     
+    // Prepare services array for tracking
+    const servicesArray = ticketServices?.map(ts => ({
+      service_id: ts.service_id,
+      service_name: ts.service_name,
+      price_charged: Number(ts.price_at_time),
+    })) || [];
+
     completeService.mutate({
       ticketId: selectedTicket,
       priceCharged: price,
       paymentMethod: paymentMethod || undefined,
+      services: servicesArray.length > 0 ? servicesArray : undefined,
     });
     
     setShowCompleteDialog(false);
@@ -304,11 +324,8 @@ const Atendimento = () => {
                             {item.customer_phone.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3')}
                           </a>
                           
-                          {service && (
-                            <div className="text-sm text-muted-foreground">
-                              {service.name} - R$ {service.price.toFixed(2).replace('.', ',')}
-                            </div>
-                          )}
+                          {/* Show all services from queue_item_services */}
+                          <QueueItemServicesDisplay queueItemId={item.id} />
                         </div>
                         
                         <Button
@@ -355,9 +372,8 @@ const Atendimento = () => {
                           <div>
                             <div className="text-xl font-bold text-green-500">{item.ticket_number}</div>
                             <div className="text-sm text-muted-foreground">{item.customer_name}</div>
-                            {service && (
-                              <div className="text-xs text-muted-foreground">{service.name}</div>
-                            )}
+                            {/* Show services */}
+                            <QueueItemServicesDisplay queueItemId={item.id} compact />
                           </div>
                           
                           <Button
@@ -436,9 +452,8 @@ const Atendimento = () => {
                               )}
                             </div>
                             
-                            {service && (
-                              <div className="text-xs text-muted-foreground">{service.name}</div>
-                            )}
+                            {/* Show services with values */}
+                            <QueueItemServicesDisplay queueItemId={item.id} compact />
                           </div>
                           
                           {item.priority === 'preferencial' && (
