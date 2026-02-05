@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   Phone, 
   Play, 
@@ -7,7 +7,9 @@ import {
   Trash2, 
   Clock,
   User,
-  MessageCircle
+  MessageCircle,
+  Plus,
+  X
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { 
@@ -19,8 +21,9 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { QueueItem, useServices } from '@/hooks/useQueue';
+import { QueueItem, useServices, useQueueItemServices, useAddServiceToQueueItem, useRemoveServiceFromQueueItem } from '@/hooks/useQueue';
 import { useAdminBarbers } from '@/hooks/useAdminBarbers';
 import { 
   useCallClient, 
@@ -30,6 +33,7 @@ import {
   useDeleteQueueItem 
 } from '@/hooks/useAdminQueue';
 import { cn } from '@/lib/utils';
+import { QueueItemServicesDisplay } from './QueueItemServicesDisplay';
 
 interface QueueCardProps {
   item: QueueItem;
@@ -40,39 +44,38 @@ export const QueueCard = ({ item }: QueueCardProps) => {
   const [priceCharged, setPriceCharged] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('');
   const [selectedBarber, setSelectedBarber] = useState(item.barber_id || '');
-  const [selectedServiceId, setSelectedServiceId] = useState(item.service_id || '');
+  const [addServiceId, setAddServiceId] = useState('');
   
   const { data: services } = useServices();
   const { data: barbers } = useAdminBarbers();
+  const { data: itemServices, isLoading: loadingServices } = useQueueItemServices(item.id);
   
   const callClient = useCallClient();
   const startService = useStartService();
   const completeService = useCompleteService();
   const markNoShow = useMarkNoShow();
   const deleteItem = useDeleteQueueItem();
+  const addServiceMutation = useAddServiceToQueueItem();
+  const removeServiceMutation = useRemoveServiceFromQueueItem();
   
-  const service = services?.find(s => s.id === item.service_id);
-  const selectedService = services?.find(s => s.id === selectedServiceId);
   const barber = barbers?.find(b => b.id === item.barber_id);
   
-  // Handle service selection in dialog - auto-fill price
-  const handleServiceSelect = (serviceId: string) => {
-    setSelectedServiceId(serviceId);
-    const svc = services?.find(s => s.id === serviceId);
-    if (svc) {
-      setPriceCharged(svc.price.toFixed(2).replace('.', ','));
-    }
-  };
+  // Calculate total from actual services
+  const totalPrice = itemServices?.reduce((sum, s) => sum + Number(s.price_at_time), 0) || 0;
   
-  // Pre-fill price when opening dialog
+  // Pre-fill price when opening dialog based on actual services
   const openCompleteDialog = () => {
-    const svc = service || selectedService;
-    if (svc) {
-      setPriceCharged(svc.price.toFixed(2).replace('.', ','));
-      setSelectedServiceId(svc.id);
-    }
+    setPriceCharged(totalPrice.toFixed(2).replace('.', ','));
     setShowCompleteDialog(true);
   };
+  
+  // Effect to update price when services change
+  useEffect(() => {
+    if (showCompleteDialog && itemServices) {
+      const total = itemServices.reduce((sum, s) => sum + Number(s.price_at_time), 0);
+      setPriceCharged(total.toFixed(2).replace('.', ','));
+    }
+  }, [itemServices, showCompleteDialog]);
   
   // Calculate time waiting
   const created = new Date(item.created_at);
@@ -95,13 +98,32 @@ export const QueueCard = ({ item }: QueueCardProps) => {
   };
   
   const handleComplete = () => {
-    const price = parseFloat(priceCharged.replace(',', '.')) || service?.price || 0;
+    const price = parseFloat(priceCharged.replace(',', '.')) || totalPrice || 0;
+    
+    // Build services array for the RPC
+    const servicesData = itemServices?.map(s => ({
+      service_id: s.service_id,
+      service_name: s.service_name,
+      price_charged: Number(s.price_at_time)
+    })) || [];
+    
     completeService.mutate({
       ticketId: item.id,
       priceCharged: price,
       paymentMethod: paymentMethod || undefined,
     });
     setShowCompleteDialog(false);
+  };
+  
+  const handleAddService = () => {
+    if (addServiceId) {
+      addServiceMutation.mutate({ queueItemId: item.id, serviceId: addServiceId });
+      setAddServiceId('');
+    }
+  };
+  
+  const handleRemoveService = (serviceId: string) => {
+    removeServiceMutation.mutate({ queueItemId: item.id, serviceId });
   };
   
   const handleNoShow = () => {
@@ -175,15 +197,14 @@ export const QueueCard = ({ item }: QueueCardProps) => {
             {item.customer_phone.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3')}
           </a>
           
-          {service && (
-            <div className="text-xs sm:text-sm text-muted-foreground truncate">
-              {service.name} - R$ {service.price.toFixed(2).replace('.', ',')}
-            </div>
-          )}
+          {/* Services Display - Shows all selected services */}
+          <div className="mt-1.5 p-2 bg-muted/30 rounded-md border border-border/50">
+            <QueueItemServicesDisplay queueItemId={item.id} compact={item.status === 'completed'} />
+          </div>
           
           {barber && (
-            <div className="text-xs sm:text-sm text-muted-foreground truncate">
-              Barbeiro: {barber.display_name}
+            <div className="text-xs sm:text-sm text-muted-foreground truncate mt-1">
+              Barbeiro: <span className="text-primary">{barber.display_name}</span>
             </div>
           )}
         </div>
@@ -281,29 +302,80 @@ export const QueueCard = ({ item }: QueueCardProps) => {
           </DialogHeader>
           
           <div className="space-y-4">
-            {/* Service Selection - Required if not pre-selected */}
+            {/* Current Services */}
             <div className="space-y-2">
-              <Label>Serviço Realizado *</Label>
-              <Select value={selectedServiceId} onValueChange={handleServiceSelect}>
-                <SelectTrigger className="bg-background">
-                  <SelectValue placeholder="Selecione o serviço..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {services?.map((svc) => (
-                    <SelectItem key={svc.id} value={svc.id}>
-                      {svc.name} - R$ {svc.price.toFixed(2).replace('.', ',')}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Label className="flex items-center justify-between">
+                <span>Serviços na comanda</span>
+                <Badge variant="outline" className="text-xs">
+                  {itemServices?.length || 0} {(itemServices?.length || 0) === 1 ? 'serviço' : 'serviços'}
+                </Badge>
+              </Label>
+              
+              <div className="bg-muted/30 rounded-lg p-3 border border-border/50 space-y-2 max-h-[200px] overflow-y-auto">
+                {loadingServices ? (
+                  <div className="text-sm text-muted-foreground text-center py-2">Carregando...</div>
+                ) : itemServices && itemServices.length > 0 ? (
+                  itemServices.map((svc) => (
+                    <div key={svc.service_id} className="flex items-center justify-between gap-2 text-sm">
+                      <span className="truncate">{svc.service_name}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium text-primary whitespace-nowrap">
+                          R$ {Number(svc.price_at_time).toFixed(2).replace('.', ',')}
+                        </span>
+                        {itemServices.length > 1 && (
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-6 w-6 text-destructive hover:bg-destructive/10"
+                            onClick={() => handleRemoveService(svc.service_id)}
+                            disabled={removeServiceMutation.isPending}
+                          >
+                            <X size={12} />
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-sm text-muted-foreground text-center py-2">Nenhum serviço selecionado</div>
+                )}
+              </div>
+              
+              {/* Total */}
+              <div className="flex items-center justify-between pt-2 border-t border-border">
+                <span className="font-medium">Total dos serviços:</span>
+                <span className="text-lg font-bold text-primary">
+                  R$ {totalPrice.toFixed(2).replace('.', ',')}
+                </span>
+              </div>
             </div>
             
-            {selectedService && (
-              <div className="bg-primary/10 rounded-lg p-3 text-sm border border-primary/20">
-                <div className="font-medium text-primary">{selectedService.name}</div>
-                <div className="text-lg font-bold">R$ {selectedService.price.toFixed(2).replace('.', ',')}</div>
+            {/* Add Service */}
+            <div className="space-y-2">
+              <Label>Adicionar serviço extra</Label>
+              <div className="flex gap-2">
+                <Select value={addServiceId} onValueChange={setAddServiceId}>
+                  <SelectTrigger className="bg-background flex-1">
+                    <SelectValue placeholder="Selecione um serviço..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {services?.filter(s => !itemServices?.find(is => is.service_id === s.id)).map((svc) => (
+                      <SelectItem key={svc.id} value={svc.id}>
+                        {svc.name} - R$ {svc.price.toFixed(2).replace('.', ',')}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button
+                  size="icon"
+                  onClick={handleAddService}
+                  disabled={!addServiceId || addServiceMutation.isPending}
+                  className="bg-primary hover:bg-primary/90"
+                >
+                  <Plus size={16} />
+                </Button>
               </div>
-            )}
+            </div>
             
             <div className="space-y-2">
               <Label>Valor Cobrado</Label>
@@ -341,7 +413,7 @@ export const QueueCard = ({ item }: QueueCardProps) => {
             </Button>
             <Button 
               onClick={handleComplete}
-              disabled={completeService.isPending || !selectedServiceId || !paymentMethod}
+              disabled={completeService.isPending || !itemServices?.length || !paymentMethod}
               className="bg-green-600 hover:bg-green-700"
             >
               <CheckCircle size={16} className="mr-2" />

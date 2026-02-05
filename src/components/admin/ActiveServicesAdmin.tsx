@@ -1,14 +1,14 @@
 import { Play, User } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useTodayQueue, useServices } from '@/hooks/useQueue';
+import { useTodayQueue } from '@/hooks/useQueue';
 import { useAdminBarbers } from '@/hooks/useAdminBarbers';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import { QueueItemServicesDisplay } from './QueueItemServicesDisplay';
 
 export const ActiveServicesAdmin = () => {
   const { data: queue } = useTodayQueue();
   const { data: barbers } = useAdminBarbers();
-  const { data: services } = useServices();
   
   // Get active services (called + in_progress)
   const activeServices = queue?.filter(q => 
@@ -22,11 +22,6 @@ export const ActiveServicesAdmin = () => {
   const getBarber = (barberId: string | null) => {
     if (!barberId) return null;
     return barbers?.find(b => b.id === barberId);
-  };
-  
-  const getService = (serviceId: string | null) => {
-    if (!serviceId) return null;
-    return services?.find(s => s.id === serviceId);
   };
 
   return (
@@ -42,7 +37,6 @@ export const ActiveServicesAdmin = () => {
           <AnimatePresence mode="popLayout">
             {activeServices.map((item) => {
               const barber = getBarber(item.barber_id);
-              const service = getService(item.service_id);
               
               return (
                 <motion.div
@@ -90,10 +84,11 @@ export const ActiveServicesAdmin = () => {
                       <span className="break-words" title={item.customer_name}>{item.customer_name}</span>
                     </div>
                     
-                    <div className="text-xs text-muted-foreground flex items-center gap-2">
-                      {barber && <span className="text-primary truncate">{barber.display_name}</span>}
-                      {service && <span className="truncate">• {service.name}</span>}
+                    <div className="text-xs text-muted-foreground">
+                      {barber && <span className="text-primary">{barber.display_name}</span>}
                     </div>
+                    
+                    <QueueItemServicesDisplay queueItemId={item.id} compact />
                   </div>
                 </motion.div>
               );
