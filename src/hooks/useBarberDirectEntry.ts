@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
-// Hook for barbers with direct entry permission to add clients directly
+// Hook for barbers with direct entry permission to add clients directly (supports multiple services)
 export const useBarberDirectEntry = () => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -11,14 +11,18 @@ export const useBarberDirectEntry = () => {
     mutationFn: async (data: {
       customer_name: string;
       customer_phone: string;
-      service_id?: string;
+      service_ids?: string[]; // Array of service IDs
+      service_id?: string; // Keep for backward compatibility
       barber_id?: string;
       priority?: string;
     }) => {
+      // Support both single service_id and array of service_ids
+      const serviceIds = data.service_ids || (data.service_id ? [data.service_id] : null);
+      
       const { data: result, error } = await supabase.rpc('barber_add_client_direct', {
         p_customer_name: data.customer_name,
         p_customer_phone: data.customer_phone,
-        p_service_id: data.service_id || null,
+        p_service_ids: serviceIds,
         p_barber_id: data.barber_id || null,
         p_priority: data.priority || 'normal',
       });
@@ -35,6 +39,7 @@ export const useBarberDirectEntry = () => {
       queryClient.invalidateQueries({ queryKey: ['public-queue'] });
       queryClient.invalidateQueries({ queryKey: ['queue-stats'] });
       queryClient.invalidateQueries({ queryKey: ['barber-queue'] });
+      queryClient.invalidateQueries({ queryKey: ['queue-item-services'] });
       toast({
         title: 'Cliente adicionado na fila!',
         description: `Ticket: ${data.ticket_number}`,

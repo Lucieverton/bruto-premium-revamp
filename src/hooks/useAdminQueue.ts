@@ -202,7 +202,7 @@ export const useDeleteQueueItem = () => {
   });
 };
 
-// Add walk-in client - uses secure RPC for admin
+// Add walk-in client - uses secure RPC for admin (supports multiple services)
 export const useAddWalkIn = () => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -211,14 +211,18 @@ export const useAddWalkIn = () => {
     mutationFn: async (data: {
       customer_name: string;
       customer_phone: string;
-      service_id?: string;
+      service_ids?: string[]; // Array of service IDs
+      service_id?: string; // Keep for backward compatibility
       barber_id?: string;
       priority?: string;
     }) => {
+      // Support both single service_id and array of service_ids
+      const serviceIds = data.service_ids || (data.service_id ? [data.service_id] : null);
+      
       const { data: result, error } = await supabase.rpc('add_walkin_client', {
         p_customer_name: data.customer_name,
         p_customer_phone: data.customer_phone,
-        p_service_id: data.service_id || null,
+        p_service_ids: serviceIds,
         p_barber_id: data.barber_id || null,
         p_priority: data.priority || 'normal',
       });
@@ -234,6 +238,7 @@ export const useAddWalkIn = () => {
       queryClient.invalidateQueries({ queryKey: ['today-queue'] });
       queryClient.invalidateQueries({ queryKey: ['public-queue'] });
       queryClient.invalidateQueries({ queryKey: ['queue-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['queue-item-services'] });
       toast({
         title: 'Cliente adicionado!',
         description: `Ticket: ${data.ticket_number}`,

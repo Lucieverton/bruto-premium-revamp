@@ -12,13 +12,13 @@ import { useCreateQueueRequest, useMyQueueRequests } from '@/hooks/useQueueReque
 import { useBarberDirectEntry } from '@/hooks/useBarberDirectEntry';
 import { useServices } from '@/hooks/useQueue';
 import { useAdminBarbers } from '@/hooks/useAdminBarbers';
+import { MultiServiceSelector } from '@/components/queue/MultiServiceSelector';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 
 const formSchema = z.object({
   customer_name: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres'),
   customer_phone: z.string().min(10, 'Telefone deve ter pelo menos 10 dígitos'),
-  service_id: z.string().optional(),
   barber_id: z.string().optional(),
   priority: z.enum(['normal', 'preferencial']).default('normal'),
 });
@@ -32,6 +32,7 @@ interface BarberQueueEntryFormProps {
 
 export const BarberQueueEntryForm = ({ barberId, canAddDirectly }: BarberQueueEntryFormProps) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]);
   const { data: services } = useServices();
   const { data: barbers } = useAdminBarbers();
   const { data: myRequests } = useMyQueueRequests();
@@ -56,26 +57,27 @@ export const BarberQueueEntryForm = ({ barberId, canAddDirectly }: BarberQueueEn
 
   const onSubmit = async (data: FormData) => {
     if (canAddDirectly) {
-      // Direct entry - add directly to queue
+      // Direct entry - add directly to queue with multi-service support
       await directEntry.mutateAsync({
         customer_name: data.customer_name.trim(),
         customer_phone: data.customer_phone.replace(/\D/g, ''),
-        service_id: data.service_id || undefined,
+        service_ids: selectedServiceIds.length > 0 ? selectedServiceIds : undefined,
         barber_id: data.barber_id || barberId, // Default to this barber
         priority: data.priority,
       });
     } else {
-      // Request entry - needs admin approval
+      // Request entry - needs admin approval (single service for now)
       await createRequest.mutateAsync({
         customer_name: data.customer_name.trim(),
         customer_phone: data.customer_phone.replace(/\D/g, ''),
-        service_id: data.service_id || undefined,
+        service_id: selectedServiceIds[0] || undefined, // First service for requests
         barber_id: data.barber_id || undefined,
         priority: data.priority,
         requested_by: barberId,
       });
     }
     reset();
+    setSelectedServiceIds([]);
     setIsOpen(false);
   };
 
@@ -200,48 +202,42 @@ export const BarberQueueEntryForm = ({ barberId, canAddDirectly }: BarberQueueEn
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <Label className="text-xs sm:text-sm">Serviço</Label>
-                  <Select onValueChange={(value) => setValue('service_id', value)}>
-                    <SelectTrigger className="bg-background h-9 sm:h-10 text-sm">
-                      <SelectValue placeholder="Opcional" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {services?.map((service) => (
-                        <SelectItem key={service.id} value={service.id}>
-                          {service.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+              <div className="space-y-1">
+                <Label className="text-xs sm:text-sm">Serviços</Label>
+                {services && services.length > 0 && (
+                  <MultiServiceSelector
+                    services={services}
+                    selectedIds={selectedServiceIds}
+                    onChange={setSelectedServiceIds}
+                    compact
+                  />
+                )}
+              </div>
 
-                <div className="space-y-1">
-                  <Label className="text-xs sm:text-sm">Barbeiro Preferido</Label>
-                  <Select 
-                    onValueChange={(value) => setValue('barber_id', value)}
-                    defaultValue={barberId}
-                  >
-                    <SelectTrigger className="bg-background h-9 sm:h-10 text-sm">
-                      <SelectValue placeholder="Você" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {barbers?.map((barber) => (
-                        <SelectItem key={barber.id} value={barber.id}>
-                          <span className="flex items-center gap-2">
-                            <span className={`w-2 h-2 rounded-full ${
-                              barber.status === 'online' ? 'bg-green-500' : 
-                              barber.status === 'busy' ? 'bg-orange-500' : 'bg-gray-400'
-                            }`} />
-                            {barber.display_name}
-                            {barber.id === barberId && ' (Você)'}
-                          </span>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+              <div className="space-y-1">
+                <Label className="text-xs sm:text-sm">Barbeiro Preferido</Label>
+                <Select 
+                  onValueChange={(value) => setValue('barber_id', value)}
+                  defaultValue={barberId}
+                >
+                  <SelectTrigger className="bg-background h-9 sm:h-10 text-sm">
+                    <SelectValue placeholder="Você" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {barbers?.map((barber) => (
+                      <SelectItem key={barber.id} value={barber.id}>
+                        <span className="flex items-center gap-2">
+                          <span className={`w-2 h-2 rounded-full ${
+                            barber.status === 'online' ? 'bg-green-500' : 
+                            barber.status === 'busy' ? 'bg-orange-500' : 'bg-gray-400'
+                          }`} />
+                          {barber.display_name}
+                          {barber.id === barberId && ' (Você)'}
+                        </span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="flex items-center gap-2">
@@ -261,7 +257,7 @@ export const BarberQueueEntryForm = ({ barberId, canAddDirectly }: BarberQueueEn
                   type="button"
                   variant="outline"
                   size="sm"
-                  onClick={() => { reset(); setIsOpen(false); }}
+                  onClick={() => { reset(); setSelectedServiceIds([]); setIsOpen(false); }}
                   className="flex-1"
                 >
                   Cancelar
