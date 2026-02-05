@@ -1,11 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { useAuth } from '@/contexts/AuthContext';
-import { useAttendanceRecords, useFinancialMetrics, useBarbersWithCommission } from '@/hooks/useFinancial';
+import { useFinancialMetrics, useBarbersWithCommission } from '@/hooks/useFinancial';
 import { useServices } from '@/hooks/useQueue';
 import { useAdminBarbers } from '@/hooks/useAdminBarbers';
 import { AnnualChart } from '@/components/admin/AnnualChart';
+import { supabase } from '@/integrations/supabase/client';
+import { useQuery } from '@tanstack/react-query';
 import { 
   DollarSign, 
   TrendingUp, 
@@ -14,19 +16,75 @@ import {
   Calendar,
   PiggyBank,
   Percent,
-  Sparkles
+  Sparkles,
+  Search,
+  X
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend, AreaChart, Area } from 'recharts';
 import { cn } from '@/lib/utils';
+import { Badge } from '@/components/ui/badge';
+
+interface AttendanceService {
+  service_id: string;
+  service_name: string;
+  price_charged: number;
+}
+
+interface DetailedAttendance {
+  id: string;
+  queue_item_id: string | null;
+  barber_id: string | null;
+  customer_name: string;
+  price_charged: number;
+  payment_method: string | null;
+  completed_at: string;
+  services: AttendanceService[];
+}
 
 type DateRange = 'today' | 'week' | 'month' | 'year';
+
+const getDateRange = (range: DateRange) => {
+  const now = new Date();
+  let start: Date;
+  const end = new Date(now);
+  end.setHours(23, 59, 59, 999);
+  
+  switch (range) {
+    case 'today':
+      start = new Date(now);
+      start.setHours(0, 0, 0, 0);
+      break;
+    case 'week':
+      start = new Date(now);
+      start.setDate(now.getDate() - 7);
+      start.setHours(0, 0, 0, 0);
+      break;
+    case 'month':
+      start = new Date(now);
+      start.setMonth(now.getMonth() - 1);
+      start.setHours(0, 0, 0, 0);
+      break;
+    case 'year':
+      start = new Date(now);
+      start.setFullYear(now.getFullYear() - 1);
+      start.setHours(0, 0, 0, 0);
+      break;
+    default:
+      start = new Date(now);
+      start.setHours(0, 0, 0, 0);
+  }
+  
+  return { start: start.toISOString(), end: end.toISOString() };
+};
 
 const AdminFinanceiro = () => {
   const { isAdmin, isAdminLoading } = useAuth();
   const navigate = useNavigate();
   const [dateRange, setDateRange] = useState<DateRange>('today');
+  const [searchTerm, setSearchTerm] = useState('');
 
   // Protect route: only admins can access
   useEffect(() => {
@@ -36,11 +94,69 @@ const AdminFinanceiro = () => {
   }, [isAdmin, isAdminLoading, navigate]);
   const [selectedBarber, setSelectedBarber] = useState<string>('all');
   
-  const { data: records, isLoading } = useAttendanceRecords(dateRange, selectedBarber === 'all' ? undefined : selectedBarber);
+  // Get date range for the RPC call
+  const { start, end } = getDateRange(dateRange);
+  
+  // Fetch attendance records with all services
+  const { data: detailedRecords, isLoading } = useQuery({
+    queryKey: ['detailed-attendance-admin', dateRange, selectedBarber],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc('get_attendance_with_services', {
+        p_start_date: start,
+        p_end_date: end,
+        p_barber_id: selectedBarber === 'all' ? null : selectedBarber,
+      });
+      
+      if (error) throw error;
+      
+      return (data || []).map((r: any) => ({
+        id: r.id,
+        queue_item_id: r.queue_item_id,
+        barber_id: r.barber_id,
+        customer_name: r.customer_name,
+        price_charged: Number(r.price_charged),
+        payment_method: r.payment_method,
+        completed_at: r.completed_at,
+        services: (r.services as unknown as AttendanceService[]) || [],
+      })) as DetailedAttendance[];
+    },
+  });
+  
   const metrics = useFinancialMetrics(dateRange, selectedBarber === 'all' ? undefined : selectedBarber);
   const { data: barbers } = useAdminBarbers();
   const { data: barbersWithCommission } = useBarbersWithCommission();
   const { data: services } = useServices();
+  
+  // Filter records based on search term
+  const filteredRecords = useMemo(() => {
+    if (!detailedRecords) return [];
+    if (!searchTerm.trim()) return detailedRecords;
+    
+    const term = searchTerm.toLowerCase().trim();
+    
+    return detailedRecords.filter(record => {
+      // Search by customer name
+      if (record.customer_name.toLowerCase().includes(term)) return true;
+      
+      // Search by date
+      const date = new Date(record.completed_at);
+      const dateStr = date.toLocaleDateString('pt-BR');
+      if (dateStr.includes(term)) return true;
+      
+      // Search by value
+      const valueStr = record.price_charged.toFixed(2).replace('.', ',');
+      if (valueStr.includes(term)) return true;
+      
+      // Search by barber name
+      const barber = barbers?.find(b => b.id === record.barber_id);
+      if (barber?.display_name.toLowerCase().includes(term)) return true;
+      
+      // Search by service name
+      if (record.services.some(s => s.service_name.toLowerCase().includes(term))) return true;
+      
+      return false;
+    });
+  }, [detailedRecords, searchTerm, barbers]);
   
   const rangeLabels: Record<DateRange, string> = {
     today: 'Hoje',
@@ -440,13 +556,37 @@ const AdminFinanceiro = () => {
         
         {/* Attendance History */}
         <div className="relative overflow-hidden bg-gradient-to-br from-card via-card to-muted/10 border border-border rounded-2xl">
-          <div className="p-4 border-b border-border/50">
+          <div className="p-4 border-b border-border/50 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <h3 className="font-bold flex items-center gap-2">
               <div className="p-1.5 bg-primary/10 rounded-lg">
                 <Calendar size={16} className="text-primary" />
               </div>
               Histórico de Atendimentos
+              {filteredRecords.length > 0 && (
+                <Badge variant="secondary" className="ml-2 text-xs">
+                  {filteredRecords.length} {filteredRecords.length === 1 ? 'registro' : 'registros'}
+                </Badge>
+              )}
             </h3>
+            
+            {/* Search Input */}
+            <div className="relative w-full sm:w-64">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar por data, nome, valor..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-9 pr-8 h-9 bg-background/50"
+              />
+              {searchTerm && (
+                <button
+                  onClick={() => setSearchTerm('')}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1 hover:bg-muted rounded"
+                >
+                  <X className="h-3 w-3 text-muted-foreground" />
+                </button>
+              )}
+            </div>
           </div>
           
           <div className="overflow-x-auto">
@@ -456,7 +596,7 @@ const AdminFinanceiro = () => {
                   <th className="p-3 text-left text-xs font-medium text-muted-foreground">Data</th>
                   <th className="p-3 text-left text-xs font-medium text-muted-foreground">Cliente</th>
                   <th className="p-3 text-left text-xs font-medium text-muted-foreground">Barbeiro</th>
-                  <th className="p-3 text-left text-xs font-medium text-muted-foreground">Serviço</th>
+                  <th className="p-3 text-left text-xs font-medium text-muted-foreground">Serviços</th>
                   <th className="p-3 text-right text-xs font-medium text-muted-foreground">Valor</th>
                   <th className="p-3 text-left text-xs font-medium text-muted-foreground">Pag.</th>
                 </tr>
@@ -468,28 +608,46 @@ const AdminFinanceiro = () => {
                       <div className="animate-spin w-6 h-6 border-2 border-primary border-t-transparent rounded-full mx-auto" />
                     </td>
                   </tr>
-                ) : records?.length === 0 ? (
+                ) : filteredRecords.length === 0 ? (
                   <tr>
                     <td colSpan={6} className="p-8 text-center text-muted-foreground text-sm">
-                      Nenhum atendimento encontrado
+                      {searchTerm ? 'Nenhum resultado encontrado' : 'Nenhum atendimento encontrado'}
                     </td>
                   </tr>
                 ) : (
-                  records?.slice(0, 15).map((record) => {
+                  filteredRecords.slice(0, 30).map((record) => {
                     const barber = barbers?.find(b => b.id === record.barber_id);
-                    const service = services?.find(s => s.id === record.service_id);
                     const date = new Date(record.completed_at);
                     
                     return (
                       <tr key={record.id} className="border-b border-border/30 hover:bg-muted/20 transition-colors">
-                        <td className="p-3 text-xs text-muted-foreground">
+                        <td className="p-3 text-xs text-muted-foreground whitespace-nowrap">
                           {date.toLocaleDateString('pt-BR')} {date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                         </td>
-                        <td className="p-3 text-sm">{record.customer_name}</td>
+                        <td className="p-3 text-sm font-medium">{record.customer_name}</td>
                         <td className="p-3 text-sm">{barber?.display_name || '-'}</td>
-                        <td className="p-3 text-xs text-muted-foreground truncate max-w-[100px]">{service?.name || '-'}</td>
-                        <td className="p-3 text-sm text-right text-green-400 font-medium">
-                          R$ {Number(record.price_charged).toFixed(0)}
+                        <td className="p-3">
+                          {record.services.length > 0 ? (
+                            <div className="flex flex-wrap gap-1 max-w-[200px]">
+                              {record.services.map((service, idx) => (
+                                <Badge 
+                                  key={idx} 
+                                  variant="outline" 
+                                  className="text-[10px] px-1.5 py-0 h-5 bg-primary/5 border-primary/20"
+                                >
+                                  {service.service_name}
+                                  <span className="ml-1 text-primary">
+                                    R${Number(service.price_charged).toFixed(0)}
+                                  </span>
+                                </Badge>
+                              ))}
+                            </div>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">-</span>
+                          )}
+                        </td>
+                        <td className="p-3 text-sm text-right text-green-400 font-bold whitespace-nowrap">
+                          R$ {record.price_charged.toFixed(2).replace('.', ',')}
                         </td>
                         <td className="p-3 text-xs text-muted-foreground capitalize">
                           {record.payment_method || '-'}
@@ -501,6 +659,12 @@ const AdminFinanceiro = () => {
               </tbody>
             </table>
           </div>
+          
+          {filteredRecords.length > 30 && (
+            <div className="p-3 text-center text-xs text-muted-foreground border-t border-border/30">
+              Exibindo 30 de {filteredRecords.length} registros
+            </div>
+          )}
         </div>
       </div>
     </AdminLayout>
