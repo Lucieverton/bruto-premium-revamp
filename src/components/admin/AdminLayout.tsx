@@ -20,6 +20,9 @@ import { Switch } from '@/components/ui/switch';
 import logo from '@/assets/logo.png';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { useQueueAlert } from '@/hooks/useQueueAlert';
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -50,6 +53,24 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { data: settings } = useQueueSettings();
   const toggleQueue = useToggleQueueActive();
+
+  // Fetch barber profile for the logged-in user (for global queue alerts)
+  const { data: myBarber } = useQuery({
+    queryKey: ['my-barber-profile-layout', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      const { data } = await supabase
+        .from('barbers')
+        .select('id')
+        .eq('user_id', user.id)
+        .single();
+      return data;
+    },
+    enabled: !!user?.id && (isBarber || isAdmin),
+  });
+
+  // Global queue alert — stays active on ALL admin pages
+  useQueueAlert(myBarber?.id || null);
 
   useEffect(() => {
     if (!loading && !user) {

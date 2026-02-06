@@ -2,13 +2,7 @@ import { useEffect, useRef, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { showSWNotification, ensureServiceWorker, type SWNotificationOptions } from '@/lib/pwa';
-
-interface QueueAlertPayload {
-  ticketNumber: string;
-  customerName: string;
-  serviceName?: string;
-}
+import { showSWNotification, ensureServiceWorker } from '@/lib/pwa';
 
 // Audio alert using Web Audio API
 const playAlertSound = () => {
@@ -63,27 +57,6 @@ export const useQueueAlert = (barberId: string | null) => {
     warmup();
   }, [barberId]);
 
-  // Fire native notification through SW
-  const fireNotification = useCallback(async (alert: QueueAlertPayload) => {
-    playAlertSound();
-    vibrateDevice();
-
-    // In-app toast
-    toast({
-      title: '💈 Novo Cliente na Fila!',
-      description: `${alert.customerName} aguardando${alert.serviceName ? ` para ${alert.serviceName}` : ''}.`,
-      duration: 10000,
-    });
-
-    // Native notification via Service Worker (works in background)
-    const sent = await showSWNotification('💈 Novo Cliente na Fila!', {
-      body: `${alert.customerName} aguardando${alert.serviceName ? ` para ${alert.serviceName}` : ''}.`,
-      tag: 'novo-cliente',
-    });
-    
-    console.log('[QueueAlert] Notification sent:', sent, 'for', alert.customerName);
-  }, [toast]);
-
   const fireTransferNotification = useCallback(async (customerName: string, ticketNumber: string) => {
     playAlertSound();
     vibrateDevice();
@@ -113,10 +86,15 @@ export const useQueueAlert = (barberId: string | null) => {
           event: 'INSERT',
           schema: 'public',
           table: 'queue_items',
-          filter: `barber_id=eq.${barberId}`,
         },
         async (payload) => {
           const newItem = payload.new as any;
+
+          // Client-side filter: only notify if assigned to me OR general queue (null)
+          if (newItem.barber_id !== null && newItem.barber_id !== barberId) {
+            console.log('[QueueAlert] Ignoring item for another barber:', newItem.barber_id);
+            return;
+          }
 
           // Skip if already processed
           if (processedIdsRef.current.has(newItem.id)) return;
@@ -135,6 +113,8 @@ export const useQueueAlert = (barberId: string | null) => {
             processedIdsRef.current = new Set(entries.slice(-25));
           }
 
+          const isGeneralQueue = newItem.barber_id === null;
+
           // Fetch service name
           let serviceName: string | undefined;
           if (newItem.service_id) {
@@ -146,11 +126,26 @@ export const useQueueAlert = (barberId: string | null) => {
             serviceName = data?.name;
           }
 
-          await fireNotification({
-            ticketNumber: newItem.ticket_number,
-            customerName: newItem.customer_name,
-            serviceName,
+          const title = isGeneralQueue 
+            ? '💈 Novo Cliente na Fila Geral!' 
+            : '💈 Novo Cliente na Sua Fila!';
+          const description = `${newItem.customer_name} aguardando${serviceName ? ` para ${serviceName}` : ''}.`;
+
+          playAlertSound();
+          vibrateDevice();
+
+          toast({
+            title,
+            description,
+            duration: 10000,
           });
+
+          await showSWNotification(title, {
+            body: description,
+            tag: isGeneralQueue ? 'fila-geral' : 'novo-cliente',
+          });
+
+          console.log('[QueueAlert] Notification sent:', { isGeneralQueue, customer: newItem.customer_name });
 
           queryClient.invalidateQueries({ queryKey: ['barber-queue'] });
           queryClient.invalidateQueries({ queryKey: ['today-queue'] });
@@ -190,5 +185,5 @@ export const useQueueAlert = (barberId: string | null) => {
       clearTimeout(timer);
       supabase.removeChannel(channel);
     };
-  }, [barberId, fireNotification, fireTransferNotification, queryClient]);
+  }, [barberId, fireTransferNotification, queryClient, toast]);
 };
