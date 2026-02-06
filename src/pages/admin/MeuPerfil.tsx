@@ -1,4 +1,5 @@
-import { Loader2, UserCheck, UserX, Sparkles, Settings, DollarSign, Bell, BellRing } from 'lucide-react';
+import { Loader2, UserCheck, UserX, Sparkles, Settings, DollarSign, Bell, BellRing, CheckCircle2 } from 'lucide-react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { Switch } from '@/components/ui/switch';
@@ -11,13 +12,14 @@ import { supabase } from '@/integrations/supabase/client';
 import { AvatarUpload } from '@/components/profile/AvatarUpload';
 import { WhatsAppNumberForm } from '@/components/profile/WhatsAppNumberForm';
 import { useQueueAlert } from '@/hooks/useQueueAlert';
-import { requestPushPermission } from '@/lib/pwa';
+import { requestPushPermission, sendTestNotification } from '@/lib/pwa';
 import { motion } from 'framer-motion';
 
 const MeuPerfil = () => {
   const { user, isAdmin } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [notificationStatus, setNotificationStatus] = useState<'idle' | 'granted' | 'denied'>('idle');
 
   const { data: barber, isLoading } = useQuery({
     queryKey: ['my-barber-profile', user?.id],
@@ -82,14 +84,33 @@ const MeuPerfil = () => {
   const requestNotifications = async () => {
     const permission = await requestPushPermission();
     if (permission === 'granted') {
+      setNotificationStatus('granted');
       toast({
         title: '🔔 Notificações ativadas!',
         description: 'Você receberá alertas mesmo em segundo plano quando novos clientes entrarem na sua fila.',
       });
     } else {
+      setNotificationStatus('denied');
       toast({
         title: '⚠️ Notificações bloqueadas',
         description: 'Habilite as notificações nas configurações do navegador.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  // Send a test notification
+  const handleTestNotification = async () => {
+    const sent = await sendTestNotification();
+    if (sent) {
+      toast({
+        title: '✅ Notificação enviada!',
+        description: 'Verifique a barra de notificações do seu celular.',
+      });
+    } else {
+      toast({
+        title: '❌ Falha ao enviar',
+        description: 'Verifique se as notificações estão permitidas nas configurações do navegador.',
         variant: 'destructive',
       });
     }
@@ -235,28 +256,52 @@ const MeuPerfil = () => {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="flex items-center justify-between p-4 rounded-xl border bg-gradient-to-r from-primary/5 to-primary/10 border-primary/20"
+              className="space-y-3"
             >
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-primary/20 rounded-lg">
-                  <BellRing size={20} className="text-primary" />
+              <div className="flex items-center justify-between p-4 rounded-xl border bg-gradient-to-r from-primary/5 to-primary/10 border-primary/20">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-primary/20 rounded-lg">
+                    <BellRing size={20} className="text-primary" />
+                  </div>
+                  <div>
+                    <p className="font-medium">Alertas de Novos Clientes</p>
+                    <p className="text-sm text-muted-foreground">
+                      Receba notificações quando clientes entrarem na sua fila
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <p className="font-medium">Alertas de Novos Clientes</p>
-                  <p className="text-sm text-muted-foreground">
-                    Receba notificações quando clientes entrarem na sua fila
-                  </p>
+                <div className="flex gap-2">
+                  {notificationStatus === 'granted' || (typeof Notification !== 'undefined' && Notification.permission === 'granted') ? (
+                    <div className="flex items-center gap-1 text-sm text-green-500">
+                      <CheckCircle2 size={16} />
+                      <span>Ativo</span>
+                    </div>
+                  ) : (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={requestNotifications}
+                      className="border-primary/30 hover:bg-primary/10"
+                    >
+                      <Bell size={16} className="mr-2" />
+                      Ativar
+                    </Button>
+                  )}
                 </div>
               </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={requestNotifications}
-                className="border-primary/30 hover:bg-primary/10"
-              >
-                <Bell size={16} className="mr-2" />
-                Ativar
-              </Button>
+
+              {/* Test notification button */}
+              {(notificationStatus === 'granted' || (typeof Notification !== 'undefined' && Notification.permission === 'granted')) && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleTestNotification}
+                  className="w-full border-primary/20 hover:bg-primary/10"
+                >
+                  <Bell size={16} className="mr-2" />
+                  Enviar Notificação de Teste
+                </Button>
+              )}
             </motion.div>
 
             {/* User Info */}

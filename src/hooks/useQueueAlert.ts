@@ -2,7 +2,7 @@ import { useEffect, useRef, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { showSWNotification, requestPushPermission, type SWNotificationOptions } from '@/lib/pwa';
+import { showSWNotification, ensureServiceWorker, type SWNotificationOptions } from '@/lib/pwa';
 
 interface QueueAlertPayload {
   ticketNumber: string;
@@ -30,7 +30,7 @@ const playAlertSound = () => {
     osc.start(ctx.currentTime);
     osc.stop(ctx.currentTime + 0.5);
   } catch {
-    console.log('Audio not supported');
+    console.log('[QueueAlert] Audio not supported');
   }
 };
 
@@ -47,8 +47,21 @@ const vibrateDevice = () => {
 export const useQueueAlert = (barberId: string | null) => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const lastTicketRef = useRef<string | null>(null);
+  const processedIdsRef = useRef<Set<string>>(new Set());
   const initialLoadRef = useRef(true);
+  const swReadyRef = useRef(false);
+
+  // Pre-warm the Service Worker on mount
+  useEffect(() => {
+    if (!barberId) return;
+    
+    const warmup = async () => {
+      const reg = await ensureServiceWorker();
+      swReadyRef.current = !!reg?.active;
+      console.log('[QueueAlert] SW pre-warmed:', swReadyRef.current);
+    };
+    warmup();
+  }, [barberId]);
 
   // Fire native notification through SW
   const fireNotification = useCallback(async (alert: QueueAlertPayload) => {
@@ -63,15 +76,12 @@ export const useQueueAlert = (barberId: string | null) => {
     });
 
     // Native notification via Service Worker (works in background)
-    await showSWNotification('💈 Novo Cliente na Fila!', {
+    const sent = await showSWNotification('💈 Novo Cliente na Fila!', {
       body: `${alert.customerName} aguardando${alert.serviceName ? ` para ${alert.serviceName}` : ''}.`,
-      icon: '/pwa-192x192.png',
-      badge: '/pwa-192x192.png',
-      vibrate: [500, 200, 500],
       tag: 'novo-cliente',
-      renotify: true,
-      requireInteraction: true,
     });
+    
+    console.log('[QueueAlert] Notification sent:', sent, 'for', alert.customerName);
   }, [toast]);
 
   const fireTransferNotification = useCallback(async (customerName: string, ticketNumber: string) => {
@@ -86,19 +96,14 @@ export const useQueueAlert = (barberId: string | null) => {
 
     await showSWNotification('🔄 Cliente Transferido!', {
       body: `${customerName} - Ticket ${ticketNumber}`,
-      icon: '/pwa-192x192.png',
-      badge: '/pwa-192x192.png',
-      vibrate: [500, 200, 500],
       tag: 'transferencia-cliente',
-      renotify: true,
     });
   }, [toast]);
 
   useEffect(() => {
     if (!barberId) return;
 
-    // Request notification permission on mount
-    requestPushPermission();
+    console.log('[QueueAlert] Subscribing for barber:', barberId);
 
     const channel = supabase
       .channel(`barber-queue-alerts-${barberId}`)
@@ -113,13 +118,22 @@ export const useQueueAlert = (barberId: string | null) => {
         async (payload) => {
           const newItem = payload.new as any;
 
-          if (lastTicketRef.current === newItem.id) return;
+          // Skip if already processed
+          if (processedIdsRef.current.has(newItem.id)) return;
+          
+          // Skip initial load period
           if (initialLoadRef.current) {
-            initialLoadRef.current = false;
+            console.log('[QueueAlert] Skipping initial load item:', newItem.id);
             return;
           }
 
-          lastTicketRef.current = newItem.id;
+          processedIdsRef.current.add(newItem.id);
+          
+          // Keep set size manageable
+          if (processedIdsRef.current.size > 50) {
+            const entries = Array.from(processedIdsRef.current);
+            processedIdsRef.current = new Set(entries.slice(-25));
+          }
 
           // Fetch service name
           let serviceName: string | undefined;
@@ -153,8 +167,8 @@ export const useQueueAlert = (barberId: string | null) => {
           const updatedItem = payload.new as any;
 
           if (updatedItem.barber_id === barberId && payload.old?.barber_id !== barberId) {
-            if (lastTicketRef.current === updatedItem.id) return;
-            lastTicketRef.current = updatedItem.id;
+            if (processedIdsRef.current.has(updatedItem.id)) return;
+            processedIdsRef.current.add(updatedItem.id);
 
             await fireTransferNotification(updatedItem.customer_name, updatedItem.ticket_number);
           }
@@ -162,13 +176,18 @@ export const useQueueAlert = (barberId: string | null) => {
           queryClient.invalidateQueries({ queryKey: ['barber-queue'] });
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('[QueueAlert] Subscription status:', status);
+      });
 
-    setTimeout(() => {
+    // Allow initial load to settle before processing real events
+    const timer = setTimeout(() => {
       initialLoadRef.current = false;
-    }, 2000);
+      console.log('[QueueAlert] Initial load period ended, now processing events');
+    }, 3000);
 
     return () => {
+      clearTimeout(timer);
       supabase.removeChannel(channel);
     };
   }, [barberId, fireNotification, fireTransferNotification, queryClient]);
