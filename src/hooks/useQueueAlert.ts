@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { showSWNotification, ensureServiceWorker } from '@/lib/pwa';
 
-// Audio alert using Web Audio API
+// ── Audio alert via Web Audio API ──────────────────────────────────────────
 const playAlertSound = () => {
   try {
     const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
@@ -24,7 +24,7 @@ const playAlertSound = () => {
     osc.start(ctx.currentTime);
     osc.stop(ctx.currentTime + 0.5);
   } catch {
-    console.log('[QueueAlert] Audio not supported');
+    // Audio not supported — silent fallback
   }
 };
 
@@ -34,156 +34,208 @@ const vibrateDevice = () => {
   }
 };
 
+// ── Hook ───────────────────────────────────────────────────────────────────
 /**
- * Hook that monitors the queue in real-time and sends native PWA notifications
- * to barbers — even when the tab is in background — via Service Worker.
+ * Monitors `queue_items` in real-time and fires native PWA notifications
+ * to barbers. Designed to survive Chrome mobile background throttling
+ * by re-subscribing on visibility change and subscription errors.
  */
 export const useQueueAlert = (barberId: string | null) => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const processedIdsRef = useRef<Set<string>>(new Set());
-  const initialLoadRef = useRef(true);
-  const swReadyRef = useRef(false);
 
-  // Pre-warm the Service Worker on mount
+  // Refs to avoid stale closures and unnecessary re-subscriptions
+  const barberIdRef = useRef(barberId);
+  const processedIdsRef = useRef<Set<string>>(new Set());
+  const subscribedAtRef = useRef<number>(0);
+  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+  const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Keep barber ID in sync without re-running the main effect
   useEffect(() => {
-    if (!barberId) return;
-    
-    const warmup = async () => {
-      const reg = await ensureServiceWorker();
-      swReadyRef.current = !!reg?.active;
-      console.log('[QueueAlert] SW pre-warmed:', swReadyRef.current);
-    };
-    warmup();
+    barberIdRef.current = barberId;
   }, [barberId]);
 
-  const fireTransferNotification = useCallback(async (customerName: string, ticketNumber: string) => {
-    playAlertSound();
-    vibrateDevice();
-
-    toast({
-      title: '🔄 Cliente transferido para você!',
-      description: `${customerName} - Ticket ${ticketNumber}`,
-      duration: 10000,
+  // Pre-warm Service Worker once
+  useEffect(() => {
+    if (!barberId) return;
+    ensureServiceWorker().then((reg) => {
+      console.log('[QueueAlert] SW ready:', !!reg?.active);
     });
+  }, [barberId]);
 
-    await showSWNotification('🔄 Cliente Transferido!', {
-      body: `${customerName} - Ticket ${ticketNumber}`,
-      tag: 'transferencia-cliente',
-    });
-  }, [toast]);
+  // ── Notification helper (stable ref) ──────────────────────────────────
+  const fireNotification = useCallback(
+    async (title: string, body: string, tag: string) => {
+      playAlertSound();
+      vibrateDevice();
+      toast({ title, description: body, duration: 10_000 });
+      await showSWNotification(title, { body, tag, renotify: true });
+    },
+    [toast],
+  );
 
+  // ── Main subscription effect ──────────────────────────────────────────
   useEffect(() => {
     if (!barberId) return;
 
-    console.log('[QueueAlert] Subscribing for barber:', barberId);
+    /** Create (or re-create) the Realtime channel */
+    const subscribe = () => {
+      // Tear down previous channel, if any
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
+      }
+      if (retryTimerRef.current) {
+        clearTimeout(retryTimerRef.current);
+        retryTimerRef.current = null;
+      }
 
-    const channel = supabase
-      .channel(`barber-queue-alerts-${barberId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'queue_items',
-        },
-        async (payload) => {
-          const newItem = payload.new as any;
+      console.log('[QueueAlert] Subscribing for barber:', barberId);
 
-          // Client-side filter: only notify if assigned to me OR general queue (null)
-          if (newItem.barber_id !== null && newItem.barber_id !== barberId) {
-            console.log('[QueueAlert] Ignoring item for another barber:', newItem.barber_id);
-            return;
+      // Unique channel name avoids collisions on re-subscribe
+      const channel = supabase
+        .channel(`queue-alerts-${barberId}-${Date.now()}`)
+        // ── INSERT: new client in queue ─────────────────────────────────
+        .on(
+          'postgres_changes',
+          { event: 'INSERT', schema: 'public', table: 'queue_items' },
+          async (payload) => {
+            const currentId = barberIdRef.current;
+            if (!currentId) return;
+
+            const item = payload.new as any;
+
+            // Client-side filter: my queue OR general queue only
+            if (item.barber_id !== null && item.barber_id !== currentId) return;
+
+            // Deduplicate
+            if (processedIdsRef.current.has(item.id)) return;
+
+            // Ignore items created before we subscribed (prevents
+            // ghost notifications on reconnect / page load)
+            const createdMs = new Date(item.created_at).getTime();
+            if (createdMs < subscribedAtRef.current) {
+              console.log('[QueueAlert] Skipping pre-subscription item:', item.id);
+              return;
+            }
+
+            processedIdsRef.current.add(item.id);
+
+            // Trim set to prevent memory leak
+            if (processedIdsRef.current.size > 100) {
+              const arr = Array.from(processedIdsRef.current);
+              processedIdsRef.current = new Set(arr.slice(-50));
+            }
+
+            const isGeneral = item.barber_id === null;
+
+            // Resolve service name (best-effort)
+            let serviceName: string | undefined;
+            if (item.service_id) {
+              const { data } = await supabase
+                .from('services')
+                .select('name')
+                .eq('id', item.service_id)
+                .single();
+              serviceName = data?.name;
+            }
+
+            const title = isGeneral
+              ? '💈 Novo Cliente na Fila Geral!'
+              : '💈 Novo Cliente na Sua Fila!';
+            const body = `${item.customer_name} aguardando${serviceName ? ` para ${serviceName}` : ''}.`;
+
+            await fireNotification(title, body, isGeneral ? 'fila-geral' : 'novo-cliente');
+
+            console.log('[QueueAlert] ✅ Notified:', {
+              isGeneral,
+              customer: item.customer_name,
+            });
+
+            queryClient.invalidateQueries({ queryKey: ['barber-queue'] });
+            queryClient.invalidateQueries({ queryKey: ['today-queue'] });
+          },
+        )
+        // ── UPDATE: transfer ────────────────────────────────────────────
+        .on(
+          'postgres_changes',
+          { event: 'UPDATE', schema: 'public', table: 'queue_items' },
+          async (payload) => {
+            const currentId = barberIdRef.current;
+            if (!currentId) return;
+
+            const updated = payload.new as any;
+            const old = payload.old as any;
+
+            // Transfer: was NOT mine, now IS mine
+            if (updated.barber_id === currentId && old?.barber_id !== currentId) {
+              const dedupeKey = `transfer-${updated.id}`;
+              if (processedIdsRef.current.has(dedupeKey)) return;
+              processedIdsRef.current.add(dedupeKey);
+
+              await fireNotification(
+                '🔄 Cliente transferido para você!',
+                `${updated.customer_name} - Ticket ${updated.ticket_number}`,
+                'transferencia-cliente',
+              );
+            }
+
+            queryClient.invalidateQueries({ queryKey: ['barber-queue'] });
+          },
+        )
+        .subscribe((status, err) => {
+          console.log('[QueueAlert] Status:', status, err ?? '');
+
+          if (status === 'SUBSCRIBED') {
+            subscribedAtRef.current = Date.now();
+            console.log(
+              '[QueueAlert] ✅ Listening since:',
+              new Date().toLocaleTimeString(),
+            );
           }
 
-          // Skip if already processed
-          if (processedIdsRef.current.has(newItem.id)) return;
-          
-          // Skip initial load period
-          if (initialLoadRef.current) {
-            console.log('[QueueAlert] Skipping initial load item:', newItem.id);
-            return;
+          // Auto-retry on failure
+          if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+            console.warn('[QueueAlert] ❌ Channel error — retrying in 5 s…');
+            retryTimerRef.current = setTimeout(subscribe, 5_000);
           }
+        });
 
-          processedIdsRef.current.add(newItem.id);
-          
-          // Keep set size manageable
-          if (processedIdsRef.current.size > 50) {
-            const entries = Array.from(processedIdsRef.current);
-            processedIdsRef.current = new Set(entries.slice(-25));
-          }
-
-          const isGeneralQueue = newItem.barber_id === null;
-
-          // Fetch service name
-          let serviceName: string | undefined;
-          if (newItem.service_id) {
-            const { data } = await supabase
-              .from('services')
-              .select('name')
-              .eq('id', newItem.service_id)
-              .single();
-            serviceName = data?.name;
-          }
-
-          const title = isGeneralQueue 
-            ? '💈 Novo Cliente na Fila Geral!' 
-            : '💈 Novo Cliente na Sua Fila!';
-          const description = `${newItem.customer_name} aguardando${serviceName ? ` para ${serviceName}` : ''}.`;
-
-          playAlertSound();
-          vibrateDevice();
-
-          toast({
-            title,
-            description,
-            duration: 10000,
-          });
-
-          await showSWNotification(title, {
-            body: description,
-            tag: isGeneralQueue ? 'fila-geral' : 'novo-cliente',
-          });
-
-          console.log('[QueueAlert] Notification sent:', { isGeneralQueue, customer: newItem.customer_name });
-
-          queryClient.invalidateQueries({ queryKey: ['barber-queue'] });
-          queryClient.invalidateQueries({ queryKey: ['today-queue'] });
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'queue_items',
-        },
-        async (payload) => {
-          const updatedItem = payload.new as any;
-
-          if (updatedItem.barber_id === barberId && payload.old?.barber_id !== barberId) {
-            if (processedIdsRef.current.has(updatedItem.id)) return;
-            processedIdsRef.current.add(updatedItem.id);
-
-            await fireTransferNotification(updatedItem.customer_name, updatedItem.ticket_number);
-          }
-
-          queryClient.invalidateQueries({ queryKey: ['barber-queue'] });
-        }
-      )
-      .subscribe((status) => {
-        console.log('[QueueAlert] Subscription status:', status);
-      });
-
-    // Allow initial load to settle before processing real events
-    const timer = setTimeout(() => {
-      initialLoadRef.current = false;
-      console.log('[QueueAlert] Initial load period ended, now processing events');
-    }, 3000);
-
-    return () => {
-      clearTimeout(timer);
-      supabase.removeChannel(channel);
+      channelRef.current = channel;
     };
-  }, [barberId, fireTransferNotification, queryClient, toast]);
+
+    // Initial subscription
+    subscribe();
+
+    // ── Reconnect when tab becomes visible (critical for mobile Chrome) ─
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        console.log('[QueueAlert] 🔄 Tab visible — re-subscribing…');
+        subscribe();
+        // Refresh stale data
+        queryClient.invalidateQueries({ queryKey: ['barber-queue'] });
+        queryClient.invalidateQueries({ queryKey: ['today-queue'] });
+      }
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+
+    // ── Reconnect on network restore ────────────────────────────────────
+    const onOnline = () => {
+      console.log('[QueueAlert] 🌐 Back online — re-subscribing…');
+      subscribe();
+    };
+    window.addEventListener('online', onOnline);
+
+    // ── Cleanup ─────────────────────────────────────────────────────────
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibility);
+      window.removeEventListener('online', onOnline);
+      if (retryTimerRef.current) clearTimeout(retryTimerRef.current);
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
+      }
+    };
+  }, [barberId, fireNotification, queryClient]);
 };
