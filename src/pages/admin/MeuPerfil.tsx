@@ -10,7 +10,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { AvatarUpload } from '@/components/profile/AvatarUpload';
 import { WhatsAppNumberForm } from '@/components/profile/WhatsAppNumberForm';
-import { useBarberQueueAlerts } from '@/hooks/useBarberQueueAlerts';
+import { useQueueAlert } from '@/hooks/useQueueAlert';
+import { requestPushPermission } from '@/lib/pwa';
 import { motion } from 'framer-motion';
 
 const MeuPerfil = () => {
@@ -74,19 +75,23 @@ const MeuPerfil = () => {
     queryClient.invalidateQueries({ queryKey: ['public-barbers'] });
   };
 
-  // Enable queue alerts for this barber
-  useBarberQueueAlerts(barber?.id || null);
+  // Enable PWA queue alerts for this barber
+  useQueueAlert(barber?.id || null);
 
-  // Request notification permission
+  // Request notification permission via PWA
   const requestNotifications = async () => {
-    if ('Notification' in window) {
-      const permission = await Notification.requestPermission();
-      if (permission === 'granted') {
-        toast({
-          title: '🔔 Notificações ativadas!',
-          description: 'Você receberá alertas quando novos clientes entrarem na sua fila.',
-        });
-      }
+    const permission = await requestPushPermission();
+    if (permission === 'granted') {
+      toast({
+        title: '🔔 Notificações ativadas!',
+        description: 'Você receberá alertas mesmo em segundo plano quando novos clientes entrarem na sua fila.',
+      });
+    } else {
+      toast({
+        title: '⚠️ Notificações bloqueadas',
+        description: 'Habilite as notificações nas configurações do navegador.',
+        variant: 'destructive',
+      });
     }
   };
 
