@@ -11,7 +11,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { AvatarUpload } from '@/components/profile/AvatarUpload';
 import { WhatsAppNumberForm } from '@/components/profile/WhatsAppNumberForm';
-import { useQueueAlert } from '@/hooks/useQueueAlert';
+
 import { requestPushPermission, sendTestNotification } from '@/lib/pwa';
 import { motion } from 'framer-motion';
 
@@ -77,8 +77,7 @@ const MeuPerfil = () => {
     queryClient.invalidateQueries({ queryKey: ['public-barbers'] });
   };
 
-  // Enable PWA queue alerts for this barber
-  useQueueAlert(barber?.id || null);
+  // Queue alerts now handled globally in AdminLayout
 
   // Request notification permission via PWA
   const requestNotifications = async () => {
