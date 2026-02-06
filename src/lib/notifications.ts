@@ -1,4 +1,5 @@
 // Notification utilities for queue system
+import { showSWNotification } from '@/lib/pwa';
 
 export const playNotificationSound = () => {
   const audio = new Audio('/notification.mp3');
@@ -46,37 +47,36 @@ export const requestNotificationPermission = async (): Promise<boolean> => {
   return false;
 };
 
-export const showPushNotification = (title: string, body: string) => {
-  if (Notification.permission === 'granted') {
-    new Notification(title, {
-      body,
-      icon: '/favicon.ico',
-      badge: '/favicon.ico',
-      requireInteraction: true,
-    });
-    vibrateDevice();
-  }
+export const showPushNotification = async (title: string, body: string) => {
+  // Use Service Worker notification for background support
+  await showSWNotification(title, {
+    body,
+    icon: '/pwa-192x192.png',
+    badge: '/pwa-192x192.png',
+    requireInteraction: true,
+    vibrate: [200, 100, 200],
+  });
+  vibrateDevice();
 };
 
 // Generic function to send notifications with options
-export const sendNotification = (title: string, options?: { body?: string; tag?: string }) => {
-  if ('Notification' in window && Notification.permission === 'granted') {
-    new Notification(title, {
-      body: options?.body || '',
-      icon: '/favicon.ico',
-      badge: '/favicon.ico',
-      tag: options?.tag,
-      requireInteraction: true,
-    });
-    playNotificationSound();
-    vibrateDevice();
-  }
-};
-
-export const notifyUserCalled = (ticketNumber: string) => {
+export const sendNotification = async (title: string, options?: { body?: string; tag?: string }) => {
+  await showSWNotification(title, {
+    body: options?.body || '',
+    icon: '/pwa-192x192.png',
+    badge: '/pwa-192x192.png',
+    tag: options?.tag,
+    requireInteraction: true,
+    vibrate: [200, 100, 200],
+  });
   playNotificationSound();
   vibrateDevice();
-  showPushNotification(
+};
+
+export const notifyUserCalled = async (ticketNumber: string) => {
+  playNotificationSound();
+  vibrateDevice();
+  await showPushNotification(
     '🎉 É sua vez!',
     `Ticket ${ticketNumber} - Dirija-se ao balcão!`
   );
