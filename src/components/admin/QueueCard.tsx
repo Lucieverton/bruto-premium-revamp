@@ -19,6 +19,16 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
@@ -41,6 +51,8 @@ interface QueueCardProps {
 
 export const QueueCard = ({ item }: QueueCardProps) => {
   const [showCompleteDialog, setShowCompleteDialog] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showNoShowConfirm, setShowNoShowConfirm] = useState(false);
   const [priceCharged, setPriceCharged] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('');
   const [selectedBarber, setSelectedBarber] = useState(item.barber_id || '');
@@ -127,15 +139,13 @@ export const QueueCard = ({ item }: QueueCardProps) => {
   };
   
   const handleNoShow = () => {
-    if (confirm('Marcar cliente como não compareceu?')) {
-      markNoShow.mutate(item.id);
-    }
+    markNoShow.mutate(item.id);
+    setShowNoShowConfirm(false);
   };
   
   const handleDelete = () => {
-    if (confirm('Remover cliente da fila?')) {
-      deleteItem.mutate(item.id);
-    }
+    deleteItem.mutate(item.id);
+    setShowDeleteConfirm(false);
   };
   
   const whatsappUrl = `https://wa.me/55${item.customer_phone}`;
@@ -249,7 +259,7 @@ export const QueueCard = ({ item }: QueueCardProps) => {
               <Button
                 size="sm"
                 variant="outline"
-                onClick={handleDelete}
+                onClick={() => setShowDeleteConfirm(true)}
                 disabled={deleteItem.isPending}
                 className="text-destructive hover:bg-destructive/10 h-8 w-8 p-0"
               >
@@ -272,7 +282,7 @@ export const QueueCard = ({ item }: QueueCardProps) => {
               <Button
                 size="sm"
                 variant="outline"
-                onClick={handleNoShow}
+                onClick={() => setShowNoShowConfirm(true)}
                 disabled={markNoShow.isPending}
                 className="text-yellow-500 hover:bg-yellow-500/10 h-8 w-8 p-0"
               >
@@ -294,6 +304,50 @@ export const QueueCard = ({ item }: QueueCardProps) => {
         </div>
       </div>
       
+      {/* Delete Confirmation */}
+      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remover cliente da fila?</AlertDialogTitle>
+            <AlertDialogDescription>
+              O cliente <strong>{item.customer_name}</strong> ({item.ticket_number}) será removido da fila. Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              className="bg-destructive hover:bg-destructive/90"
+            >
+              <Trash2 size={14} className="mr-1" />
+              Remover
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* No-Show Confirmation */}
+      <AlertDialog open={showNoShowConfirm} onOpenChange={setShowNoShowConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Marcar como não compareceu?</AlertDialogTitle>
+            <AlertDialogDescription>
+              O cliente <strong>{item.customer_name}</strong> ({item.ticket_number}) será marcado como no-show.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleNoShow}
+              className="bg-yellow-600 hover:bg-yellow-700"
+            >
+              <XCircle size={14} className="mr-1" />
+              Confirmar No-Show
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       {/* Complete Dialog */}
       <Dialog open={showCompleteDialog} onOpenChange={setShowCompleteDialog}>
         <DialogContent>
