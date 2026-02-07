@@ -29,7 +29,7 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useTodayQueue, useServices, useQueueItemServices, useAddServiceToQueueItem, useRemoveServiceFromQueueItem } from '@/hooks/useQueue';
+import { useTodayQueue, useServices, useQueueItemServices, useAddServiceToQueueItem, useRemoveServiceFromQueueItem, useLeaveQueue } from '@/hooks/useQueue';
 import { useAdminBarbers } from '@/hooks/useAdminBarbers';
 import { useBarberStartService, useBarberCompleteService } from '@/hooks/useBarberQueue';
 import { useBarberCallClient } from '@/hooks/useBarberDirectEntry';
@@ -96,6 +96,7 @@ const Atendimento = () => {
   const startService = useBarberStartService();
   const completeService = useBarberCompleteService();
   const callClient = useBarberCallClient();
+  const leaveQueue = useLeaveQueue();
 
   // Filter queue items - SECURITY: Only show clients assigned to this barber OR with no barber assigned
   // Barbers can only see and manage their own clients - NOT other barbers' clients
@@ -498,6 +499,26 @@ const Atendimento = () => {
                               Iniciar
                             </Button>
                           )}
+
+                          {/* Remove Client Button */}
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              if (confirm('Remover cliente da fila?')) {
+                                leaveQueue.mutate({
+                                  ticketId: item.id,
+                                  customerName: item.customer_name,
+                                  barberId: item.barber_id,
+                                  ticketNumber: item.ticket_number,
+                                });
+                              }
+                            }}
+                            disabled={leaveQueue.isPending}
+                            className="text-destructive hover:bg-destructive/10 h-8 w-8 p-0"
+                          >
+                            <Trash2 size={14} />
+                          </Button>
                         </div>
                       </div>
                     </div>

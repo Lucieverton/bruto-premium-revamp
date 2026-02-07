@@ -179,26 +179,46 @@ export const useMarkNoShow = () => {
   });
 };
 
-// Delete queue item
+// Delete queue item (fetches ticket info first for push notification)
 export const useDeleteQueueItem = () => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   
   return useMutation({
     mutationFn: async (ticketId: string) => {
+      // Fetch ticket info before deleting (for push notification)
+      const { data: ticket } = await supabase
+        .from('queue_items')
+        .select('customer_name, barber_id, ticket_number')
+        .eq('id', ticketId)
+        .single();
+
       const { error } = await supabase
         .from('queue_items')
         .delete()
         .eq('id', ticketId);
       
       if (error) throw error;
+      return ticket; // pass through for onSuccess
     },
-    onSuccess: () => {
+    onSuccess: (ticket) => {
       queryClient.invalidateQueries({ queryKey: ['queue-items'] });
       queryClient.invalidateQueries({ queryKey: ['today-queue'] });
+      queryClient.invalidateQueries({ queryKey: ['public-queue'] });
+      queryClient.invalidateQueries({ queryKey: ['queue-stats'] });
       toast({
         title: 'Cliente removido da fila',
       });
+
+      // Notify the assigned barber
+      if (ticket?.barber_id) {
+        sendPushNotification({
+          type: 'client_left',
+          customer_name: ticket.customer_name || 'Cliente',
+          barber_id: ticket.barber_id,
+          ticket_number: ticket.ticket_number || '',
+        });
+      }
     },
   });
 };
