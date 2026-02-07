@@ -179,20 +179,26 @@ export const useMarkNoShow = () => {
   });
 };
 
-// Delete queue item (fetches ticket info first for push notification)
+// Delete queue item — cancels via RPC first (triggers realtime + notifications), then hard-deletes
 export const useDeleteQueueItem = () => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   
   return useMutation({
     mutationFn: async (ticketId: string) => {
-      // Fetch ticket info before deleting (for push notification)
+      // Fetch ticket info before removing (for push notification)
       const { data: ticket } = await supabase
         .from('queue_items')
-        .select('customer_name, barber_id, ticket_number')
+        .select('customer_name, barber_id, ticket_number, status')
         .eq('id', ticketId)
-        .single();
+        .maybeSingle();
 
+      // Cancel via RPC first so realtime listeners fire properly
+      if (ticket && (ticket.status === 'waiting' || ticket.status === 'called')) {
+        await supabase.rpc('leave_queue', { p_ticket_id: ticketId });
+      }
+
+      // Hard-delete the record for admin cleanup
       const { error } = await supabase
         .from('queue_items')
         .delete()
@@ -206,11 +212,13 @@ export const useDeleteQueueItem = () => {
       queryClient.invalidateQueries({ queryKey: ['today-queue'] });
       queryClient.invalidateQueries({ queryKey: ['public-queue'] });
       queryClient.invalidateQueries({ queryKey: ['queue-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['active-services-public'] });
+      queryClient.invalidateQueries({ queryKey: ['barber-queue'] });
       toast({
         title: 'Cliente removido da fila',
       });
 
-      // Notify the assigned barber
+      // Notify the assigned barber via push
       if (ticket?.barber_id) {
         sendPushNotification({
           type: 'client_left',
@@ -219,6 +227,13 @@ export const useDeleteQueueItem = () => {
           ticket_number: ticket.ticket_number || '',
         });
       }
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Erro ao remover cliente',
+        description: error.message,
+        variant: 'destructive',
+      });
     },
   });
 };
