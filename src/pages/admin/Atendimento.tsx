@@ -1,4 +1,14 @@
 import { useState } from 'react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { 
   Play, 
   CheckCircle, 
@@ -50,6 +60,7 @@ const Atendimento = () => {
   const [priceCharged, setPriceCharged] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('');
   const [showAddServiceSelect, setShowAddServiceSelect] = useState(false);
+  const [removeConfirm, setRemoveConfirm] = useState<{ id: string; name: string; barberId: string | null; ticketNumber: string } | null>(null);
   
   // Enable realtime updates
   useQueueRealtime();
@@ -504,16 +515,12 @@ const Atendimento = () => {
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => {
-                              if (confirm('Remover cliente da fila?')) {
-                                leaveQueue.mutate({
-                                  ticketId: item.id,
-                                  customerName: item.customer_name,
-                                  barberId: item.barber_id,
-                                  ticketNumber: item.ticket_number,
-                                });
-                              }
-                            }}
+                            onClick={() => setRemoveConfirm({
+                              id: item.id,
+                              name: item.customer_name,
+                              barberId: item.barber_id,
+                              ticketNumber: item.ticket_number,
+                            })}
                             disabled={leaveQueue.isPending}
                             className="text-destructive hover:bg-destructive/10 h-8 w-8 p-0"
                           >
@@ -688,6 +695,38 @@ const Atendimento = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Remove Client Confirmation */}
+      <AlertDialog open={!!removeConfirm} onOpenChange={(open) => !open && setRemoveConfirm(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remover cliente da fila?</AlertDialogTitle>
+            <AlertDialogDescription>
+              O cliente <strong>{removeConfirm?.name}</strong> ({removeConfirm?.ticketNumber}) será removido da fila. Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (removeConfirm) {
+                  leaveQueue.mutate({
+                    ticketId: removeConfirm.id,
+                    customerName: removeConfirm.name,
+                    barberId: removeConfirm.barberId,
+                    ticketNumber: removeConfirm.ticketNumber,
+                  });
+                  setRemoveConfirm(null);
+                }
+              }}
+              className="bg-destructive hover:bg-destructive/90"
+            >
+              <Trash2 size={14} className="mr-1" />
+              Remover
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </AdminLayout>
   );
 };
