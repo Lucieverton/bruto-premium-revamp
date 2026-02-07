@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { saveMyTicket } from '@/lib/antiAbuse';
+import { sendPushNotification } from '@/lib/pushNotify';
 
 export interface QueueItem {
   id: string;
@@ -335,6 +336,13 @@ export const useJoinQueue = () => {
       toast({
         title: 'Você entrou na fila!',
         description: `Seu ticket é ${data.ticket_number}`,
+      });
+
+      // Fire-and-forget push notification to barbers
+      sendPushNotification({
+        type: 'new_client',
+        customer_name: data.ticket_number, // ticket is enough context
+        ticket_number: data.ticket_number,
       });
     },
     onError: (error: Error) => {

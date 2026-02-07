@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { sendPushNotification } from '@/lib/pushNotify';
 
 export interface QueueTransfer {
   id: string;
@@ -54,7 +55,7 @@ export const useTransferClient = () => {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['queue-items'] });
       queryClient.invalidateQueries({ queryKey: ['today-queue'] });
       queryClient.invalidateQueries({ queryKey: ['public-queue'] });
@@ -63,6 +64,14 @@ export const useTransferClient = () => {
       toast({
         title: 'Cliente transferido!',
         description: 'O cliente foi transferido para outro barbeiro.',
+      });
+
+      // Fire-and-forget push notification to the target barber
+      sendPushNotification({
+        type: 'transfer',
+        customer_name: 'Cliente transferido',
+        barber_id: variables.toBarberId,
+        ticket_number: variables.queueItemId,
       });
     },
     onError: (error: Error) => {
