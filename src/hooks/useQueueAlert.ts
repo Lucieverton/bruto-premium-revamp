@@ -142,9 +142,9 @@ export const useQueueAlert = (barberId: string | null) => {
             }
 
             const title = isGeneral
-              ? '💈 Novo Cliente na Fila Geral!'
+              ? '👥 Novo Cliente na Fila Geral!'
               : '💈 Novo Cliente na Sua Fila!';
-            const body = `${item.customer_name} aguardando${serviceName ? ` para ${serviceName}` : ''}.`;
+            const body = `${item.customer_name}${serviceName ? ` • ${serviceName}` : ''} — Ticket ${item.ticket_number}`;
 
             await fireNotification(title, body, isGeneral ? 'fila-geral' : 'novo-cliente');
 
@@ -176,8 +176,25 @@ export const useQueueAlert = (barberId: string | null) => {
 
               await fireNotification(
                 '🔄 Cliente transferido para você!',
-                `${updated.customer_name} - Ticket ${updated.ticket_number}`,
+                `${updated.customer_name} — Ticket ${updated.ticket_number}`,
                 'transferencia-cliente',
+              );
+            }
+
+            // Status changed to cancelled (client left the queue)
+            if (
+              updated.status === 'cancelled' &&
+              old?.status === 'waiting' &&
+              (updated.barber_id === currentId || updated.barber_id === null)
+            ) {
+              const dedupeKey = `left-${updated.id}`;
+              if (processedIdsRef.current.has(dedupeKey)) return;
+              processedIdsRef.current.add(dedupeKey);
+
+              await fireNotification(
+                '🚶 Cliente saiu da fila',
+                `${updated.customer_name} (Ticket ${updated.ticket_number}) desistiu.`,
+                'cliente-saiu',
               );
             }
 

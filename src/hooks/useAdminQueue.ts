@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { sendPushNotification } from '@/lib/pushNotify';
 
 // Call next client - improved logic with validation
 export const useCallClient = () => {
@@ -233,7 +234,7 @@ export const useAddWalkIn = () => {
       const ticket = Array.isArray(result) ? result[0] : result;
       return ticket as { id: string; ticket_number: string };
     },
-    onSuccess: (data) => {
+    onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['queue-items'] });
       queryClient.invalidateQueries({ queryKey: ['today-queue'] });
       queryClient.invalidateQueries({ queryKey: ['public-queue'] });
@@ -242,6 +243,14 @@ export const useAddWalkIn = () => {
       toast({
         title: 'Cliente adicionado!',
         description: `Ticket: ${data.ticket_number}`,
+      });
+
+      // Push notification → assigned barber (or all if general)
+      sendPushNotification({
+        type: 'new_client',
+        customer_name: variables.customer_name,
+        barber_id: variables.barber_id || null,
+        ticket_number: data.ticket_number,
       });
     },
     onError: (error: Error) => {
