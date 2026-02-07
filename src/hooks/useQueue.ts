@@ -457,8 +457,13 @@ export const useLeaveQueue = () => {
         p_ticket_id: params.ticketId,
       });
       
-      if (error) throw error;
-      if (!data) throw new Error('Não foi possível sair da fila');
+      if (error) {
+        console.error('[LeaveQueue] RPC error:', error);
+        throw error;
+      }
+      if (data === false) {
+        throw new Error('Não foi possível sair da fila. O ticket pode já ter sido processado.');
+      }
       
       return params; // pass context through for onSuccess
     },
@@ -469,9 +474,10 @@ export const useLeaveQueue = () => {
       queryClient.invalidateQueries({ queryKey: ['queue-stats'] });
       queryClient.invalidateQueries({ queryKey: ['active-services-public'] });
       queryClient.invalidateQueries({ queryKey: ['queue-item'] });
+      queryClient.invalidateQueries({ queryKey: ['barber-queue'] });
       toast({
-        title: 'Você saiu da fila',
-        description: 'Esperamos vê-lo em breve!',
+        title: 'Saiu da fila',
+        description: 'O cliente foi removido com sucesso.',
       });
 
       // Notify the assigned barber that the client left
@@ -485,6 +491,7 @@ export const useLeaveQueue = () => {
       }
     },
     onError: (error: Error) => {
+      console.error('[LeaveQueue] Error:', error);
       toast({
         title: 'Erro ao sair da fila',
         description: error.message,
