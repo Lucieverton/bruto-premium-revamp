@@ -1,97 +1,118 @@
 
 
-## Diagnostico: Notificacoes Nao Chegam Quando Cliente Entra na Fila
+## Diagnostico e Correcao: Erro na Fila + Push para Tela Bloqueada
 
-### Problemas Identificados
+### Problema Principal (CRITICO): Fila Quebrada
 
-Apos analisar todo o fluxo do sistema de notificacoes, identifiquei **3 problemas criticos** que explicam por que as notificacoes nao funcionam na pratica, mesmo o teste funcionando:
+O erro ao entrar na fila e causado pelos **triggers de banco de dados** criados na ultima migracao. Esses triggers usam `net.http_post()` da extensao `pg_net`, que **nao esta habilitada** no projeto. O log do banco confirma:
+
+```
+ERROR: schema "net" does not exist
+```
+
+Quando um cliente tenta entrar na fila, o `INSERT` na tabela `queue_items` dispara o trigger `on_queue_item_insert_push`, que tenta executar `net.http_post()` e **falha**, cancelando a insercao inteira. Resultado: o cliente ve "Erro ao entrar na fila".
+
+O mesmo problema afeta transferencias pelo trigger `on_queue_item_transfer_push`.
+
+### Problema Secundario: Push Nao Funciona com Tela Bloqueada
+
+O sistema atual de notificacao com tela bloqueada depende desses triggers (que estao quebrados) para chamar a edge function `send-push`. Mesmo se os triggers funcionassem, a abordagem de usar `pg_net` diretamente do banco nao e compativel com Lovable Cloud.
+
+### Solucao
+
+A estrategia e **remover os triggers quebrados** e mover a chamada de push para o **frontend**, disparando a edge function apos operacoes bem-sucedidas.
 
 ---
 
-### Problema 1 (CRITICO): Hook so funciona na pagina "Meu Perfil"
+### Passo 1: Migracao SQL - Remover triggers quebrados
 
-O `useQueueAlert` esta montado **apenas** na pagina `MeuPerfil.tsx` (linha 81). Quando o barbeiro navega para qualquer outra pagina (Atendimento, Fila, Financeiro), o hook e **desmontado** e para de escutar eventos. Ou seja, a assinatura Realtime simplesmente deixa de existir.
+Remover os dois triggers e suas funcoes que usam `net.http_post`:
 
-O teste funciona porque o barbeiro esta na pagina "Meu Perfil" quando clica o botao, mas no dia a dia ele estara em "Atendimento" ou outro painel.
+- `DROP TRIGGER on_queue_item_insert_push ON public.queue_items`
+- `DROP TRIGGER on_queue_item_transfer_push ON public.queue_items`
+- `DROP FUNCTION public.notify_barbers_push()`
+- `DROP FUNCTION public.notify_barber_transfer_push()`
 
-### Problema 2 (CRITICO): Filtro Realtime ignora clientes sem barbeiro especifico
+Isso resolve o erro na fila imediatamente.
 
-O canal Realtime usa o filtro:
+### Passo 2: Criar helper para chamar a edge function do frontend
+
+Criar uma funcao utilitaria `sendPushNotification()` em `src/lib/pushNotify.ts` que faz POST para a edge function `send-push` com os dados do cliente:
+
 ```
-filter: `barber_id=eq.${barberId}`
+POST /functions/v1/send-push
+Body: { type, customer_name, barber_id, ticket_number }
 ```
 
-Porem, quando um cliente escolhe "Qualquer barbeiro disponivel" no formulario, o `barber_id` e inserido como `NULL`. O filtro `barber_id=eq.UUID` **nao captura registros com barber_id NULL**, entao a notificacao nunca e disparada para nenhum barbeiro.
+Esta chamada sera feita de forma **nao-bloqueante** (fire-and-forget via `.catch()`), para que falhas de push nunca afetem a operacao principal da fila.
 
-### Problema 3 (MENOR): Dois hooks duplicados causam confusao
+### Passo 3: Integrar push no fluxo de entrada na fila
 
-Existem dois hooks com funcionalidade identica:
-- `useQueueAlert.ts` (com Service Worker - o mais recente)
-- `useBarberQueueAlerts.ts` (antigo, sem SW)
+Modificar `src/hooks/useQueue.ts` (no `onSuccess` do `useJoinQueue`) para chamar `sendPushNotification()` apos o cliente entrar com sucesso.
 
-O `useBarberQueueAlerts` **nao e usado em nenhum lugar** do projeto, gerando confusao e codigo morto.
+### Passo 4: Integrar push no fluxo de transferencia
 
----
+Modificar `src/hooks/useQueueTransfers.ts` (no `onSuccess` do `useTransferClient`) para chamar `sendPushNotification()` com tipo `transfer`.
 
-### Solucao Proposta
+### Passo 5: Integrar push na entrada direta do barbeiro
 
-#### 1. Mover o hook para o `AdminLayout` (escopo global)
+Modificar `src/hooks/useBarberDirectEntry.ts` (no `onSuccess` do `useBarberDirectEntry`) para tambem disparar push.
 
-O `useQueueAlert` sera ativado dentro do `AdminLayout.tsx`, que envolve **todas** as paginas do painel admin. Assim, nao importa em qual pagina o barbeiro esteja, a assinatura Realtime permanece ativa.
+### Passo 6: Configurar JWT da edge function
 
-Para isso, o `AdminLayout` precisara buscar o `barber.id` do usuario logado e passar para o hook.
+Atualizar `supabase/config.toml` para que `send-push` aceite chamadas sem JWT (ja que clientes nao autenticados tambem entram na fila):
 
-#### 2. Remover o filtro `barber_id` e escutar TODOS os INSERTs
-
-Em vez de filtrar por `barber_id=eq.${barberId}`, o canal vai escutar **todos** os INSERTs na tabela `queue_items`. Dentro do callback, a logica sera:
-
-- Se `barber_id === meuId` --> Notificar: "Novo cliente NA SUA fila!"
-- Se `barber_id === null` --> Notificar: "Novo cliente na fila geral!" (para todos os barbeiros disponiveis)
-- Se `barber_id !== meuId` e `!== null` --> Ignorar (e de outro barbeiro)
-
-Isso resolve o cenario em que o cliente nao escolhe barbeiro.
-
-#### 3. Remover o hook duplicado
-
-Deletar `useBarberQueueAlerts.ts` e manter apenas `useQueueAlert.ts` (que usa Service Worker).
-
-#### 4. Remover o hook do MeuPerfil
-
-Como o hook estara no `AdminLayout`, remover a chamada duplicada de `MeuPerfil.tsx`.
+```
+[functions.send-push]
+verify_jwt = false
+```
 
 ---
 
 ### Detalhes Tecnicos
 
-**Arquivo: `src/components/admin/AdminLayout.tsx`**
-- Adicionar `useQuery` para buscar o perfil do barbeiro logado (mesmo padrao ja usado em `MeuPerfil.tsx` e `Atendimento.tsx`)
-- Chamar `useQueueAlert(barber?.id || null)` no nivel do layout
-- Isso garante que o hook permanece montado enquanto o barbeiro estiver em qualquer pagina admin
+**Novo arquivo: `src/lib/pushNotify.ts`**
 
-**Arquivo: `src/hooks/useQueueAlert.ts`**
-- Remover o filtro `filter: barber_id=eq.${barberId}` da subscription INSERT
-- Escutar todos os INSERTs sem filtro
-- No callback, verificar:
-  - `newItem.barber_id === barberId` --> alerta direto
-  - `newItem.barber_id === null` --> alerta geral ("cliente na fila geral")
-  - Outro barbeiro --> ignorar
-- Manter o filtro de UPDATE para transferencias (ja funciona corretamente)
+```typescript
+export const sendPushNotification = async (data: {
+  type: 'new_client' | 'transfer';
+  customer_name: string;
+  barber_id?: string | null;
+  ticket_number: string;
+}) => {
+  try {
+    await fetch(
+      `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-push`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      }
+    );
+  } catch (err) {
+    console.warn('[Push] Failed to send:', err);
+  }
+};
+```
 
-**Arquivo: `src/pages/admin/MeuPerfil.tsx`**
-- Remover a linha `useQueueAlert(barber?.id || null)` (linha 81)
-- Remover o import do `useQueueAlert`
+**Modificacoes em `src/hooks/useQueue.ts`** (onSuccess do useJoinQueue):
+- Adicionar chamada `sendPushNotification({ type: 'new_client', ... })` fire-and-forget
 
-**Arquivo: `src/hooks/useBarberQueueAlerts.ts`**
-- Deletar o arquivo (codigo morto, nao utilizado)
+**Modificacoes em `src/hooks/useQueueTransfers.ts`** (onSuccess do useTransferClient):
+- Adicionar chamada `sendPushNotification({ type: 'transfer', ... })` fire-and-forget
+
+**Modificacoes em `src/hooks/useBarberDirectEntry.ts`** (onSuccess do useBarberDirectEntry):
+- Adicionar chamada `sendPushNotification({ type: 'new_client', ... })` fire-and-forget
+
+**Modificacoes em `supabase/config.toml`**:
+- Adicionar secao `[functions.send-push]` com `verify_jwt = false`
 
 ---
 
 ### Resultado Esperado
 
-Apos a implementacao:
-- Barbeiro recebe notificacao em **qualquer pagina** do painel admin
-- Barbeiro recebe notificacao quando cliente escolhe **ele especificamente**
-- Barbeiro recebe notificacao quando cliente escolhe **"qualquer barbeiro"**
-- Notificacoes continuam funcionando em segundo plano via Service Worker
-- Codigo mais limpo sem duplicacao
+1. **Fila volta a funcionar** - sem triggers bloqueantes, o INSERT completa normalmente
+2. **Push continua funcionando** - a edge function e chamada do frontend apos sucesso
+3. **Tela bloqueada** - o Web Push (VAPID) ja implementado continua acordando o Service Worker
+4. **Sem risco** - falhas de push nunca impedem a operacao da fila (fire-and-forget)
 
