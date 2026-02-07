@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { sendPushNotification } from '@/lib/pushNotify';
 
 // Hook for barbers with direct entry permission to add clients directly (supports multiple services)
 export const useBarberDirectEntry = () => {
@@ -43,6 +44,13 @@ export const useBarberDirectEntry = () => {
       toast({
         title: 'Cliente adicionado na fila!',
         description: `Ticket: ${data.ticket_number}`,
+      });
+
+      // Fire-and-forget push notification to barbers
+      sendPushNotification({
+        type: 'new_client',
+        customer_name: data.ticket_number,
+        ticket_number: data.ticket_number,
       });
     },
     onError: (error: Error) => {
