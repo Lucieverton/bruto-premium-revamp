@@ -66,10 +66,10 @@ export const useTransferClient = () => {
         description: 'O cliente foi transferido para outro barbeiro.',
       });
 
-      // Fire-and-forget push notification to the target barber
+      // Push notification only to the destination barber
       sendPushNotification({
         type: 'transfer',
-        customer_name: 'Cliente transferido',
+        customer_name: 'Cliente transferido para você',
         barber_id: variables.toBarberId,
         ticket_number: variables.queueItemId,
       });

@@ -84,7 +84,12 @@ export const MyTicketCard = ({ ticketId, onLeave }: MyTicketCardProps) => {
   
   const handleLeave = async () => {
     if (confirm('Tem certeza que deseja sair da fila?')) {
-      await leaveQueue.mutateAsync(ticketId);
+      await leaveQueue.mutateAsync({
+        ticketId,
+        customerName: ticket?.customer_name_masked || 'Cliente',
+        barberId: ticket?.barber_id,
+        ticketNumber: ticket?.ticket_number || '',
+      });
       clearMyTicket();
       onLeave();
     }

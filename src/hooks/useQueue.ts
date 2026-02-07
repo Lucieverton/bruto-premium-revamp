@@ -326,7 +326,7 @@ export const useJoinQueue = () => {
 
       return ticket as { id: string; ticket_number: string };
     },
-    onSuccess: (data) => {
+    onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['queue-items'] });
       queryClient.invalidateQueries({ queryKey: ['today-queue'] });
       queryClient.invalidateQueries({ queryKey: ['public-queue'] });
@@ -338,10 +338,11 @@ export const useJoinQueue = () => {
         description: `Seu ticket é ${data.ticket_number}`,
       });
 
-      // Fire-and-forget push notification to barbers
+      // Push notification → only the selected barber (or all if general queue)
       sendPushNotification({
         type: 'new_client',
-        customer_name: data.ticket_number, // ticket is enough context
+        customer_name: variables.customer_name,
+        barber_id: variables.barber_id || null,
         ticket_number: data.ticket_number,
       });
     },
@@ -451,17 +452,17 @@ export const useLeaveQueue = () => {
   const { toast } = useToast();
   
   return useMutation({
-    mutationFn: async (ticketId: string) => {
+    mutationFn: async (params: { ticketId: string; customerName?: string; barberId?: string | null; ticketNumber?: string }) => {
       const { data, error } = await supabase.rpc('leave_queue', {
-        p_ticket_id: ticketId
+        p_ticket_id: params.ticketId,
       });
       
       if (error) throw error;
       if (!data) throw new Error('Não foi possível sair da fila');
       
-      return data;
+      return params; // pass context through for onSuccess
     },
-    onSuccess: () => {
+    onSuccess: (params) => {
       queryClient.invalidateQueries({ queryKey: ['queue-items'] });
       queryClient.invalidateQueries({ queryKey: ['today-queue'] });
       queryClient.invalidateQueries({ queryKey: ['public-queue'] });
@@ -472,6 +473,16 @@ export const useLeaveQueue = () => {
         title: 'Você saiu da fila',
         description: 'Esperamos vê-lo em breve!',
       });
+
+      // Notify the assigned barber that the client left
+      if (params.barberId) {
+        sendPushNotification({
+          type: 'client_left',
+          customer_name: params.customerName || 'Cliente',
+          barber_id: params.barberId,
+          ticket_number: params.ticketNumber || '',
+        });
+      }
     },
     onError: (error: Error) => {
       toast({

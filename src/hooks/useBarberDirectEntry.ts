@@ -34,7 +34,7 @@ export const useBarberDirectEntry = () => {
       const ticket = Array.isArray(result) ? result[0] : result;
       return ticket as { id: string; ticket_number: string };
     },
-    onSuccess: (data) => {
+    onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['queue-items'] });
       queryClient.invalidateQueries({ queryKey: ['today-queue'] });
       queryClient.invalidateQueries({ queryKey: ['public-queue'] });
@@ -46,10 +46,11 @@ export const useBarberDirectEntry = () => {
         description: `Ticket: ${data.ticket_number}`,
       });
 
-      // Fire-and-forget push notification to barbers
+      // Push only to assigned barber (if different from the one adding)
       sendPushNotification({
         type: 'new_client',
-        customer_name: data.ticket_number,
+        customer_name: variables.customer_name,
+        barber_id: variables.barber_id || null,
         ticket_number: data.ticket_number,
       });
     },
