@@ -23,6 +23,7 @@ import { cn } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useQueueAlert } from '@/hooks/useQueueAlert';
+import { usePushSubscription } from '@/hooks/usePushSubscription';
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -69,8 +70,11 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
     enabled: !!user?.id && (isBarber || isAdmin),
   });
 
-  // Global queue alert — stays active on ALL admin pages
+  // Global queue alert — stays active on ALL admin pages (Realtime + in-app)
   useQueueAlert(myBarber?.id || null);
+
+  // Web Push subscription — ensures Chrome sends push even with screen locked
+  usePushSubscription(myBarber?.id || null);
 
   useEffect(() => {
     if (!loading && !user) {
