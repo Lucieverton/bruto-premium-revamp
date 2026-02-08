@@ -40,19 +40,19 @@ const QueuePage = () => {
     <div className="min-h-screen bg-background text-foreground overflow-x-hidden selection:bg-primary/30">
       <QueueHeader />
 
-      <main className="py-6 px-4 lg:px-8 max-w-[1600px] mx-auto">
-        {/* TÍTULO PRINCIPAL - Sem repetição de "BRUTO'S" */}
-        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-8">
-          <h1 className="font-display text-4xl md:text-5xl uppercase tracking-tight italic font-black">
+      <main className="py-4 sm:py-6 px-3 sm:px-4 lg:px-8 max-w-[1600px] mx-auto">
+        {/* TÍTULO PRINCIPAL */}
+        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-5 sm:mb-8">
+          <h1 className="font-display text-3xl sm:text-4xl md:text-5xl uppercase tracking-tight italic font-black">
             FILA <span className="text-primary">VIRTUAL</span>
           </h1>
-          <p className="text-xs text-muted-foreground uppercase tracking-[0.3em] mt-2 font-medium">
+          <p className="text-[10px] sm:text-xs text-muted-foreground uppercase tracking-[0.3em] mt-1.5 sm:mt-2 font-medium">
             Acompanhamento em tempo real
           </p>
         </motion.div>
 
         {/* GRID LAYOUT - Alinhamento vertical melhorado */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-6 items-stretch">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-5 lg:gap-6 items-stretch">
           {/* ESQUERDA: ENTRE DA FILA! */}
           <aside className="lg:col-span-3 order-2 lg:order-1">
             <div className="bg-card/60 border border-border rounded-2xl overflow-hidden backdrop-blur-sm h-full flex flex-col">

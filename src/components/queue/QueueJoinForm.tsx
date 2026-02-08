@@ -93,8 +93,8 @@ export const QueueJoinForm = ({ onSuccess }: QueueJoinFormProps) => {
   }
 
   return (
-    <div className="bg-card border border-border rounded-lg p-6">
-      <h2 className="font-display text-2xl uppercase mb-6 text-center">Entrar na Fila</h2>
+    <div className="bg-card border border-border rounded-lg p-4 sm:p-6">
+      <h2 className="font-display text-xl sm:text-2xl uppercase mb-4 sm:mb-6 text-center">Entrar na Fila</h2>
       
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div className="space-y-2">
