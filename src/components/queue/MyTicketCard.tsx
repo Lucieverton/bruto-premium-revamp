@@ -1,6 +1,16 @@
 import { useEffect, useState, useRef } from 'react';
 import { Ticket, Clock, MapPin, X, Star, Bell, Timer, Loader2, MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { useLeaveQueue, useQueuePosition, useQueueStats } from '@/hooks/useQueue';
 import { usePublicTicket } from '@/hooks/usePublicTicket';
 import { clearMyTicket } from '@/lib/antiAbuse';
@@ -18,6 +28,7 @@ export const MyTicketCard = ({ ticketId, onLeave }: MyTicketCardProps) => {
   const { data: stats } = useQueueStats();
   const leaveQueue = useLeaveQueue();
   const [timeWaiting, setTimeWaiting] = useState('');
+  const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
   const lastPositionRef = useRef<number | null>(null);
   
   // Get position from secure RPC
@@ -83,16 +94,14 @@ export const MyTicketCard = ({ ticketId, onLeave }: MyTicketCardProps) => {
   }, [ticket, ticketLoading, refetch]);
   
   const handleLeave = async () => {
-    if (confirm('Tem certeza que deseja sair da fila?')) {
-      await leaveQueue.mutateAsync({
-        ticketId,
-        customerName: ticket?.customer_name_masked || 'Cliente',
-        barberId: ticket?.barber_id,
-        ticketNumber: ticket?.ticket_number || '',
-      });
-      clearMyTicket();
-      onLeave();
-    }
+    await leaveQueue.mutateAsync({
+      ticketId,
+      customerName: ticket?.customer_name_masked || 'Cliente',
+      barberId: ticket?.barber_id,
+      ticketNumber: ticket?.ticket_number || '',
+    });
+    clearMyTicket();
+    onLeave();
   };
   
   if (isLoading) {
@@ -153,12 +162,33 @@ export const MyTicketCard = ({ ticketId, onLeave }: MyTicketCardProps) => {
         <Button
           variant="ghost"
           size="icon"
-          onClick={handleLeave}
+          onClick={() => setShowLeaveConfirm(true)}
           className="absolute top-1.5 right-1.5 sm:top-2 sm:right-2 text-muted-foreground hover:text-destructive h-8 w-8 sm:h-10 sm:w-10"
         >
           <X size={18} />
         </Button>
       )}
+      
+      {/* Leave confirmation dialog */}
+      <AlertDialog open={showLeaveConfirm} onOpenChange={setShowLeaveConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Sair da fila?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja sair da fila? Você perderá sua posição atual.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleLeave}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Sair da Fila
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
       
       {/* Next in line banner */}
       {isNextInLine && (

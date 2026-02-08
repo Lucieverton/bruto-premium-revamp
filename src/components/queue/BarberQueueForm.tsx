@@ -157,14 +157,14 @@ export const BarberQueueForm = ({ barberId, barberName, onSuccess }: BarberQueue
       {/* Service Selection */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <Label className="text-base font-semibold">
+          <Label className="text-sm font-semibold">
             Escolha o(s) serviço(s) *
           </Label>
-          <span className="text-xs text-muted-foreground">
+          <span className="text-[11px] text-muted-foreground">
             Selecione múltiplos
           </span>
         </div>
-        <div className="grid grid-cols-2 gap-2 max-h-[200px] overflow-y-auto pr-1">
+      <div className="grid grid-cols-1 gap-2 max-h-[250px] overflow-y-auto pr-1">
           <AnimatePresence>
             {services?.map((service, index) => {
               const isSelected = selectedServices.some(s => s.id === service.id);
@@ -185,23 +185,23 @@ export const BarberQueueForm = ({ barberId, barberName, onSuccess }: BarberQueue
                       : 'border-border bg-card'
                   )}
                 >
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex-1 min-w-0">
-                      <div className="font-medium text-sm truncate">{service.name}</div>
-                      <div className="text-xs text-muted-foreground mt-0.5">
-                        {service.duration_minutes} min
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2 flex-1 min-w-0">
+                      {isSelected ? (
+                        <CheckCircle2 className="w-5 h-5 text-primary flex-shrink-0" />
+                      ) : (
+                        <Plus className="w-5 h-5 text-muted-foreground flex-shrink-0" />
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium text-sm leading-tight">{service.name}</div>
+                        <div className="text-xs text-muted-foreground mt-0.5">
+                          {service.duration_minutes} min
+                        </div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-1">
-                      <span className="text-sm font-semibold text-primary">
-                        R$ {service.price.toFixed(2).replace('.', ',')}
-                      </span>
-                      {isSelected ? (
-                        <CheckCircle2 className="w-4 h-4 text-primary" />
-                      ) : (
-                        <Plus className="w-4 h-4 text-muted-foreground" />
-                      )}
-                    </div>
+                    <span className="text-sm font-semibold text-primary whitespace-nowrap flex-shrink-0">
+                      R$ {service.price.toFixed(2).replace('.', ',')}
+                    </span>
                   </div>
                 </motion.button>
               );

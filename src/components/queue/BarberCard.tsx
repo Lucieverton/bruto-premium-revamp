@@ -68,10 +68,10 @@ export const BarberCard = ({ barber, index, onJoinSuccess, hasActiveTicket }: Ba
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: index * 0.1 }}
-        className="bg-background/50 rounded-xl p-4 border border-border/50 transition-all duration-300 hover:border-primary/30"
+        className="bg-background/50 rounded-xl p-3 sm:p-4 border border-border/50 transition-all duration-300 hover:border-primary/30"
       >
         {/* Large Avatar */}
-        <div className="relative mx-auto w-24 h-24 sm:w-28 sm:h-28 mb-3">
+        <div className="relative mx-auto w-20 h-20 sm:w-24 sm:h-24 mb-2 sm:mb-3">
           <div className="w-full h-full rounded-xl overflow-hidden bg-muted/50 border border-border">
             {barber.avatar_url ? (
               <img
@@ -90,12 +90,12 @@ export const BarberCard = ({ barber, index, onJoinSuccess, hasActiveTicket }: Ba
         </div>
         
         {/* Name */}
-        <h3 className="font-semibold text-base text-center text-foreground mb-1">
+        <h3 className="font-semibold text-sm sm:text-base text-center text-foreground mb-1">
           {barber.display_name.split(' ')[0]}
         </h3>
         
         {/* Status */}
-        <div className={cn('text-xs flex items-center justify-center gap-1.5 mb-4', config.color)}>
+        <div className={cn('text-[11px] sm:text-xs flex items-center justify-center gap-1.5 mb-3 sm:mb-4', config.color)}>
           <motion.span 
             className={cn('w-2 h-2 rounded-full', config.dotColor)}
             animate={status === 'online' ? { scale: [1, 1.2, 1] } : {}}
@@ -135,10 +135,10 @@ export const BarberCard = ({ barber, index, onJoinSuccess, hasActiveTicket }: Ba
       
       {/* Queue Form Sheet */}
       <Sheet open={isFormOpen} onOpenChange={setIsFormOpen}>
-        <SheetContent side="bottom" className="max-h-[85vh] overflow-y-auto rounded-t-2xl">
-          <SheetHeader className="mb-4">
-            <SheetTitle className="flex items-center gap-2 text-xl">
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#e8e8e8] to-[#c0c0c0] flex items-center justify-center overflow-hidden">
+        <SheetContent side="bottom" className="max-h-[90vh] overflow-y-auto rounded-t-2xl px-4 pb-6">
+          <SheetHeader className="mb-3">
+            <SheetTitle className="flex items-center gap-2 text-lg">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#e8e8e8] to-[#c0c0c0] flex items-center justify-center overflow-hidden flex-shrink-0">
                 {barber.avatar_url ? (
                   <img src={barber.avatar_url} alt={barber.display_name} className="w-full h-full object-cover" />
                 ) : (
