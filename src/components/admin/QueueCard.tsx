@@ -182,8 +182,19 @@ export const QueueCard = ({ item }: QueueCardProps) => {
             )}>
               {item.origin === 'online' ? '🌐' : '🏪'}
             </span>
+            
+            {item.group_id && (
+              <span className="text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 rounded bg-indigo-500/20 text-indigo-400">
+                👥 Grupo
+              </span>
+            )}
+            
+            {item.companion_name && (
+              <span className="text-[10px] sm:text-xs text-muted-foreground italic">
+                c/ {item.companion_name}
+              </span>
+            )}
           </div>
-          
           <div className="flex items-center gap-1 text-muted-foreground text-xs sm:text-sm">
             <Clock size={12} />
             {getTimeString()}

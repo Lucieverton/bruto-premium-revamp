@@ -288,10 +288,12 @@ export type Database = {
         Row: {
           barber_id: string | null
           called_at: string | null
+          companion_name: string | null
           completed_at: string | null
           created_at: string
           customer_name: string
           customer_phone: string
+          group_id: string | null
           id: string
           is_called: boolean
           notes: string | null
@@ -304,10 +306,12 @@ export type Database = {
         Insert: {
           barber_id?: string | null
           called_at?: string | null
+          companion_name?: string | null
           completed_at?: string | null
           created_at?: string
           customer_name: string
           customer_phone: string
+          group_id?: string | null
           id?: string
           is_called?: boolean
           notes?: string | null
@@ -320,10 +324,12 @@ export type Database = {
         Update: {
           barber_id?: string | null
           called_at?: string | null
+          companion_name?: string | null
           completed_at?: string | null
           created_at?: string
           customer_name?: string
           customer_phone?: string
+          group_id?: string | null
           id?: string
           is_called?: boolean
           notes?: string | null
@@ -773,6 +779,21 @@ export type Database = {
           p_service_ids?: string[]
         }
         Returns: {
+          id: string
+          ticket_number: string
+        }[]
+      }
+      join_queue_group: {
+        Args: {
+          p_barber_id?: string
+          p_companions?: Json
+          p_customer_name: string
+          p_customer_phone: string
+          p_priority?: string
+          p_service_ids?: string[]
+        }
+        Returns: {
+          group_id: string
           id: string
           ticket_number: string
         }[]
