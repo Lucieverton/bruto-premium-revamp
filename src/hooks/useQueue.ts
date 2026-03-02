@@ -19,6 +19,8 @@ export interface QueueItem {
   completed_at: string | null;
   created_at: string;
   notes: string | null;
+  group_id: string | null;
+  companion_name: string | null;
 }
 
 export interface Service {
