@@ -12,47 +12,47 @@ export default defineConfig(({ mode }) => ({
   plugins: [
     react(),
     VitePWA({
-      registerType: 'autoUpdate',
-      includeAssets: ['favicon.png', 'favicon.ico', 'robots.txt'],
+      registerType: "autoUpdate",
+      includeAssets: ["favicon.png", "favicon.ico", "robots.txt"],
       manifest: {
-        name: 'Barbearia Brutos - Tradição, Estilo e Atitude',
-        short_name: 'Brutos',
-        description: 'Barbearia Brutos em Maceió. Cortes clássicos e modernos, barba profissional e produtos premium.',
-        theme_color: '#0a0a0a',
-        background_color: '#0a0a0a',
-        display: 'standalone',
-        orientation: 'portrait',
-        scope: '/',
-        start_url: '/',
+        name: "Barbearia Brutos - Tradição, Estilo e Atitude",
+        short_name: "Brutos",
+        description: "Barbearia Brutos em Maceió. Cortes clássicos e modernos, barba profissional e produtos premium.",
+        theme_color: "#0a0a0a",
+        background_color: "#0a0a0a",
+        display: "standalone",
+        orientation: "portrait",
+        scope: "/",
+        start_url: "/",
         icons: [
           {
-            src: '/pwa-192x192.png',
-            sizes: '192x192',
-            type: 'image/png',
+            src: "/favicon.png",
+            sizes: "192x192",
+            type: "image/png",
           },
           {
-            src: '/pwa-512x512.png',
-            sizes: '512x512',
-            type: 'image/png',
+            src: "/favicon.png",
+            sizes: "512x512",
+            type: "image/png",
           },
           {
-            src: '/pwa-512x512.png',
-            sizes: '512x512',
-            type: 'image/png',
-            purpose: 'maskable',
+            src: "/favicon.png",
+            sizes: "512x512",
+            type: "image/png",
+            purpose: "maskable",
           },
         ],
       },
       workbox: {
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, // 5 MB
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,jpg,jpeg,woff2}'],
-        importScripts: ['/sw-push.js'],
+        globPatterns: ["**/*.{js,css,html,ico,png,svg,jpg,jpeg,woff2}"],
+        importScripts: ["/sw-push.js"],
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
-            handler: 'CacheFirst',
+            handler: "CacheFirst",
             options: {
-              cacheName: 'google-fonts-cache',
+              cacheName: "google-fonts-cache",
               expiration: {
                 maxEntries: 10,
                 maxAgeSeconds: 60 * 60 * 24 * 365,
@@ -64,9 +64,9 @@ export default defineConfig(({ mode }) => ({
           },
           {
             urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*/i,
-            handler: 'CacheFirst',
+            handler: "CacheFirst",
             options: {
-              cacheName: 'gstatic-fonts-cache',
+              cacheName: "gstatic-fonts-cache",
               expiration: {
                 maxEntries: 10,
                 maxAgeSeconds: 60 * 60 * 24 * 365,
