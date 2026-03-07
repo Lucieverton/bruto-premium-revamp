@@ -42,6 +42,8 @@ interface DetailedAttendance {
   payment_method: string | null;
   completed_at: string;
   services: AttendanceService[];
+  group_id: string | null;
+  companion_name: string | null;
 }
 
 type DateRange = 'today' | 'week' | 'month' | 'year';
