@@ -310,7 +310,7 @@ const Atendimento = () => {
                         className="bg-card border border-border rounded-lg p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
                       >
                         <div className="space-y-2">
-                          <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-3 flex-wrap">
                             <span className="text-2xl font-bold text-blue-500">
                               {item.ticket_number}
                             </span>
@@ -318,6 +318,16 @@ const Atendimento = () => {
                               <span className="text-xs bg-purple-500/20 text-purple-400 px-2 py-1 rounded">
                                 ⭐ Preferencial
                               </span>
+                            )}
+                            {item.group_id && (
+                              <Badge variant="outline" className="text-xs bg-indigo-500/20 text-indigo-400 border-indigo-500/30">
+                                👥 Grupo
+                              </Badge>
+                            )}
+                            {item.companion_name && (
+                              <Badge variant="outline" className="text-xs bg-teal-500/20 text-teal-400 border-teal-500/30">
+                                c/ {item.companion_name}
+                              </Badge>
                             )}
                           </div>
                           
@@ -384,6 +394,18 @@ const Atendimento = () => {
                           <div>
                             <div className="text-xl font-bold text-green-500">{item.ticket_number}</div>
                             <div className="text-sm text-muted-foreground">{item.customer_name}</div>
+                            <div className="flex gap-1 flex-wrap">
+                              {item.group_id && (
+                                <Badge variant="outline" className="text-[10px] bg-indigo-500/20 text-indigo-400 border-indigo-500/30 px-1.5 py-0">
+                                  👥 Grupo
+                                </Badge>
+                              )}
+                              {item.companion_name && (
+                                <Badge variant="outline" className="text-[10px] bg-teal-500/20 text-teal-400 border-teal-500/30 px-1.5 py-0">
+                                  c/ {item.companion_name}
+                                </Badge>
+                              )}
+                            </div>
                             {/* Show services */}
                             <QueueItemServicesDisplay queueItemId={item.id} compact />
                           </div>
@@ -447,7 +469,7 @@ const Atendimento = () => {
                           </div>
                           
                           <div>
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 flex-wrap">
                               <span className="font-medium">{item.customer_name}</span>
                               
                               {/* Visual indicator for client type */}
@@ -461,6 +483,16 @@ const Atendimento = () => {
                                   <Users size={10} />
                                   Geral
                                 </span>
+                              )}
+                              {item.group_id && (
+                                <Badge variant="outline" className="text-[10px] bg-indigo-500/20 text-indigo-400 border-indigo-500/30 px-1.5 py-0">
+                                  👥 Grupo
+                                </Badge>
+                              )}
+                              {item.companion_name && (
+                                <Badge variant="outline" className="text-[10px] bg-teal-500/20 text-teal-400 border-teal-500/30 px-1.5 py-0">
+                                  c/ {item.companion_name}
+                                </Badge>
                               )}
                             </div>
                             

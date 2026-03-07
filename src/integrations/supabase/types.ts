@@ -59,8 +59,10 @@ export type Database = {
       attendance_records: {
         Row: {
           barber_id: string | null
+          companion_name: string | null
           completed_at: string
           customer_name: string
+          group_id: string | null
           id: string
           notes: string | null
           payment_method: string | null
@@ -70,8 +72,10 @@ export type Database = {
         }
         Insert: {
           barber_id?: string | null
+          companion_name?: string | null
           completed_at?: string
           customer_name: string
+          group_id?: string | null
           id?: string
           notes?: string | null
           payment_method?: string | null
@@ -81,8 +85,10 @@ export type Database = {
         }
         Update: {
           barber_id?: string | null
+          companion_name?: string | null
           completed_at?: string
           customer_name?: string
+          group_id?: string | null
           id?: string
           notes?: string | null
           payment_method?: string | null
@@ -678,8 +684,10 @@ export type Database = {
         Args: { p_barber_id?: string; p_end_date: string; p_start_date: string }
         Returns: {
           barber_id: string
+          companion_name: string
           completed_at: string
           customer_name: string
+          group_id: string
           id: string
           payment_method: string
           price_charged: number

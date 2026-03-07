@@ -60,6 +60,8 @@ interface DetailedAttendance {
   payment_method: string | null;
   completed_at: string;
   commission: number;
+  group_id: string | null;
+  companion_name: string | null;
 }
 
 const MeuFinanceiro = () => {
@@ -110,7 +112,7 @@ const MeuFinanceiro = () => {
       
       const commissionPct = barber.commission_percentage || 50;
       
-      return (records || []).map(r => ({
+      return (records || []).map((r: any) => ({
         id: r.id,
         customer_name: r.customer_name,
         services: (Array.isArray(r.services) ? r.services : []) as unknown as AttendanceService[],
@@ -118,6 +120,8 @@ const MeuFinanceiro = () => {
         payment_method: r.payment_method,
         completed_at: r.completed_at,
         commission: (Number(r.price_charged) * commissionPct) / 100,
+        group_id: r.group_id || null,
+        companion_name: r.companion_name || null,
       })) as DetailedAttendance[];
     },
     enabled: !!barber?.id,
@@ -464,7 +468,21 @@ Gerado em: ${format(new Date(), "dd/MM/yyyy 'às' HH:mm")}
                               {format(new Date(record.completed_at), 'HH:mm')}
                             </div>
                           </TableCell>
-                          <TableCell className="font-medium">{record.customer_name}</TableCell>
+                          <TableCell className="font-medium">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              {record.customer_name}
+                              {record.group_id && (
+                                <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 bg-indigo-500/10 text-indigo-400 border-indigo-500/20">
+                                  👥
+                                </Badge>
+                              )}
+                              {record.companion_name && (
+                                <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 bg-teal-500/10 text-teal-400 border-teal-500/20">
+                                  c/ {record.companion_name}
+                                </Badge>
+                              )}
+                            </div>
+                          </TableCell>
                           <TableCell>
                             <div className="space-y-1">
                               {record.services.length > 0 ? (

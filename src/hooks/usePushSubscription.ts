@@ -82,7 +82,7 @@ export const usePushSubscription = (barberId: string | null) => {
         console.log('[Push] Got VAPID public key');
 
         // 3. Wait for SW to be ready
-        const registration = await navigator.serviceWorker.ready;
+        const registration = await navigator.serviceWorker.ready as ServiceWorkerRegistration & { pushManager: PushManager };
 
         // 4. Check existing subscription
         let subscription = await registration.pushManager.getSubscription();
