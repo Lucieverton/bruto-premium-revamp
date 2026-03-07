@@ -60,6 +60,8 @@ interface DetailedAttendance {
   payment_method: string | null;
   completed_at: string;
   commission: number;
+  group_id: string | null;
+  companion_name: string | null;
 }
 
 const MeuFinanceiro = () => {
