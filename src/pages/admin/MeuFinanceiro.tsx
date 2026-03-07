@@ -112,7 +112,7 @@ const MeuFinanceiro = () => {
       
       const commissionPct = barber.commission_percentage || 50;
       
-      return (records || []).map(r => ({
+      return (records || []).map((r: any) => ({
         id: r.id,
         customer_name: r.customer_name,
         services: (Array.isArray(r.services) ? r.services : []) as unknown as AttendanceService[],
@@ -120,6 +120,8 @@ const MeuFinanceiro = () => {
         payment_method: r.payment_method,
         completed_at: r.completed_at,
         commission: (Number(r.price_charged) * commissionPct) / 100,
+        group_id: r.group_id || null,
+        companion_name: r.companion_name || null,
       })) as DetailedAttendance[];
     },
     enabled: !!barber?.id,
