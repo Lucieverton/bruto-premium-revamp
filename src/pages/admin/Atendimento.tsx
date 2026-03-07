@@ -394,6 +394,18 @@ const Atendimento = () => {
                           <div>
                             <div className="text-xl font-bold text-green-500">{item.ticket_number}</div>
                             <div className="text-sm text-muted-foreground">{item.customer_name}</div>
+                            <div className="flex gap-1 flex-wrap">
+                              {item.group_id && (
+                                <Badge variant="outline" className="text-[10px] bg-indigo-500/20 text-indigo-400 border-indigo-500/30 px-1.5 py-0">
+                                  👥 Grupo
+                                </Badge>
+                              )}
+                              {item.companion_name && (
+                                <Badge variant="outline" className="text-[10px] bg-teal-500/20 text-teal-400 border-teal-500/30 px-1.5 py-0">
+                                  c/ {item.companion_name}
+                                </Badge>
+                              )}
+                            </div>
                             {/* Show services */}
                             <QueueItemServicesDisplay queueItemId={item.id} compact />
                           </div>
