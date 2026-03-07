@@ -684,8 +684,10 @@ export type Database = {
         Args: { p_barber_id?: string; p_end_date: string; p_start_date: string }
         Returns: {
           barber_id: string
+          companion_name: string
           completed_at: string
           customer_name: string
+          group_id: string
           id: string
           payment_method: string
           price_charged: number
