@@ -310,7 +310,7 @@ const Atendimento = () => {
                         className="bg-card border border-border rounded-lg p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
                       >
                         <div className="space-y-2">
-                          <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-3 flex-wrap">
                             <span className="text-2xl font-bold text-blue-500">
                               {item.ticket_number}
                             </span>
@@ -318,6 +318,16 @@ const Atendimento = () => {
                               <span className="text-xs bg-purple-500/20 text-purple-400 px-2 py-1 rounded">
                                 ⭐ Preferencial
                               </span>
+                            )}
+                            {item.group_id && (
+                              <Badge variant="outline" className="text-xs bg-indigo-500/20 text-indigo-400 border-indigo-500/30">
+                                👥 Grupo
+                              </Badge>
+                            )}
+                            {item.companion_name && (
+                              <Badge variant="outline" className="text-xs bg-teal-500/20 text-teal-400 border-teal-500/30">
+                                c/ {item.companion_name}
+                              </Badge>
                             )}
                           </div>
                           
