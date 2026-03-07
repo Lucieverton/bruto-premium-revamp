@@ -120,6 +120,8 @@ const AdminFinanceiro = () => {
         payment_method: r.payment_method,
         completed_at: r.completed_at,
         services: (r.services as unknown as AttendanceService[]) || [],
+        group_id: r.group_id || null,
+        companion_name: r.companion_name || null,
       })) as DetailedAttendance[];
     },
   });
