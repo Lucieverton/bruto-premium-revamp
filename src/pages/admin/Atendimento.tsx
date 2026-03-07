@@ -469,7 +469,7 @@ const Atendimento = () => {
                           </div>
                           
                           <div>
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 flex-wrap">
                               <span className="font-medium">{item.customer_name}</span>
                               
                               {/* Visual indicator for client type */}
@@ -483,6 +483,16 @@ const Atendimento = () => {
                                   <Users size={10} />
                                   Geral
                                 </span>
+                              )}
+                              {item.group_id && (
+                                <Badge variant="outline" className="text-[10px] bg-indigo-500/20 text-indigo-400 border-indigo-500/30 px-1.5 py-0">
+                                  👥 Grupo
+                                </Badge>
+                              )}
+                              {item.companion_name && (
+                                <Badge variant="outline" className="text-[10px] bg-teal-500/20 text-teal-400 border-teal-500/30 px-1.5 py-0">
+                                  c/ {item.companion_name}
+                                </Badge>
                               )}
                             </div>
                             

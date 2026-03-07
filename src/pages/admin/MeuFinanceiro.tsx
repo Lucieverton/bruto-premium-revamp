@@ -468,7 +468,21 @@ Gerado em: ${format(new Date(), "dd/MM/yyyy 'às' HH:mm")}
                               {format(new Date(record.completed_at), 'HH:mm')}
                             </div>
                           </TableCell>
-                          <TableCell className="font-medium">{record.customer_name}</TableCell>
+                          <TableCell className="font-medium">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              {record.customer_name}
+                              {record.group_id && (
+                                <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 bg-indigo-500/10 text-indigo-400 border-indigo-500/20">
+                                  👥
+                                </Badge>
+                              )}
+                              {record.companion_name && (
+                                <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 bg-teal-500/10 text-teal-400 border-teal-500/20">
+                                  c/ {record.companion_name}
+                                </Badge>
+                              )}
+                            </div>
+                          </TableCell>
                           <TableCell>
                             <div className="space-y-1">
                               {record.services.length > 0 ? (

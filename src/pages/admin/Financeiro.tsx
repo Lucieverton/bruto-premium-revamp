@@ -628,7 +628,21 @@ const AdminFinanceiro = () => {
                         <td className="p-3 text-xs text-muted-foreground whitespace-nowrap">
                           {date.toLocaleDateString('pt-BR')} {date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                         </td>
-                        <td className="p-3 text-sm font-medium">{record.customer_name}</td>
+                        <td className="p-3 text-sm font-medium">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            {record.customer_name}
+                            {record.group_id && (
+                              <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 bg-indigo-500/10 text-indigo-400 border-indigo-500/20">
+                                👥
+                              </Badge>
+                            )}
+                            {record.companion_name && (
+                              <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 bg-teal-500/10 text-teal-400 border-teal-500/20">
+                                c/ {record.companion_name}
+                              </Badge>
+                            )}
+                          </div>
+                        </td>
                         <td className="p-3 text-sm">{barber?.display_name || '-'}</td>
                         <td className="p-3">
                           {record.services.length > 0 ? (
