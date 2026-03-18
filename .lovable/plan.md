@@ -1,118 +1,54 @@
 
 
-## Diagnostico e Correcao: Erro na Fila + Push para Tela Bloqueada
+# Plano: PWA Instalável + Notificações Corrigidas
 
-### Problema Principal (CRITICO): Fila Quebrada
+## Resumo
+1. Usar `favicon.png` como ícone do PWA (remover arquivos `pwa-192x192.png` e `pwa-512x512.png`)
+2. Garantir que clientes recebam apenas 1 notificação: "Você será o próximo" (posição = 1)
+3. Barbeiros recebem notificação com nome do cliente apenas quando são o barbeiro escolhido
+4. Ajustar todas as referências de ícones
 
-O erro ao entrar na fila e causado pelos **triggers de banco de dados** criados na ultima migracao. Esses triggers usam `net.http_post()` da extensao `pg_net`, que **nao esta habilitada** no projeto. O log do banco confirma:
+## Mudanças
 
-```
-ERROR: schema "net" does not exist
-```
+### 1. `vite.config.ts` — Ícones do PWA
+- Alterar todos os ícones do manifest para usar `/favicon.png` (já usa, mas confirmar consistência)
+- Adicionar `/~oauth` ao `navigateFallbackDenylist` do workbox (requisito PWA)
 
-Quando um cliente tenta entrar na fila, o `INSERT` na tabela `queue_items` dispara o trigger `on_queue_item_insert_push`, que tenta executar `net.http_post()` e **falha**, cancelando a insercao inteira. Resultado: o cliente ve "Erro ao entrar na fila".
+### 2. `src/lib/pwa.ts` — Trocar referências de ícones
+- Substituir todas as ocorrências de `/pwa-192x192.png` por `/favicon.png`
 
-O mesmo problema afeta transferencias pelo trigger `on_queue_item_transfer_push`.
+### 3. `src/lib/notifications.ts` — Trocar referências de ícones
+- Substituir todas as ocorrências de `/pwa-192x192.png` por `/favicon.png`
 
-### Problema Secundario: Push Nao Funciona com Tela Bloqueada
+### 4. Remover arquivos desnecessários
+- Deletar `public/pwa-192x192.png`
+- Deletar `public/pwa-512x512.png`
 
-O sistema atual de notificacao com tela bloqueada depende desses triggers (que estao quebrados) para chamar a edge function `send-push`. Mesmo se os triggers funcionassem, a abordagem de usar `pg_net` diretamente do banco nao e compativel com Lovable Cloud.
+### 5. `src/components/queue/MyTicketCard.tsx` — Notificação do cliente
+- Já envia notificação "Você é o próximo!" quando posição muda para 1 (linha 43-51) — **funciona corretamente**
+- Já envia notificação "É sua vez!" quando status muda para `called` (linha 54-60) — **funciona corretamente**
+- Garantir que essas são as **únicas** notificações enviadas ao cliente (sem duplicatas)
 
-### Solucao
+### 6. `src/hooks/useQueueRealtime.ts` — Verificar notificação duplicada do cliente
+- Já notifica quando `is_called && status === 'called'` via `notifyUserCalled` — pode duplicar com MyTicketCard
+- Remover a notificação `notifyUserCalled` deste hook, pois `MyTicketCard` já cuida disso de forma mais controlada
 
-A estrategia e **remover os triggers quebrados** e mover a chamada de push para o **frontend**, disparando a edge function apos operacoes bem-sucedidas.
+### 7. `public/sw-push.js` — Trocar ícones
+- Substituir `/favicon.png` nos ícones (já usa, confirmar que está correto)
 
----
+### 8. Notificações do barbeiro — Verificação
+- `useQueueAlert.ts` já filtra: `item.barber_id !== null && item.barber_id !== currentId` → ignora clientes de outros barbeiros ✅
+- `item.barber_id === null` → fila geral, notifica todos os barbeiros ✅
+- Push via edge function (`send-push`) já envia para `barber_id` específico quando definido ✅
 
-### Passo 1: Migracao SQL - Remover triggers quebrados
+## Arquivos Modificados
 
-Remover os dois triggers e suas funcoes que usam `net.http_post`:
-
-- `DROP TRIGGER on_queue_item_insert_push ON public.queue_items`
-- `DROP TRIGGER on_queue_item_transfer_push ON public.queue_items`
-- `DROP FUNCTION public.notify_barbers_push()`
-- `DROP FUNCTION public.notify_barber_transfer_push()`
-
-Isso resolve o erro na fila imediatamente.
-
-### Passo 2: Criar helper para chamar a edge function do frontend
-
-Criar uma funcao utilitaria `sendPushNotification()` em `src/lib/pushNotify.ts` que faz POST para a edge function `send-push` com os dados do cliente:
-
-```
-POST /functions/v1/send-push
-Body: { type, customer_name, barber_id, ticket_number }
-```
-
-Esta chamada sera feita de forma **nao-bloqueante** (fire-and-forget via `.catch()`), para que falhas de push nunca afetem a operacao principal da fila.
-
-### Passo 3: Integrar push no fluxo de entrada na fila
-
-Modificar `src/hooks/useQueue.ts` (no `onSuccess` do `useJoinQueue`) para chamar `sendPushNotification()` apos o cliente entrar com sucesso.
-
-### Passo 4: Integrar push no fluxo de transferencia
-
-Modificar `src/hooks/useQueueTransfers.ts` (no `onSuccess` do `useTransferClient`) para chamar `sendPushNotification()` com tipo `transfer`.
-
-### Passo 5: Integrar push na entrada direta do barbeiro
-
-Modificar `src/hooks/useBarberDirectEntry.ts` (no `onSuccess` do `useBarberDirectEntry`) para tambem disparar push.
-
-### Passo 6: Configurar JWT da edge function
-
-Atualizar `supabase/config.toml` para que `send-push` aceite chamadas sem JWT (ja que clientes nao autenticados tambem entram na fila):
-
-```
-[functions.send-push]
-verify_jwt = false
-```
-
----
-
-### Detalhes Tecnicos
-
-**Novo arquivo: `src/lib/pushNotify.ts`**
-
-```typescript
-export const sendPushNotification = async (data: {
-  type: 'new_client' | 'transfer';
-  customer_name: string;
-  barber_id?: string | null;
-  ticket_number: string;
-}) => {
-  try {
-    await fetch(
-      `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-push`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      }
-    );
-  } catch (err) {
-    console.warn('[Push] Failed to send:', err);
-  }
-};
-```
-
-**Modificacoes em `src/hooks/useQueue.ts`** (onSuccess do useJoinQueue):
-- Adicionar chamada `sendPushNotification({ type: 'new_client', ... })` fire-and-forget
-
-**Modificacoes em `src/hooks/useQueueTransfers.ts`** (onSuccess do useTransferClient):
-- Adicionar chamada `sendPushNotification({ type: 'transfer', ... })` fire-and-forget
-
-**Modificacoes em `src/hooks/useBarberDirectEntry.ts`** (onSuccess do useBarberDirectEntry):
-- Adicionar chamada `sendPushNotification({ type: 'new_client', ... })` fire-and-forget
-
-**Modificacoes em `supabase/config.toml`**:
-- Adicionar secao `[functions.send-push]` com `verify_jwt = false`
-
----
-
-### Resultado Esperado
-
-1. **Fila volta a funcionar** - sem triggers bloqueantes, o INSERT completa normalmente
-2. **Push continua funcionando** - a edge function e chamada do frontend apos sucesso
-3. **Tela bloqueada** - o Web Push (VAPID) ja implementado continua acordando o Service Worker
-4. **Sem risco** - falhas de push nunca impedem a operacao da fila (fire-and-forget)
+| Arquivo | Mudança |
+|---------|---------|
+| `vite.config.ts` | Adicionar `navigateFallbackDenylist` |
+| `src/lib/pwa.ts` | Trocar ícones para `/favicon.png` |
+| `src/lib/notifications.ts` | Trocar ícones para `/favicon.png` |
+| `src/hooks/useQueueRealtime.ts` | Remover `notifyUserCalled` duplicado |
+| `public/pwa-192x192.png` | Deletar |
+| `public/pwa-512x512.png` | Deletar |
 
