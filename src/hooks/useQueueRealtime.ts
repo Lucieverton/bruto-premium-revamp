@@ -25,14 +25,7 @@ export const useQueueRealtime = () => {
           queryClient.invalidateQueries({ queryKey: ['active-services-public'] });
           queryClient.invalidateQueries({ queryKey: ['barber-queue'] });
           
-          // Check if current user's ticket was called
-          const myTicketId = getMyTicket();
-          if (myTicketId && payload.eventType === 'UPDATE') {
-            const newData = payload.new as { id: string; status: string; ticket_number: string; is_called: boolean };
-            if (newData.id === myTicketId && newData.is_called && newData.status === 'called') {
-              notifyUserCalled(newData.ticket_number);
-            }
-          }
+          // MyTicketCard handles client notifications (no duplicate here)
           
           // Also invalidate single ticket query and position
           if (payload.eventType === 'UPDATE' || payload.eventType === 'DELETE') {
