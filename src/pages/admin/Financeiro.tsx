@@ -334,8 +334,8 @@ const AdminFinanceiro = () => {
           />
         </div>
         
-        {/* Annual Chart */}
-        <AnnualChart />
+        {/* Evolution Chart - dynamic by dateRange */}
+        <AnnualChart dateRange={dateRange} />
         
         {/* Charts Row */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
