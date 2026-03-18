@@ -1,7 +1,7 @@
-import { useEffect, useRef } from 'react';
-import { MapPin, Clock, Phone } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { FaWhatsapp, FaInstagram } from 'react-icons/fa';
+import { useEffect, useRef } from "react";
+import { MapPin, Clock, Phone } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { FaWhatsapp, FaInstagram } from "react-icons/fa";
 
 export const Contact = () => {
   const sectionRef = useRef<HTMLElement>(null);
@@ -11,11 +11,11 @@ export const Contact = () => {
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
-            entry.target.classList.add('animate-fadeInUp');
+            entry.target.classList.add("animate-fadeInUp");
           }
         });
       },
-      { threshold: 0.1 }
+      { threshold: 0.1 },
     );
 
     if (sectionRef.current) {
@@ -30,22 +30,16 @@ export const Contact = () => {
   }, []);
 
   return (
-    <section 
-      id="contato" 
-      ref={sectionRef} 
-      className="py-12 md:py-16 px-5 bg-background relative overflow-hidden"
-    >
+    <section id="contato" ref={sectionRef} className="py-12 md:py-16 px-5 bg-background relative overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-b from-card/50 to-transparent" />
-      
+
       <div className="max-w-[1200px] mx-auto relative z-10">
         <div className="text-center mb-12">
           <h2 className="font-display text-3xl md:text-4xl lg:text-5xl uppercase relative inline-block">
             Entre em contato
             <span className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-16 h-1 bg-primary rounded" />
           </h2>
-          <p className="text-muted-foreground text-lg mt-6">
-            Agende seu horário ou tire dúvidas pelos nossos canais!
-          </p>
+          <p className="text-muted-foreground text-lg mt-6">Agende seu horário ou tire dúvidas pelos nossos canais!</p>
         </div>
 
         <div className="grid md:grid-cols-2 gap-8 lg:gap-12 mt-16">
@@ -56,9 +50,7 @@ export const Contact = () => {
               </div>
               <div>
                 <h4 className="font-display text-lg mb-1">Endereço</h4>
-                <p className="text-muted-foreground">
-                  Rua da Codeal, Salvador Lyra, Maceió – AL
-                </p>
+                <p className="text-muted-foreground">Rua da Codeal, 144 Salvador Lyra, Maceió – AL</p>
               </div>
             </div>
 
@@ -68,9 +60,8 @@ export const Contact = () => {
               </div>
               <div>
                 <h4 className="font-display text-lg mb-1">Horário</h4>
-                <p className="text-muted-foreground">
-                  Segunda a Sábado, das 8h às 19h30
-                </p>
+                <p className="text-muted-foreground">Segunda a Sábado, das 8h às 19h</p>
+                <p className="text-muted-foreground">Domingo 1º, 2º e 3º domingo do mês: 9h as 12h</p>
               </div>
             </div>
 
@@ -80,20 +71,14 @@ export const Contact = () => {
               </div>
               <div>
                 <h4 className="font-display text-lg mb-1">Telefone</h4>
-                <p className="text-muted-foreground">
-                  (82) 99659-2830
-                </p>
+                <p className="text-muted-foreground">(82) 99659-2830</p>
               </div>
             </div>
           </div>
 
           <div className="flex flex-col justify-center gap-4">
-            <Button
-              asChild
-              size="lg"
-              className="bg-[#25D366] hover:bg-[#20BA5A] text-white font-bold text-lg py-6"
-            >
-              <a 
+            <Button asChild size="lg" className="bg-[#25D366] hover:bg-[#20BA5A] text-white font-bold text-lg py-6">
+              <a
                 href="https://wa.me/5582996592830?text=Ol%C3%A1!%20Vim%20pelo%20site%20da%20Barbearia%20Brutos%20e%20gostaria%20de%20mais%20informa%C3%A7%C3%B5es%2C%20por%20favor."
                 target="_blank"
                 rel="noopener noreferrer"
@@ -108,11 +93,7 @@ export const Contact = () => {
               size="lg"
               className="bg-gradient-to-r from-[#E1306C] to-[#C32AA3] hover:from-[#C32AA3] hover:to-[#E1306C] text-white font-bold text-lg py-6"
             >
-              <a 
-                href="https://instagram.com/barbeariabrutos"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
+              <a href="https://instagram.com/barbeariabrutos" target="_blank" rel="noopener noreferrer">
                 <FaInstagram className="mr-2" size={24} />
                 Siga-nos no Instagram
               </a>
