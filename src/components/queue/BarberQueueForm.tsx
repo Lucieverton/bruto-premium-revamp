@@ -239,6 +239,82 @@ export const BarberQueueForm = ({ barberId, barberName, onSuccess }: BarberQueue
         )}
       </div>
       
+      {/* Companions Toggle - Visível logo após serviços */}
+      {selectedServices.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="p-3 bg-accent/30 border border-accent rounded-lg space-y-3"
+        >
+          <div className="flex items-center justify-between">
+            <Label className="flex items-center gap-2 text-sm cursor-pointer font-semibold">
+              <Users size={16} className="text-primary" />
+              Vai com acompanhante?
+            </Label>
+            <Switch
+              checked={hasCompanions}
+              onCheckedChange={(checked) => {
+                setHasCompanions(checked);
+                if (checked && companions.length === 0) {
+                  setCompanions([{ name: '', service_ids: [], barber_id: '' }]);
+                }
+              }}
+            />
+          </div>
+
+          <AnimatePresence>
+            {hasCompanions && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="space-y-3"
+              >
+                <p className="text-xs text-muted-foreground">
+                  Adicione filhos, parentes ou amigos à sua fila. Todos usam seu WhatsApp. Máx. 5.
+                </p>
+
+                {companions.map((companion, index) => (
+                  <CompanionEntry
+                    key={index}
+                    index={index}
+                    companion={companion}
+                    services={services || []}
+                    barbers={barbers || []}
+                    leaderBarberId={barberId}
+                    leaderBarberName={barberName}
+                    onChange={(data) => updateCompanion(index, data)}
+                    onRemove={() => removeCompanion(index)}
+                  />
+                ))}
+
+                {companions.length < 5 && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={addCompanion}
+                    className="w-full border-dashed"
+                  >
+                    <Plus size={14} className="mr-1" />
+                    Adicionar mais um acompanhante
+                  </Button>
+                )}
+
+                {companionTotalPrice > 0 && (
+                  <div className="p-2.5 bg-primary/5 border border-primary/20 rounded-lg">
+                    <div className="flex justify-between text-sm font-bold">
+                      <span className="text-foreground">Total geral ({1 + companions.length} pessoas):</span>
+                      <span className="text-primary">R$ {grandTotal.toFixed(2).replace('.', ',')}</span>
+                    </div>
+                  </div>
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
+      )}
+
       {/* Customer Info */}
       <div className="space-y-4 pt-2 border-t border-border/50">
         <div className="space-y-2">
@@ -259,77 +335,6 @@ export const BarberQueueForm = ({ barberId, barberName, onSuccess }: BarberQueue
           />
           {errors.customer_phone && <p className="text-sm text-destructive">{errors.customer_phone.message}</p>}
         </div>
-      </div>
-
-      {/* Companions Toggle */}
-      <div className="space-y-3 pt-2 border-t border-border/50">
-        <div className="flex items-center justify-between">
-          <Label className="flex items-center gap-2 text-sm cursor-pointer">
-            <Users size={16} className="text-muted-foreground" />
-            Adicionar acompanhantes
-          </Label>
-          <Switch
-            checked={hasCompanions}
-            onCheckedChange={(checked) => {
-              setHasCompanions(checked);
-              if (checked && companions.length === 0) {
-                setCompanions([{ name: '', service_ids: [], barber_id: '' }]);
-              }
-            }}
-          />
-        </div>
-
-        <AnimatePresence>
-          {hasCompanions && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              className="space-y-3"
-            >
-              <p className="text-xs text-muted-foreground">
-                Adicione filhos, parentes ou amigos à sua fila. Todos usam seu WhatsApp. Máx. 5.
-              </p>
-
-              {companions.map((companion, index) => (
-                <CompanionEntry
-                  key={index}
-                  index={index}
-                  companion={companion}
-                  services={services || []}
-                  barbers={barbers || []}
-                  leaderBarberId={barberId}
-                  leaderBarberName={barberName}
-                  onChange={(data) => updateCompanion(index, data)}
-                  onRemove={() => removeCompanion(index)}
-                />
-              ))}
-
-              {companions.length < 5 && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={addCompanion}
-                  className="w-full border-dashed"
-                >
-                  <Plus size={14} className="mr-1" />
-                  Adicionar mais um acompanhante
-                </Button>
-              )}
-
-              {/* Grand Total */}
-              {companionTotalPrice > 0 && (
-                <div className="p-2.5 bg-primary/5 border border-primary/20 rounded-lg">
-                  <div className="flex justify-between text-sm font-bold">
-                    <span className="text-foreground">Total geral ({1 + companions.length} pessoas):</span>
-                    <span className="text-primary">R$ {grandTotal.toFixed(2).replace('.', ',')}</span>
-                  </div>
-                </div>
-              )}
-            </motion.div>
-          )}
-        </AnimatePresence>
       </div>
       
       {/* Priority */}
@@ -354,15 +359,14 @@ export const BarberQueueForm = ({ barberId, barberName, onSuccess }: BarberQueue
         disabled={isPending || selectedServices.length === 0}
         className={cn(
           'w-full group relative overflow-hidden',
-          'bg-gradient-to-br from-zinc-200 via-zinc-300 to-zinc-400',
-          'text-zinc-900 font-bold uppercase tracking-wide',
+          'bg-primary text-primary-foreground font-bold uppercase tracking-wide',
           'shadow-md hover:shadow-lg',
-          'border border-white/50',
+          'border border-primary/50',
           'transition-all duration-300',
           'disabled:opacity-50'
         )}
       >
-        <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/50 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-out" />
+        <span className="absolute inset-0 bg-gradient-to-r from-transparent via-primary-foreground/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-out" />
         {isPending ? (
           <Loader2 className="animate-spin mr-2 relative z-10" size={20} />
         ) : (
