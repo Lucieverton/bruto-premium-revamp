@@ -180,6 +180,24 @@ serve(async (req) => {
       const { type, customer_name, barber_id, ticket_number } = body;
       console.log("[send-push] Incoming:", { type, customer_name, barber_id, ticket_number });
 
+      // ── Anti-abuse: verify ticket actually exists in today's queue ──
+      if (!ticket_number || typeof ticket_number !== "string") {
+        return jsonRes({ error: "Missing ticket_number" }, 400);
+      }
+
+      const { data: ticketExists, error: ticketErr } = await supaAdmin
+        .from("queue_items")
+        .select("id")
+        .eq("ticket_number", ticket_number)
+        .gte("created_at", new Date(new Date().setHours(0, 0, 0, 0)).toISOString())
+        .limit(1)
+        .maybeSingle();
+
+      if (ticketErr || !ticketExists) {
+        console.warn("[send-push] Rejected: ticket not found:", ticket_number);
+        return jsonRes({ error: "Invalid ticket" }, 403);
+      }
+
       // Load VAPID keys
       const { data: vk } = await supaAdmin
         .from("vapid_keys")
