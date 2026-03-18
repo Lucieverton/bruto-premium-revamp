@@ -1,7 +1,6 @@
 import { useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { notifyUserCalled } from '@/lib/notifications';
 import { getMyTicket } from '@/lib/antiAbuse';
 
 export const useQueueRealtime = () => {
