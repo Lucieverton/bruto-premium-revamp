@@ -239,29 +239,13 @@ export const BarberQueueForm = ({ barberId, barberName, onSuccess }: BarberQueue
         )}
       </div>
       
-      {/* Customer Info */}
-      <div className="space-y-4 pt-2 border-t border-border/50">
-        <div className="space-y-2">
-          <Label htmlFor="customer_name">Seu nome *</Label>
-          <Input id="customer_name" placeholder="Digite seu nome completo" {...register('customer_name')} className="bg-background" />
-          {errors.customer_name && <p className="text-sm text-destructive">{errors.customer_name.message}</p>}
-        </div>
-        
-        <div className="space-y-2">
-          <Label htmlFor="customer_phone">WhatsApp *</Label>
-          <Input
-            id="customer_phone"
-            placeholder="(82) 99999-9999"
-            {...register('customer_phone', {
-              onChange: (e) => { e.target.value = formatPhone(e.target.value); }
-            })}
-            className="bg-background"
-          />
-          {errors.customer_phone && <p className="text-sm text-destructive">{errors.customer_phone.message}</p>}
-        </div>
-      </div>
-
-      {/* Companions Toggle */}
+      {/* Companions Toggle - ANTES dos dados pessoais para visibilidade */}
+      {selectedServices.length > 0 && (
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="p-3 bg-accent/30 border border-accent rounded-lg"
+      >
       <div className="space-y-3 pt-2 border-t border-border/50">
         <div className="flex items-center justify-between">
           <Label className="flex items-center gap-2 text-sm cursor-pointer">
