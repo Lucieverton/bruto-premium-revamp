@@ -37,6 +37,7 @@ export const useQueueRealtime = () => {
           }
           
           // Invalidate position for current user's ticket on any queue change
+          const myTicketId = getMyTicket();
           if (myTicketId) {
             queryClient.invalidateQueries({ queryKey: ['queue-position', myTicketId] });
           }
