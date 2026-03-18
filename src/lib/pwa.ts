@@ -62,8 +62,8 @@ export const showSWNotification = async (
   options?: SWNotificationOptions
 ): Promise<boolean> => {
   const finalOptions = {
-    icon: '/pwa-192x192.png',
-    badge: '/pwa-192x192.png',
+    icon: '/favicon.png',
+    badge: '/favicon.png',
     vibrate: [500, 200, 500] as number[],
     tag: 'queue-notification',
     renotify: true,
@@ -118,8 +118,8 @@ export const sendTestNotification = async (): Promise<boolean> => {
 
   return showSWNotification('🔔 Teste de Notificação', {
     body: 'As notificações estão funcionando corretamente! Você receberá alertas quando novos clientes entrarem na sua fila.',
-    icon: '/pwa-192x192.png',
-    badge: '/pwa-192x192.png',
+    icon: '/favicon.png',
+    badge: '/favicon.png',
     vibrate: [200, 100, 200],
     tag: 'test-notification',
     renotify: true,

@@ -48,11 +48,10 @@ export const requestNotificationPermission = async (): Promise<boolean> => {
 };
 
 export const showPushNotification = async (title: string, body: string) => {
-  // Use Service Worker notification for background support
   await showSWNotification(title, {
     body,
-    icon: '/pwa-192x192.png',
-    badge: '/pwa-192x192.png',
+    icon: '/favicon.png',
+    badge: '/favicon.png',
     requireInteraction: true,
     vibrate: [200, 100, 200],
   });
@@ -63,8 +62,8 @@ export const showPushNotification = async (title: string, body: string) => {
 export const sendNotification = async (title: string, options?: { body?: string; tag?: string }) => {
   await showSWNotification(title, {
     body: options?.body || '',
-    icon: '/pwa-192x192.png',
-    badge: '/pwa-192x192.png',
+    icon: '/favicon.png',
+    badge: '/favicon.png',
     tag: options?.tag,
     requireInteraction: true,
     vibrate: [200, 100, 200],
