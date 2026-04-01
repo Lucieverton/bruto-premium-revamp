@@ -61,7 +61,7 @@ export const Contact = () => {
               <div>
                 <h4 className="font-display text-lg mb-1">Horário</h4>
                 <p className="text-muted-foreground">Segunda a Sábado, das 8h às 19h</p>
-                <p className="text-muted-foreground">Domingo 1º, 2º e 3º domingo do mês: 9h as 12h</p>
+                <p className="text-muted-foreground">Domingo 1º, 2º domingo do mês: 9h as 12h</p>
               </div>
             </div>
 
