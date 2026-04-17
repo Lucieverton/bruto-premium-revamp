@@ -1,22 +1,41 @@
 
 
-# Plano: Corrigir PWA para instalação mobile + Atualizar horário
+# Diagnóstico: Fila com contagem errada e barbeiros sumindo
 
-## Problemas Identificados
+## Problemas identificados
 
-1. **PWA não instalável no celular**: Falta a guarda contra iframe/preview no `main.tsx`. O Service Worker registrado dentro do iframe do Lovable impede a instalação no site publicado.
-2. **Horário desatualizado**: Atualmente mostra "1º, 2º e 3º domingo" — deve ser "1º, 2º domingo do mês: 9h as 12h".
+### Problema 1: Posição da fila errada (cliente diz que é o 6º quando há só 2)
+**Causa raiz:** Existem **tickets antigos** com status `waiting`/`called`/`in_progress` de dias passados (2026-02-02, 2026-02-14, 2026-02-17) que nunca foram limpos. Verificado no banco: 7 tickets ativos, mas só 2 são de hoje.
 
-## Mudanças
+A função `get_queue_position` (RPC que calcula a posição) **não filtra por data** — conta TODOS os tickets `waiting` no banco, incluindo os antigos. Por isso o cliente de hoje aparece como #6.
 
-### 1. `src/main.tsx` — Adicionar guarda de iframe para PWA
-Impedir registro do Service Worker quando o app está rodando dentro do iframe do Lovable (preview). Desregistrar SWs existentes nesses contextos. Isso resolve o problema de instalação no site publicado.
+A função `cleanup_stale_tickets()` existe no banco mas **nunca é chamada automaticamente** (sem trigger, sem agendamento).
 
-### 2. `src/components/Contact.tsx` — Corrigir horário
-Linha 64: Trocar `"Domingo 1º, 2º e 3º domingo do mês: 9h as 12h"` por `"Domingo 1º, 2º domingo do mês: 9h as 12h"`.
+### Problema 2: Barbeiros sumindo da lista pública
+**Causa raiz:** A página `/fila` (Fila.tsx) **não monta os hooks de realtime** (`useBarbersRealtime`, `useQueueRealtime`). Depende apenas de polling (`refetchInterval: 5000` + `staleTime: 0`).
+
+Combinado com `staleTime: 0`, qualquer refetch dispara um estado de "loading" que renderiza o skeleton de barbeiros — daí o "sumiço" momentâneo. Quando o polling falha por rede instável (mobile), os barbeiros podem ficar invisíveis por mais tempo.
+
+## Correções
+
+### 1. Filtrar `get_queue_position` por data atual (SQL)
+Adicionar `AND qi2.created_at::date = CURRENT_DATE` na contagem de posição e no `total_waiting`. Isso resolve imediatamente o problema da posição errada.
+
+### 2. Limpar tickets antigos do banco (SQL)
+Executar `cleanup_stale_tickets()` uma vez para cancelar todos os tickets de dias anteriores que ainda estão como `waiting`/`called`/`in_progress`.
+
+### 3. Auto-limpeza diária via trigger (SQL)
+Criar um trigger leve que chama `cleanup_stale_tickets()` antes de inserir um novo ticket — garante que a fila do dia sempre comece limpa, sem depender de cron job externo.
+
+### 4. Corrigir "sumiço" dos barbeiros na página pública
+- Em `src/pages/Fila.tsx`: adicionar `useBarbersRealtime()` e `useQueueRealtime()` para sincronização instantânea.
+- Em `src/hooks/useQueue.ts` (`usePublicBarbers`): manter dados anteriores enquanto refetch acontece (`placeholderData: keepPreviousData`) para eliminar o flash de skeleton.
+
+## Arquivos modificados
 
 | Arquivo | Mudança |
 |---------|---------|
-| `src/main.tsx` | Adicionar guarda iframe/preview para Service Worker |
-| `src/components/Contact.tsx` | Corrigir texto do horário de domingo |
+| Migração SQL | Filtrar `get_queue_position` por `CURRENT_DATE`; rodar `cleanup_stale_tickets()`; criar trigger auto-limpeza em `queue_items` |
+| `src/pages/Fila.tsx` | Adicionar `useBarbersRealtime()` e `useQueueRealtime()` |
+| `src/hooks/useQueue.ts` | `usePublicBarbers`: usar `placeholderData: keepPreviousData` para evitar flash |
 
