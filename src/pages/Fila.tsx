@@ -8,10 +8,16 @@ import { QueueListPanel } from "@/components/queue/QueueListPanel";
 import { ActiveServicesDisplay } from "@/components/queue/ActiveServicesDisplay";
 import { getMyTicket, clearMyTicket, validateStoredTicket } from "@/lib/antiAbuse";
 import { supabase } from "@/integrations/supabase/client";
+import { useBarbersRealtime, useQueueRealtime, useQueueSettingsRealtime } from "@/hooks/useQueueRealtime";
 
 const QueuePage = () => {
   const [myTicketId, setMyTicketId] = useState<string | null>(null);
   const [isValidating, setIsValidating] = useState(true);
+
+  // Realtime sync for instant updates (barbers status, queue changes, settings)
+  useBarbersRealtime();
+  useQueueRealtime();
+  useQueueSettingsRealtime();
 
   // Validate stored ticket on mount - clears completed/cancelled tickets
   useEffect(() => {
