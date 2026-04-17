@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { saveMyTicket } from '@/lib/antiAbuse';
@@ -199,7 +199,8 @@ export const usePublicBarbers = () => {
       if (error) throw error;
       return data as PublicBarber[];
     },
-    staleTime: 0, // Always consider data stale for immediate updates
+    placeholderData: keepPreviousData, // Keep previous data during refetch to avoid skeleton flash
+    staleTime: 5000,
     refetchInterval: 5000, // Polling every 5 seconds for reliable sync
   });
 };
