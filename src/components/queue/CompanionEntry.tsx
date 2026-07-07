@@ -36,7 +36,7 @@ export const CompanionEntry = ({
   onChange,
   onRemove,
 }: CompanionEntryProps) => {
-  const [showServices, setShowServices] = useState(false);
+  const [showServices, setShowServices] = useState(true);
 
   const selectedServices = services.filter(s => companion.service_ids.includes(s.id));
   const totalPrice = selectedServices.reduce((sum, s) => sum + s.price, 0);
