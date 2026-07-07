@@ -97,7 +97,7 @@ export const QueueListPanel = () => {
                     <div className="flex-1 min-w-0">
                       <div className="flex flex-wrap items-center gap-1.5 mb-0.5">
                         <span className={cn(
-                          'font-medium truncate text-sm',
+                          'font-medium text-sm break-words',
                           isMe && 'text-primary'
                         )}>
                           {item.customer_name_masked}
