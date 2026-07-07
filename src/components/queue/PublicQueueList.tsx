@@ -96,6 +96,17 @@ export const PublicQueueList = () => {
                             ⭐ Pref.
                           </span>
                         )}
+
+                        {isLeader && (
+                          <span className="text-[9px] sm:text-[10px] bg-primary/20 text-primary px-1.5 py-0.5 rounded flex-shrink-0">
+                            👥 Grupo
+                          </span>
+                        )}
+                        {isCompanion && (
+                          <span className="text-[9px] sm:text-[10px] bg-primary/15 text-primary px-1.5 py-0.5 rounded flex-shrink-0">
+                            Acompanhante de {item.companion_name}
+                          </span>
+                        )}
                       </div>
                       
                       {/* Service & Barber Row */}
