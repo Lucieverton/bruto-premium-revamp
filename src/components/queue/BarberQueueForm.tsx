@@ -12,6 +12,7 @@ import { Switch } from '@/components/ui/switch';
 import { useJoinQueue, useServices, useQueueSettings, usePublicBarbers, Service } from '@/hooks/useQueue';
 import { useJoinQueueGroup } from '@/hooks/useQueueGroup';
 import { requestNotificationPermission } from '@/lib/notifications';
+import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { CompanionEntry, CompanionData } from './CompanionEntry';
 
@@ -39,6 +40,7 @@ export const BarberQueueForm = ({ barberId, barberName, onSuccess }: BarberQueue
   const { data: barbers } = usePublicBarbers();
   const joinQueue = useJoinQueue();
   const joinQueueGroup = useJoinQueueGroup();
+  const { toast } = useToast();
   
   const {
     register,
@@ -58,9 +60,24 @@ export const BarberQueueForm = ({ barberId, barberName, onSuccess }: BarberQueue
     try {
       requestNotificationPermission().catch(() => {});
       
-      const validCompanions = companions.filter(c => c.name.trim().length >= 2 && c.service_ids.length > 0);
-      
-      if (hasCompanions && validCompanions.length > 0) {
+      if (hasCompanions && companions.length > 0) {
+        // Validate every companion has a name + at least one service — never drop silently
+        const invalidIndex = companions.findIndex(
+          c => c.name.trim().length < 2 || c.service_ids.length === 0
+        );
+        if (invalidIndex !== -1) {
+          const c = companions[invalidIndex];
+          const missing: string[] = [];
+          if (c.name.trim().length < 2) missing.push('nome');
+          if (c.service_ids.length === 0) missing.push('ao menos um serviço');
+          toast({
+            title: `Complete os dados do acompanhante ${invalidIndex + 1}`,
+            description: `Faltando: ${missing.join(' e ')}.`,
+            variant: 'destructive',
+          });
+          return;
+        }
+
         // Group entry
         await joinQueueGroup.mutateAsync({
           customer_name: data.customer_name.trim(),
@@ -68,7 +85,7 @@ export const BarberQueueForm = ({ barberId, barberName, onSuccess }: BarberQueue
           service_ids: selectedServices.map(s => s.id),
           barber_id: barberId,
           priority: data.priority,
-          companions: validCompanions.map(c => ({
+          companions: companions.map(c => ({
             name: c.name.trim(),
             service_ids: c.service_ids,
             barber_id: c.barber_id || barberId,

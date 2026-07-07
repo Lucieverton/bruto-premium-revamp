@@ -1,51 +1,41 @@
-# Diagnóstico: Acompanhantes não entram na fila
+# Plano: Impedir que acompanhantes sejam ignorados silenciosamente
 
-## Causa raiz (bug real no código)
+## Diagnóstico
 
-No hook `src/hooks/useQueueGroup.ts`, o array de `service_ids` de cada acompanhante está sendo **serializado duas vezes** antes de chegar no banco:
+No teste do usuário, apenas 1 ticket foi criado no banco (A-019 "TESTE", `group_id = NULL`). Isso significa que o formulário chamou `join_queue` (entrada única) em vez de `join_queue_group`.
+
+Causa raiz em `src/components/queue/BarberQueueForm.tsx` (linha 61):
 
 ```ts
-const companionsJson = data.companions.map(c => ({
-  name: c.name,
-  service_ids: JSON.stringify(c.service_ids),  // ← vira string "[uuid,uuid]"
-  barber_id: c.barber_id || '',
-}));
-// ...
-p_companions: JSON.stringify(companionsJson),  // ← stringifica de novo
+const validCompanions = companions.filter(
+  c => c.name.trim().length >= 2 && c.service_ids.length > 0
+);
+
+if (hasCompanions && validCompanions.length > 0) { /* group */ }
+else { /* single */ }
 ```
 
-No banco, a RPC `join_queue_group` faz:
+O painel de "Serviços" em cada acompanhante (`CompanionEntry`) começa **fechado** (`showServices = false`). Se o usuário digita o nome mas não expande e seleciona serviços, o filtro descarta o acompanhante **em silêncio** e o formulário cai no fluxo de entrada única — por isso somente o líder aparece na fila, sem `group_id`, sem acompanhantes.
 
-```sql
-FOR v_companion IN SELECT * FROM jsonb_to_recordset(p_companions) 
-  AS x(name text, service_ids jsonb, barber_id text)
--- ...
-SELECT ARRAY(SELECT jsonb_array_elements_text(v_companion.service_ids)::uuid)
-```
+## Correções
 
-Como `service_ids` chega como **string JSON escalar** (não array), o `jsonb_array_elements_text` lança erro `"cannot extract elements from a scalar"`. Isso derruba a transação inteira — nem o cliente principal nem o acompanhante são inseridos, ou (em alguns cenários) o toast de sucesso aparece antes do erro da mutação ser tratado corretamente, deixando a sensação de "adicionou mas não entrou".
+### 1. `src/components/queue/BarberQueueForm.tsx` — validar antes de enviar
+No `onSubmit`, quando `hasCompanions` estiver ligado:
+- Detectar acompanhantes incompletos (nome curto OU sem serviço).
+- Se houver algum incompleto, **bloquear o envio** e exibir toast de erro claro: "Complete os dados do acompanhante N: nome e ao menos um serviço."
+- Só chamar `joinQueueGroup` com a lista completa (nunca cair no fluxo single quando o toggle "Vai com acompanhante?" estiver ativo).
 
-O `p_companions` externo também deve ser passado como objeto JS puro (o supabase-js já serializa), não como string dupla.
+### 2. `src/components/queue/CompanionEntry.tsx` — deixar a seleção de serviços óbvia
+- Iniciar `showServices = true` para o painel já aparecer aberto.
+- Rotular o botão como **"Serviços *"** (com asterisco) e destacar em vermelho quando `service_ids.length === 0` para sinalizar que é obrigatório.
+- Mostrar mensagem inline "Selecione ao menos um serviço" quando vazio.
 
-## Correção
+### 3. Verificação
+Após aplicar, refazer o teste (líder + 2 acompanhantes) e confirmar via banco que os 3 tickets existem com o mesmo `group_id` e `companion_name` preenchido nos acompanhantes.
 
-### `src/hooks/useQueueGroup.ts`
-- Remover o `JSON.stringify(c.service_ids)` — passar o array direto.
-- Remover o `JSON.stringify(companionsJson)` externo — passar o array de objetos como parâmetro nativo. O supabase-js converte para JSONB automaticamente e a RPC recebe estruturas corretas.
-
-Depois disso:
-- Líder e acompanhantes entram na mesma transação.
-- A trigger `generate_ticket_number` numera sequencialmente (ex.: líder `A-005`, acompanhante `A-006`).
-- Como `created_at` do líder é anterior ao dos acompanhantes por microssegundos, a ordenação da fila (`ORDER BY priority, created_at ASC`) mantém pai → filho, filho seguido, exatamente como pedido.
-
-### Verificação extra (sem mudar lógica)
-- Confirmar visualmente na `Fila Virtual` que após enviar o formulário aparecem N tickets consecutivos com o mesmo `group_id`.
-- O toast já mostra os números de tickets gerados; se agora aparecerem múltiplos, o fluxo está correto.
-
-## Arquivos modificados
+## Arquivos
 
 | Arquivo | Mudança |
-|---------|---------|
-| `src/hooks/useQueueGroup.ts` | Parar de duplo-serializar `service_ids` e `companions`; passar arrays/objetos JS nativos para a RPC |
-
-Nenhuma mudança de schema, RPC ou UI é necessária — o backend já suporta grupos corretamente; o bug está apenas na serialização do payload no cliente.
+|---|---|
+| `src/components/queue/BarberQueueForm.tsx` | Validar acompanhantes; toast de erro; forçar `joinQueueGroup` quando toggle ativo |
+| `src/components/queue/CompanionEntry.tsx` | Painel de serviços aberto por padrão + destaque de obrigatoriedade |
