@@ -60,6 +60,8 @@ export const QueueListPanel = () => {
             {waitingQueue.map((item, index) => {
               const isMe = item.id === myTicketId;
               const isFirst = index === 0;
+              const isCompanion = !!item.companion_name;
+              const isLeader = !!item.group_id && !item.companion_name;
               
               return (
                 <motion.div
@@ -75,9 +77,11 @@ export const QueueListPanel = () => {
                   }}
                   className={cn(
                     'relative p-3 rounded-lg transition-all duration-300',
+                    isCompanion && 'ml-4 border-l-2 border-l-primary/50',
                     isMe && 'ring-2 ring-primary bg-primary/10 shadow-md',
                     isFirst && !isMe && 'bg-success/10 border border-success/30',
-                    !isMe && !isFirst && 'bg-background/50 border border-border/50'
+                    !isMe && !isFirst && !isCompanion && 'bg-background/50 border border-border/50',
+                    !isMe && isCompanion && 'bg-background/40'
                   )}
                 >
                   <div className="flex items-center gap-3">
@@ -91,7 +95,7 @@ export const QueueListPanel = () => {
                     
                     {/* Info */}
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-1.5 mb-0.5">
+                      <div className="flex flex-wrap items-center gap-1.5 mb-0.5">
                         <span className={cn(
                           'font-medium truncate text-sm',
                           isMe && 'text-primary'
@@ -99,10 +103,25 @@ export const QueueListPanel = () => {
                           {item.customer_name_masked}
                           {isMe && <span className="text-primary ml-1 font-bold">(você)</span>}
                         </span>
+
+                        <span className="text-[10px] font-mono text-muted-foreground bg-muted/60 px-1.5 py-0.5 rounded">
+                          {item.ticket_number}
+                        </span>
                         
                         {item.priority === 'preferencial' && (
                           <span className="text-[10px] bg-purple-500/20 text-purple-400 px-1 py-0.5 rounded flex-shrink-0">
                             ⭐
+                          </span>
+                        )}
+
+                        {isLeader && (
+                          <span className="text-[10px] bg-primary/20 text-primary px-1.5 py-0.5 rounded flex-shrink-0">
+                            👥 Grupo
+                          </span>
+                        )}
+                        {isCompanion && (
+                          <span className="text-[10px] bg-primary/15 text-primary px-1.5 py-0.5 rounded flex-shrink-0">
+                            Acompanhante de {item.companion_name}
                           </span>
                         )}
                       </div>
