@@ -12,6 +12,7 @@ import { Switch } from '@/components/ui/switch';
 import { useJoinQueue, useServices, useQueueSettings, usePublicBarbers, Service } from '@/hooks/useQueue';
 import { useJoinQueueGroup } from '@/hooks/useQueueGroup';
 import { requestNotificationPermission } from '@/lib/notifications';
+import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { CompanionEntry, CompanionData } from './CompanionEntry';
 
