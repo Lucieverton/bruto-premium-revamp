@@ -118,20 +118,34 @@ export const CompanionEntry = ({
       </div>
 
       {/* Services Toggle */}
-      <div className="space-y-2">
+      <div className={cn(
+        'space-y-2 -mx-1 px-1 rounded-md',
+        selectedServices.length === 0 && 'ring-1 ring-destructive/40 bg-destructive/5 py-1.5'
+      )}>
         <button
           type="button"
           onClick={() => setShowServices(!showServices)}
-          className="flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+          className={cn(
+            'flex items-center gap-1 text-xs font-semibold transition-colors',
+            selectedServices.length === 0
+              ? 'text-destructive'
+              : 'text-muted-foreground hover:text-foreground'
+          )}
         >
           {showServices ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-          Serviços ({selectedServices.length} selecionado{selectedServices.length !== 1 ? 's' : ''})
+          Serviços * ({selectedServices.length} selecionado{selectedServices.length !== 1 ? 's' : ''})
           {totalPrice > 0 && (
             <span className="ml-1 text-primary font-semibold">
               R$ {totalPrice.toFixed(2).replace('.', ',')}
             </span>
           )}
         </button>
+
+        {selectedServices.length === 0 && (
+          <p className="text-[11px] text-destructive font-medium">
+            Selecione ao menos um serviço para este acompanhante.
+          </p>
+        )}
 
         <AnimatePresence>
           {showServices && (
