@@ -84,7 +84,7 @@ export const PublicQueueList = () => {
                       <div className="flex items-center gap-1.5 sm:gap-2 mb-0.5">
                         <User size={12} className="text-muted-foreground flex-shrink-0" />
                         <span className={cn(
-                          'font-medium truncate text-xs sm:text-sm',
+                          'font-medium text-xs sm:text-sm break-words',
                           isMe && 'text-primary'
                         )}>
                           {item.customer_name_masked}
