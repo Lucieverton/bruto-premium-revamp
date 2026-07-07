@@ -39,6 +39,8 @@ export const PublicQueueList = () => {
             {waitingQueue.map((item, index) => {
               const isMe = item.id === myTicketId;
               const isFirst = index === 0;
+              const isCompanion = !!item.companion_name;
+              const isLeader = !!item.group_id && !item.companion_name;
               
               return (
                 <motion.div
@@ -55,9 +57,11 @@ export const PublicQueueList = () => {
                   }}
                   className={cn(
                     'relative p-2.5 sm:p-3 rounded-lg transition-all duration-300',
+                    isCompanion && 'ml-4 border-l-2 border-l-primary/50',
                     isMe && 'ring-2 ring-primary bg-primary/10 shadow-md',
                     isFirst && !isMe && 'bg-success/10 border border-success/30',
-                    !isMe && !isFirst && 'bg-background/50 border border-border/50'
+                    !isMe && !isFirst && !isCompanion && 'bg-background/50 border border-border/50',
+                    !isMe && isCompanion && 'bg-background/40'
                   )}
                 >
                   {/* Main content with WhatsApp button on right */}
