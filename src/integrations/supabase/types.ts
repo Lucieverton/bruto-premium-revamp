@@ -728,8 +728,10 @@ export type Database = {
           barber_name: string
           barber_whatsapp: string
           called_at: string
+          companion_name: string
           created_at: string
           customer_name_masked: string
+          group_id: string
           id: string
           priority: string
           service_id: string
