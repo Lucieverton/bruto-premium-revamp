@@ -40,6 +40,7 @@ export const BarberQueueForm = ({ barberId, barberName, onSuccess }: BarberQueue
   const { data: barbers } = usePublicBarbers();
   const joinQueue = useJoinQueue();
   const joinQueueGroup = useJoinQueueGroup();
+  const { toast } = useToast();
   
   const {
     register,
