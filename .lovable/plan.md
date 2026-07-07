@@ -1,41 +1,51 @@
+# Diagnóstico: Acompanhantes não entram na fila
 
+## Causa raiz (bug real no código)
 
-# Diagnóstico: Fila com contagem errada e barbeiros sumindo
+No hook `src/hooks/useQueueGroup.ts`, o array de `service_ids` de cada acompanhante está sendo **serializado duas vezes** antes de chegar no banco:
 
-## Problemas identificados
+```ts
+const companionsJson = data.companions.map(c => ({
+  name: c.name,
+  service_ids: JSON.stringify(c.service_ids),  // ← vira string "[uuid,uuid]"
+  barber_id: c.barber_id || '',
+}));
+// ...
+p_companions: JSON.stringify(companionsJson),  // ← stringifica de novo
+```
 
-### Problema 1: Posição da fila errada (cliente diz que é o 6º quando há só 2)
-**Causa raiz:** Existem **tickets antigos** com status `waiting`/`called`/`in_progress` de dias passados (2026-02-02, 2026-02-14, 2026-02-17) que nunca foram limpos. Verificado no banco: 7 tickets ativos, mas só 2 são de hoje.
+No banco, a RPC `join_queue_group` faz:
 
-A função `get_queue_position` (RPC que calcula a posição) **não filtra por data** — conta TODOS os tickets `waiting` no banco, incluindo os antigos. Por isso o cliente de hoje aparece como #6.
+```sql
+FOR v_companion IN SELECT * FROM jsonb_to_recordset(p_companions) 
+  AS x(name text, service_ids jsonb, barber_id text)
+-- ...
+SELECT ARRAY(SELECT jsonb_array_elements_text(v_companion.service_ids)::uuid)
+```
 
-A função `cleanup_stale_tickets()` existe no banco mas **nunca é chamada automaticamente** (sem trigger, sem agendamento).
+Como `service_ids` chega como **string JSON escalar** (não array), o `jsonb_array_elements_text` lança erro `"cannot extract elements from a scalar"`. Isso derruba a transação inteira — nem o cliente principal nem o acompanhante são inseridos, ou (em alguns cenários) o toast de sucesso aparece antes do erro da mutação ser tratado corretamente, deixando a sensação de "adicionou mas não entrou".
 
-### Problema 2: Barbeiros sumindo da lista pública
-**Causa raiz:** A página `/fila` (Fila.tsx) **não monta os hooks de realtime** (`useBarbersRealtime`, `useQueueRealtime`). Depende apenas de polling (`refetchInterval: 5000` + `staleTime: 0`).
+O `p_companions` externo também deve ser passado como objeto JS puro (o supabase-js já serializa), não como string dupla.
 
-Combinado com `staleTime: 0`, qualquer refetch dispara um estado de "loading" que renderiza o skeleton de barbeiros — daí o "sumiço" momentâneo. Quando o polling falha por rede instável (mobile), os barbeiros podem ficar invisíveis por mais tempo.
+## Correção
 
-## Correções
+### `src/hooks/useQueueGroup.ts`
+- Remover o `JSON.stringify(c.service_ids)` — passar o array direto.
+- Remover o `JSON.stringify(companionsJson)` externo — passar o array de objetos como parâmetro nativo. O supabase-js converte para JSONB automaticamente e a RPC recebe estruturas corretas.
 
-### 1. Filtrar `get_queue_position` por data atual (SQL)
-Adicionar `AND qi2.created_at::date = CURRENT_DATE` na contagem de posição e no `total_waiting`. Isso resolve imediatamente o problema da posição errada.
+Depois disso:
+- Líder e acompanhantes entram na mesma transação.
+- A trigger `generate_ticket_number` numera sequencialmente (ex.: líder `A-005`, acompanhante `A-006`).
+- Como `created_at` do líder é anterior ao dos acompanhantes por microssegundos, a ordenação da fila (`ORDER BY priority, created_at ASC`) mantém pai → filho, filho seguido, exatamente como pedido.
 
-### 2. Limpar tickets antigos do banco (SQL)
-Executar `cleanup_stale_tickets()` uma vez para cancelar todos os tickets de dias anteriores que ainda estão como `waiting`/`called`/`in_progress`.
-
-### 3. Auto-limpeza diária via trigger (SQL)
-Criar um trigger leve que chama `cleanup_stale_tickets()` antes de inserir um novo ticket — garante que a fila do dia sempre comece limpa, sem depender de cron job externo.
-
-### 4. Corrigir "sumiço" dos barbeiros na página pública
-- Em `src/pages/Fila.tsx`: adicionar `useBarbersRealtime()` e `useQueueRealtime()` para sincronização instantânea.
-- Em `src/hooks/useQueue.ts` (`usePublicBarbers`): manter dados anteriores enquanto refetch acontece (`placeholderData: keepPreviousData`) para eliminar o flash de skeleton.
+### Verificação extra (sem mudar lógica)
+- Confirmar visualmente na `Fila Virtual` que após enviar o formulário aparecem N tickets consecutivos com o mesmo `group_id`.
+- O toast já mostra os números de tickets gerados; se agora aparecerem múltiplos, o fluxo está correto.
 
 ## Arquivos modificados
 
 | Arquivo | Mudança |
 |---------|---------|
-| Migração SQL | Filtrar `get_queue_position` por `CURRENT_DATE`; rodar `cleanup_stale_tickets()`; criar trigger auto-limpeza em `queue_items` |
-| `src/pages/Fila.tsx` | Adicionar `useBarbersRealtime()` e `useQueueRealtime()` |
-| `src/hooks/useQueue.ts` | `usePublicBarbers`: usar `placeholderData: keepPreviousData` para evitar flash |
+| `src/hooks/useQueueGroup.ts` | Parar de duplo-serializar `service_ids` e `companions`; passar arrays/objetos JS nativos para a RPC |
 
+Nenhuma mudança de schema, RPC ou UI é necessária — o backend já suporta grupos corretamente; o bug está apenas na serialização do payload no cliente.

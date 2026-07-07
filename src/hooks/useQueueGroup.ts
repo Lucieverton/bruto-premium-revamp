@@ -25,7 +25,7 @@ export const useJoinQueueGroup = () => {
     }) => {
       const companionsJson = data.companions.map(c => ({
         name: c.name,
-        service_ids: JSON.stringify(c.service_ids),
+        service_ids: c.service_ids,
         barber_id: c.barber_id || '',
       }));
 
@@ -35,7 +35,7 @@ export const useJoinQueueGroup = () => {
         p_service_ids: data.service_ids,
         p_barber_id: data.barber_id,
         p_priority: data.priority,
-        p_companions: JSON.stringify(companionsJson),
+        p_companions: companionsJson,
       });
 
       if (error) throw error;
