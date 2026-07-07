@@ -97,7 +97,7 @@ export const QueueListPanel = () => {
                     <div className="flex-1 min-w-0">
                       <div className="flex flex-wrap items-center gap-1.5 mb-0.5">
                         <span className={cn(
-                          'font-medium truncate text-sm',
+                          'font-medium text-sm break-words',
                           isMe && 'text-primary'
                         )}>
                           {item.customer_name_masked}
@@ -128,13 +128,13 @@ export const QueueListPanel = () => {
                       
                       <div className="flex flex-wrap items-center gap-x-2 text-xs text-muted-foreground">
                         {item.service_name && (
-                          <span className="flex items-center gap-1 truncate">
-                            <Scissors size={10} />
+                          <span className="flex items-center gap-1 break-words">
+                            <Scissors size={10} className="flex-shrink-0" />
                             {item.service_name}
                           </span>
                         )}
                         {item.barber_name && (
-                          <span className="text-primary/70">→ {item.barber_name}</span>
+                          <span className="text-primary/70 break-words">→ {item.barber_name}</span>
                         )}
                       </div>
                       

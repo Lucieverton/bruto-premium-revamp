@@ -84,7 +84,7 @@ export const PublicQueueList = () => {
                       <div className="flex items-center gap-1.5 sm:gap-2 mb-0.5">
                         <User size={12} className="text-muted-foreground flex-shrink-0" />
                         <span className={cn(
-                          'font-medium truncate text-xs sm:text-sm',
+                          'font-medium text-xs sm:text-sm break-words',
                           isMe && 'text-primary'
                         )}>
                           {item.customer_name_masked}
@@ -113,8 +113,8 @@ export const PublicQueueList = () => {
                       <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] sm:text-xs text-muted-foreground">
                         {item.service_name && (
                           <span className="flex items-center gap-1">
-                            <Scissors size={10} />
-                            <span className="truncate max-w-[100px] sm:max-w-none">{item.service_name}</span>
+                            <Scissors size={10} className="flex-shrink-0" />
+                            <span className="break-words">{item.service_name}</span>
                           </span>
                         )}
                         
