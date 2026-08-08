@@ -142,6 +142,7 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
             {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
           </Button>
           <img src={logo} alt="Brutos" className="h-8 w-auto" />
+
         </div>
 
         {isAdmin && (
