@@ -110,7 +110,12 @@ export interface BarberBreak {
   started_at: string;
   ended_at: string | null;
   duration_minutes: number;
+  is_overrun: boolean;
+  overrun_minutes: number;
 }
+
+/** Pausa sem previsão é considerada estourada após este tempo */
+export const PAUSE_LIMIT_MINUTES = 30;
 
 export const useBarberBreaks = (start: Date, end: Date, barberId?: string | null) => {
   return useQuery({
@@ -124,8 +129,58 @@ export const useBarberBreaks = (start: Date, end: Date, barberId?: string | null
       if (error) throw error;
       return (data ?? []) as BarberBreak[];
     },
+    // mantém as durações "em andamento" atualizadas
+    refetchInterval: 60_000,
+    placeholderData: keepPreviousData,
   });
 };
+
+/** Atualiza o histórico de pausas em tempo real */
+export const useBarberBreaksRealtime = () => {
+  const qc = useQueryClient();
+
+  useEffect(() => {
+    const channel = supabase
+      .channel('barber-breaks-realtime')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'barber_breaks' },
+        () => {
+          qc.invalidateQueries({ queryKey: ['barber-breaks'] });
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'barbers' },
+        () => {
+          qc.invalidateQueries({ queryKey: ['admin-barbers'] });
+          qc.invalidateQueries({ queryKey: ['barbers'] });
+          qc.invalidateQueries({ queryKey: ['my-barber-profile'] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [qc]);
+};
+
+/** Retorna quantos minutos a pausa em andamento passou do combinado (0 = dentro do prazo) */
+export const pauseOverrunMinutes = (barber: {
+  status?: string;
+  pause_expected_return?: string | null;
+  status_changed_at?: string | null;
+}) => {
+  if (barber.status !== 'paused') return 0;
+  if (barber.pause_expected_return) {
+    const diff = Date.now() - new Date(barber.pause_expected_return).getTime();
+    return diff > 0 ? Math.floor(diff / 60_000) : 0;
+  }
+  const elapsed = minutesSince(barber.status_changed_at);
+  return elapsed > PAUSE_LIMIT_MINUTES ? elapsed - PAUSE_LIMIT_MINUTES : 0;
+};
+
 
 export const formatDuration = (minutes: number) => {
   if (minutes < 60) return `${minutes} min`;
