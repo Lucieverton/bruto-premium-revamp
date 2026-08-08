@@ -31,13 +31,25 @@ interface AdminLayoutProps {
   children: ReactNode;
 }
 
+interface NavItem {
+  href: string;
+  icon: typeof Settings;
+  label: string;
+  children?: { href: string; icon: typeof Settings; label: string }[];
+}
+
 // Full nav items for admins
-const adminNavItems = [
+const adminNavItems: NavItem[] = [
   { href: '/admin', icon: LayoutDashboard, label: 'Fila' },
   { href: '/admin/barbeiros', icon: Users, label: 'Barbeiros' },
   { href: '/admin/servicos', icon: Scissors, label: 'Serviços' },
   { href: '/admin/financeiro', icon: DollarSign, label: 'Financeiro' },
-  { href: '/admin/configuracoes', icon: Settings, label: 'Configurações' },
+  {
+    href: '/admin/configuracoes',
+    icon: Settings,
+    label: 'Configurações',
+    children: [{ href: '/admin/site', icon: Globe, label: 'Meu site' }],
+  },
 ];
 
 // Limited nav items for barbers
