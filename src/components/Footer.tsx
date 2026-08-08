@@ -1,7 +1,9 @@
-import logo from '@/assets/logo.png';
+import defaultLogo from '@/assets/logo.png';
+import { useSiteImage } from '@/hooks/useSiteImages';
 import { FaInstagram, FaWhatsapp, FaFacebook } from 'react-icons/fa';
 
 export const Footer = () => {
+  const logo = useSiteImage('logo', defaultLogo);
   const currentYear = new Date().getFullYear();
 
   const footerLinks = [
