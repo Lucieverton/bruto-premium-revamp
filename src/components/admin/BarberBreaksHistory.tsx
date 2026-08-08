@@ -102,47 +102,87 @@ export const BarberBreaksHistory = ({ barbers }: { barbers: Option[] }) => {
             Nenhuma pausa registrada neste dia.
           </p>
         ) : (
-          <div className="space-y-2">
-            {data.map((b) => (
-              <div
-                key={b.id}
-                className="rounded-lg border border-border bg-muted/30 p-3 text-sm space-y-1"
-              >
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <span className="font-medium break-words">{b.barber_name}</span>
-                  <span
-                    className={
-                      b.ended_at
-                        ? 'text-xs text-muted-foreground'
-                        : 'text-xs font-medium text-warning'
-                    }
-                  >
-                    {b.ended_at ? 'Encerrada' : 'Em andamento'}
-                  </span>
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {summary.map((s) => (
+                <div
+                  key={s.name}
+                  className="rounded-lg border border-border bg-background p-3 text-sm"
+                >
+                  <p className="font-medium break-words">{s.name}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {s.count} {s.count === 1 ? 'pausa' : 'pausas'} · {formatDuration(s.minutes)} fora
+                  </p>
+                  {s.overruns > 0 && (
+                    <p className="flex items-center gap-1.5 text-xs font-medium text-destructive mt-1">
+                      <AlertTriangle size={12} /> {s.overruns}{' '}
+                      {s.overruns === 1 ? 'pausa estourada' : 'pausas estouradas'}
+                    </p>
+                  )}
                 </div>
-                <p className="text-muted-foreground break-words">
-                  {b.state === 'offline' ? 'Fora do expediente' : 'Pausa'} ·{' '}
-                  {reasonLabel(b.reason)}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {new Date(b.started_at).toLocaleTimeString('pt-BR', {
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  })}
-                  {' → '}
-                  {b.ended_at
-                    ? new Date(b.ended_at).toLocaleTimeString('pt-BR', {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })
-                    : 'agora'}{' '}
-                  · {formatDuration(b.duration_minutes)}
-                </p>
-                {b.note && <p className="text-xs text-muted-foreground break-words">“{b.note}”</p>}
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+
+            <p className="text-xs text-muted-foreground">
+              Considera-se estouro passar da previsão de retorno, ou ficar mais de{' '}
+              {PAUSE_LIMIT_MINUTES} min em pausa sem previsão.
+            </p>
+
+            <div className="space-y-2">
+              {data.map((b) => (
+                <div
+                  key={b.id}
+                  className={
+                    b.is_overrun
+                      ? 'rounded-lg border border-destructive/40 bg-destructive/5 p-3 text-sm space-y-1'
+                      : 'rounded-lg border border-border bg-muted/30 p-3 text-sm space-y-1'
+                  }
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <span className="font-medium break-words">{b.barber_name}</span>
+                    <span
+                      className={
+                        b.ended_at
+                          ? 'text-xs text-muted-foreground'
+                          : 'text-xs font-medium text-warning'
+                      }
+                    >
+                      {b.ended_at ? 'Encerrada' : 'Em andamento'}
+                    </span>
+                  </div>
+                  <p className="text-muted-foreground break-words">
+                    {b.state === 'offline' ? 'Fora do expediente' : 'Pausa'} ·{' '}
+                    {reasonLabel(b.reason)}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {new Date(b.started_at).toLocaleTimeString('pt-BR', {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
+                    {' → '}
+                    {b.ended_at
+                      ? new Date(b.ended_at).toLocaleTimeString('pt-BR', {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })
+                      : 'agora'}{' '}
+                    · {formatDuration(b.duration_minutes)}
+                  </p>
+                  {b.is_overrun && b.state !== 'offline' && (
+                    <p className="flex items-center gap-1.5 text-xs font-medium text-destructive">
+                      <AlertTriangle size={12} /> Estourou {formatDuration(b.overrun_minutes)} do
+                      previsto
+                    </p>
+                  )}
+                  {b.note && (
+                    <p className="text-xs text-muted-foreground break-words">“{b.note}”</p>
+                  )}
+                </div>
+              ))}
+            </div>
+          </>
         )}
+
       </CardContent>
     </Card>
   );
