@@ -9,7 +9,9 @@ import portfolio5 from '@/assets/portfolio5.png';
 import portfolio6 from '@/assets/portfolio6.png';
 import portfolio7 from '@/assets/portfolio7.png';
 
-const portfolioImages = [
+import { useSiteGallery } from '@/hooks/useSiteImages';
+
+const defaultPortfolioImages = [
   { src: portfolio1, alt: 'Corte profissional com design' },
   { src: portfolio2, alt: 'Trança estilizada com fade' },
   { src: portfolio3, alt: 'Fade com design artístico' },
@@ -20,6 +22,10 @@ const portfolioImages = [
 ];
 
 export const Portfolio = () => {
+  const { data: galleryItems } = useSiteGallery('portfolio');
+  const portfolioImages = galleryItems && galleryItems.length > 0
+    ? galleryItems.map((item) => ({ src: item.url, alt: item.title || 'Trabalho da Brutos Barbearia' }))
+    : defaultPortfolioImages;
   const [currentIndex, setCurrentIndex] = useState(0);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxImage, setLightboxImage] = useState('');
