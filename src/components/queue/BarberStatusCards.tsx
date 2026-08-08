@@ -21,7 +21,7 @@ const statusConfig: Record<BarberStatus, { label: string; color: string; icon: R
     icon: <Scissors size={12} className="text-destructive" />,
   },
   away: {
-    label: 'Ausente',
+    label: 'Em pausa',
     color: 'text-warning',
     bgColor: 'bg-gradient-to-br from-warning/20 to-warning/5 border-warning/40',
     dotColor: 'bg-warning',
@@ -72,7 +72,7 @@ export const BarberStatusCards = () => {
     }
     // Otherwise use the status from database
     if (barber.status === 'busy') return 'busy';
-    if (barber.status === 'away') return 'away';
+    if (barber.status === 'away' || barber.status === 'paused') return 'away';
     if (barber.is_available && barber.status === 'online') return 'online';
     return 'offline';
   };
