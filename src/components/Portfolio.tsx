@@ -266,6 +266,9 @@ export const Portfolio = () => {
             <ChevronRight size={24} />
           </Button>
         </div>
+        )}
+
+
 
         {maxIndex > 0 && (
           <div className="flex justify-center gap-2 mt-6">
