@@ -10,7 +10,8 @@ import {
   Menu,
   X,
   User,
-  Play
+  Play,
+  Globe
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
