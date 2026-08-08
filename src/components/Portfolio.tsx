@@ -66,6 +66,12 @@ export const Portfolio = () => {
   const totalSlides = portfolioImages.length;
   const maxIndex = Math.max(0, totalSlides - itemsPerView);
 
+  // Mantém o carrossel válido quando as fotos do painel mudam
+  useEffect(() => {
+    setCurrentIndex((prev) => Math.max(0, Math.min(prev, maxIndex)));
+  }, [maxIndex]);
+
+
   const goToSlide = (index: number) => {
     const clampedIndex = Math.max(0, Math.min(index, maxIndex));
     setCurrentIndex(clampedIndex);
