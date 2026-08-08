@@ -10,14 +10,16 @@ import {
   Menu,
   X,
   User,
-  Play
+  Play,
+  Globe
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToggleQueueActive } from '@/hooks/useAdminQueue';
 import { useQueueSettings } from '@/hooks/useQueue';
 import { Switch } from '@/components/ui/switch';
-import logo from '@/assets/logo.png';
+import defaultLogo from '@/assets/logo.png';
+import { useSiteImage } from '@/hooks/useSiteImages';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
@@ -29,17 +31,29 @@ interface AdminLayoutProps {
   children: ReactNode;
 }
 
+interface NavItem {
+  href: string;
+  icon: typeof Settings;
+  label: string;
+  children?: { href: string; icon: typeof Settings; label: string }[];
+}
+
 // Full nav items for admins
-const adminNavItems = [
+const adminNavItems: NavItem[] = [
   { href: '/admin', icon: LayoutDashboard, label: 'Fila' },
   { href: '/admin/barbeiros', icon: Users, label: 'Barbeiros' },
   { href: '/admin/servicos', icon: Scissors, label: 'Serviços' },
   { href: '/admin/financeiro', icon: DollarSign, label: 'Financeiro' },
-  { href: '/admin/configuracoes', icon: Settings, label: 'Configurações' },
+  {
+    href: '/admin/configuracoes',
+    icon: Settings,
+    label: 'Configurações',
+    children: [{ href: '/admin/site', icon: Globe, label: 'Meu site' }],
+  },
 ];
 
 // Limited nav items for barbers
-const barberNavItems = [
+const barberNavItems: NavItem[] = [
   { href: '/admin/atendimento', icon: Play, label: 'Atendimento' },
   { href: '/admin', icon: LayoutDashboard, label: 'Fila' },
   { href: '/admin/meu-financeiro', icon: DollarSign, label: 'Financeiro' },
@@ -52,6 +66,7 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const logo = useSiteImage('logo', defaultLogo);
   const { data: settings } = useQueueSettings();
   const toggleQueue = useToggleQueueActive();
 
@@ -128,6 +143,7 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
             {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
           </Button>
           <img src={logo} alt="Brutos" className="h-8 w-auto" />
+
         </div>
 
         {isAdmin && (
@@ -168,23 +184,44 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
           {navItems.map((item) => {
             const isActive = location.pathname === item.href;
             return (
-              <Link
-                key={item.href}
-                to={item.href}
-                onClick={() => setSidebarOpen(false)}
-                className={cn(
-                  'flex items-center gap-3 px-4 py-3 rounded-lg transition-colors',
-                  isActive 
-                    ? 'bg-primary text-primary-foreground' 
-                    : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-                )}
-              >
-                <item.icon size={20} />
-                <span>{item.label}</span>
-              </Link>
+              <div key={item.href}>
+                <Link
+                  to={item.href}
+                  onClick={() => setSidebarOpen(false)}
+                  className={cn(
+                    'flex items-center gap-3 px-4 py-3 rounded-lg transition-colors',
+                    isActive 
+                      ? 'bg-primary text-primary-foreground' 
+                      : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                  )}
+                >
+                  <item.icon size={20} />
+                  <span>{item.label}</span>
+                </Link>
+                {'children' in item && item.children?.map((sub) => {
+                  const subActive = location.pathname === sub.href;
+                  return (
+                    <Link
+                      key={sub.href}
+                      to={sub.href}
+                      onClick={() => setSidebarOpen(false)}
+                      className={cn(
+                        'flex items-center gap-3 pl-10 pr-4 py-2 mt-1 rounded-lg text-sm transition-colors',
+                        subActive
+                          ? 'bg-primary/15 text-primary'
+                          : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                      )}
+                    >
+                      <sub.icon size={16} />
+                      <span>{sub.label}</span>
+                    </Link>
+                  );
+                })}
+              </div>
             );
           })}
         </nav>
+
 
         <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-border">
           {isAdmin && (

@@ -7,9 +7,11 @@ import { cn } from '@/lib/utils';
 import { QueueSectionCard } from './QueueSectionCard';
 
 // Empty state chair icon
-import chairImage from '@/assets/cadeira-chamando.jpeg';
+import defaultChairImage from '@/assets/cadeira-chamando.jpeg';
+import { useSiteImage } from '@/hooks/useSiteImages';
 
 export const QueueListPanel = () => {
+  const chairImage = useSiteImage('queue_chair', defaultChairImage);
   const { data: queue, isLoading } = usePublicQueue();
   const myTicketId = getMyTicket();
   

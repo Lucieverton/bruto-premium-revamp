@@ -1,7 +1,9 @@
 import { Link } from 'react-router-dom';
-import logo from '@/assets/logo.png';
+import defaultLogo from '@/assets/logo.png';
+import { useSiteImage } from '@/hooks/useSiteImages';
 
 export const QueueHeader = () => {
+  const logo = useSiteImage('logo', defaultLogo);
   return (
     <header className="bg-background border-b border-border py-4 px-5">
       <div className="max-w-[1600px] mx-auto flex items-center justify-between">

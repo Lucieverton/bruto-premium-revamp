@@ -603,6 +603,69 @@ export type Database = {
         }
         Relationships: []
       }
+      site_gallery_items: {
+        Row: {
+          created_at: string
+          description: string | null
+          gallery: string
+          id: string
+          is_active: boolean
+          sort_order: number
+          title: string | null
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          gallery: string
+          id?: string
+          is_active?: boolean
+          sort_order?: number
+          title?: string | null
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          gallery?: string
+          id?: string
+          is_active?: boolean
+          sort_order?: number
+          title?: string | null
+          updated_at?: string
+          url?: string
+        }
+        Relationships: []
+      }
+      site_images: {
+        Row: {
+          alt: string | null
+          created_at: string
+          id: string
+          slot: string
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          alt?: string | null
+          created_at?: string
+          id?: string
+          slot: string
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          alt?: string | null
+          created_at?: string
+          id?: string
+          slot?: string
+          updated_at?: string
+          url?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
