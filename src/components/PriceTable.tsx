@@ -16,6 +16,8 @@ interface Service {
 }
 
 export const PriceTable = () => {
+  const { data: produtos } = useSiteGallery('produtos');
+  const produtos1 = produtos?.[0]?.url || defaultProdutos1;
   const sectionRef = useRef<HTMLElement>(null);
 
   const { data: services, isLoading } = useQuery({
