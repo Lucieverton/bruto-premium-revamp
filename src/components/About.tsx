@@ -1,8 +1,11 @@
 import { useEffect, useRef } from 'react';
-import barbershopFront from '@/assets/barbershop-front-nobg.png';
-import barbershopInterior from '@/assets/barbershop-interior.jpg';
+import defaultBarbershopFront from '@/assets/barbershop-front-nobg.png';
+import defaultBarbershopInterior from '@/assets/barbershop-interior.jpg';
+import { useSiteImage } from '@/hooks/useSiteImages';
 import { Card3DFlip } from './Card3DFlip';
 export const About = () => {
+  const barbershopFront = useSiteImage('about_front', defaultBarbershopFront);
+  const barbershopInterior = useSiteImage('about_interior', defaultBarbershopInterior);
   const sectionRef = useRef<HTMLElement>(null);
   useEffect(() => {
     const observer = new IntersectionObserver(entries => {
