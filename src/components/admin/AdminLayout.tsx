@@ -170,23 +170,44 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
           {navItems.map((item) => {
             const isActive = location.pathname === item.href;
             return (
-              <Link
-                key={item.href}
-                to={item.href}
-                onClick={() => setSidebarOpen(false)}
-                className={cn(
-                  'flex items-center gap-3 px-4 py-3 rounded-lg transition-colors',
-                  isActive 
-                    ? 'bg-primary text-primary-foreground' 
-                    : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-                )}
-              >
-                <item.icon size={20} />
-                <span>{item.label}</span>
-              </Link>
+              <div key={item.href}>
+                <Link
+                  to={item.href}
+                  onClick={() => setSidebarOpen(false)}
+                  className={cn(
+                    'flex items-center gap-3 px-4 py-3 rounded-lg transition-colors',
+                    isActive 
+                      ? 'bg-primary text-primary-foreground' 
+                      : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                  )}
+                >
+                  <item.icon size={20} />
+                  <span>{item.label}</span>
+                </Link>
+                {'children' in item && item.children?.map((sub) => {
+                  const subActive = location.pathname === sub.href;
+                  return (
+                    <Link
+                      key={sub.href}
+                      to={sub.href}
+                      onClick={() => setSidebarOpen(false)}
+                      className={cn(
+                        'flex items-center gap-3 pl-10 pr-4 py-2 mt-1 rounded-lg text-sm transition-colors',
+                        subActive
+                          ? 'bg-primary/15 text-primary'
+                          : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                      )}
+                    >
+                      <sub.icon size={16} />
+                      <span>{sub.label}</span>
+                    </Link>
+                  );
+                })}
+              </div>
             );
           })}
         </nav>
+
 
         <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-border">
           {isAdmin && (
