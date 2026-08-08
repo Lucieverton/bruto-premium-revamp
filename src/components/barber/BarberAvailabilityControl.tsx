@@ -18,9 +18,12 @@ import {
   PAUSE_REASONS,
   reasonLabel,
   useSetBarberAvailability,
+  useBarberBreaksRealtime,
   minutesSince,
   formatDuration,
+  pauseOverrunMinutes,
 } from '@/hooks/useBarberAvailability';
+
 
 interface BarberLike {
   id: string;
