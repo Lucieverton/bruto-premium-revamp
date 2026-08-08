@@ -551,6 +551,10 @@ const AdminBarbeiros = () => {
           </div>
         )}
 
+        <BarberBreaksHistory barbers={barbers ?? []} />
+
+
+
         <AlertDialog open={!!deleteBarber} onOpenChange={() => setDeleteBarber(null)}>
           <AlertDialogContent>
             <AlertDialogHeader>
