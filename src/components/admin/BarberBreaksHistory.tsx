@@ -34,11 +34,27 @@ export const BarberBreaksHistory = ({ barbers }: { barbers: Option[] }) => {
   const [day, setDay] = useState(today);
   const [barberId, setBarberId] = useState<string>('all');
 
+  useBarberBreaksRealtime();
+
   const { data, isLoading } = useBarberBreaks(
     toDate(day),
     toDate(day, true),
     barberId === 'all' ? null : barberId
   );
+
+  const summary = useMemo(() => {
+    const rows = data ?? [];
+    const byBarber = new Map<string, { name: string; count: number; minutes: number; overruns: number }>();
+    for (const b of rows) {
+      const cur = byBarber.get(b.barber_id) ?? { name: b.barber_name, count: 0, minutes: 0, overruns: 0 };
+      cur.count += 1;
+      cur.minutes += b.duration_minutes;
+      if (b.is_overrun) cur.overruns += 1;
+      byBarber.set(b.barber_id, cur);
+    }
+    return Array.from(byBarber.values()).sort((a, b) => b.minutes - a.minutes);
+  }, [data]);
+
 
   return (
     <Card>
