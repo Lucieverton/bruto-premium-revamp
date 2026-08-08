@@ -40,38 +40,9 @@ const MeuPerfil = () => {
     enabled: !!user?.id,
   });
 
-  const toggleAvailability = useMutation({
-    mutationFn: async (is_available: boolean) => {
-      if (!barber?.id) throw new Error('Barbeiro não encontrado');
-      
-      // Update both is_available AND status field for real-time sync
-      const { error } = await supabase
-        .from('barbers')
-        .update({ 
-          is_available,
-          status: is_available ? 'online' : 'offline'
-        })
-        .eq('id', barber.id);
-      
-      if (error) throw error;
-    },
-    onSuccess: (_, is_available) => {
-      // Force immediate refetch for real-time sync
-      queryClient.refetchQueries({ queryKey: ['my-barber-profile'] });
-      queryClient.refetchQueries({ queryKey: ['barbers'] });
-      queryClient.refetchQueries({ queryKey: ['public-barbers'] });
-      queryClient.refetchQueries({ queryKey: ['admin-barbers'] });
-      toast({ 
-        title: is_available ? 'Agora você está online!' : 'Você está offline',
-        description: is_available 
-          ? 'Clientes podem ver você disponível na fila.' 
-          : 'Você aparecerá como offline na fila.',
-      });
-    },
-    onError: (error: Error) => {
-      toast({ title: 'Erro', description: error.message, variant: 'destructive' });
-    },
-  });
+  // Disponibilidade/pausas são controladas em BarberAvailabilityControl (RPC barber_set_availability)
+
+
 
   const handleAvatarUpdate = (newUrl: string) => {
     queryClient.invalidateQueries({ queryKey: ['my-barber-profile'] });
