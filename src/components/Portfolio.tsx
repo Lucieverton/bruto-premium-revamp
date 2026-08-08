@@ -1,31 +1,15 @@
 import { useState, useEffect, useRef } from 'react';
 import { ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import portfolio1 from '@/assets/portfolio1.png';
-import portfolio2 from '@/assets/portfolio2.png';
-import portfolio3 from '@/assets/portfolio3.png';
-import portfolio4 from '@/assets/portfolio4.png';
-import portfolio5 from '@/assets/portfolio5.png';
-import portfolio6 from '@/assets/portfolio6.png';
-import portfolio7 from '@/assets/portfolio7.png';
-
 import { useSiteGallery } from '@/hooks/useSiteImages';
 
-const defaultPortfolioImages = [
-  { src: portfolio1, alt: 'Corte profissional com design' },
-  { src: portfolio2, alt: 'Trança estilizada com fade' },
-  { src: portfolio3, alt: 'Fade com design artístico' },
-  { src: portfolio4, alt: 'Corte platinado elegante' },
-  { src: portfolio5, alt: 'Corte infantil com degradê' },
-  { src: portfolio6, alt: 'Design criativo com degradê' },
-  { src: portfolio7, alt: 'Fade artístico com design' },
-];
-
 export const Portfolio = () => {
-  const { data: galleryItems } = useSiteGallery('portfolio');
-  const portfolioImages = galleryItems && galleryItems.length > 0
-    ? galleryItems.map((item) => ({ src: item.url, alt: item.title || 'Trabalho da Brutos Barbearia' }))
-    : defaultPortfolioImages;
+  const { data: galleryItems, isLoading } = useSiteGallery('portfolio');
+  const portfolioImages = (galleryItems ?? []).map((item) => ({
+    src: item.url,
+    alt: item.title || 'Trabalho da Brutos Barbearia',
+  }));
+
   const [currentIndex, setCurrentIndex] = useState(0);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxImage, setLightboxImage] = useState('');
@@ -81,6 +65,12 @@ export const Portfolio = () => {
 
   const totalSlides = portfolioImages.length;
   const maxIndex = Math.max(0, totalSlides - itemsPerView);
+
+  // Mantém o carrossel válido quando as fotos do painel mudam
+  useEffect(() => {
+    setCurrentIndex((prev) => Math.max(0, Math.min(prev, maxIndex)));
+  }, [maxIndex]);
+
 
   const goToSlide = (index: number) => {
     const clampedIndex = Math.max(0, Math.min(index, maxIndex));
@@ -200,7 +190,19 @@ export const Portfolio = () => {
           </p>
         </div>
 
+        {isLoading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="w-full aspect-[4/5] rounded-lg bg-muted animate-pulse" />
+            ))}
+          </div>
+        ) : totalSlides === 0 ? (
+          <p className="text-center text-muted-foreground py-10">
+            Em breve novas fotos dos nossos trabalhos.
+          </p>
+        ) : (
         <div className="relative">
+
           <div 
             className="overflow-hidden cursor-grab active:cursor-grabbing"
             ref={carouselRef}
@@ -264,6 +266,9 @@ export const Portfolio = () => {
             <ChevronRight size={24} />
           </Button>
         </div>
+        )}
+
+
 
         {maxIndex > 0 && (
           <div className="flex justify-center gap-2 mt-6">
