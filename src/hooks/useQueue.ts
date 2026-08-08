@@ -172,7 +172,11 @@ export interface PublicBarber {
   specialty: string | null;
   is_available: boolean;
   avatar_url: string | null;
+  pause_reason?: string | null;
+  pause_expected_return?: string | null;
+  status_changed_at?: string | null;
 }
+
 
 // Fetch barbers (for authenticated staff - full data)
 export const useBarbers = () => {
