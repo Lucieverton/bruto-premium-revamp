@@ -11,6 +11,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { AvatarUpload } from '@/components/profile/AvatarUpload';
 import { WhatsAppNumberForm } from '@/components/profile/WhatsAppNumberForm';
+import { BarberAvailabilityControl } from '@/components/barber/BarberAvailabilityControl';
+
 
 import { requestPushPermission, sendTestNotification } from '@/lib/pwa';
 import { motion } from 'framer-motion';
