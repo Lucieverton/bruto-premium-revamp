@@ -1,11 +1,15 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import logo from '@/assets/logo.png';
-import menuIcon from '@/assets/menu-icon.png';
-import closeIcon from '@/assets/close-icon.png';
+import defaultLogo from '@/assets/logo.png';
+import defaultMenuIcon from '@/assets/menu-icon.png';
+import defaultCloseIcon from '@/assets/close-icon.png';
+import { useSiteImage } from '@/hooks/useSiteImages';
 
 export const Navbar = () => {
+  const logo = useSiteImage('logo', defaultLogo);
+  const menuIcon = useSiteImage('menu_icon', defaultMenuIcon);
+  const closeIcon = useSiteImage('close_icon', defaultCloseIcon);
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [displayedText, setDisplayedText] = useState('');
