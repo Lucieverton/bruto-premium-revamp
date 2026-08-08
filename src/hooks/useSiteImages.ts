@@ -45,7 +45,10 @@ export const useSiteImages = () => {
       });
       return map;
     },
-    staleTime: 60_000,
+    staleTime: 5 * 60_000,
+    gcTime: 30 * 60_000,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
   });
 };
 
@@ -69,9 +72,13 @@ export const useSiteGallery = (gallery: 'portfolio' | 'produtos', onlyActive = t
       if (error) throw error;
       return (data || []) as GalleryItem[];
     },
-    staleTime: 60_000,
+    staleTime: 5 * 60_000,
+    gcTime: 30 * 60_000,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
   });
 };
+
 
 export const uploadSiteImage = async (blob: Blob, name: string) => {
   const ext = blob.type === 'image/png' ? 'png' : 'webp';
