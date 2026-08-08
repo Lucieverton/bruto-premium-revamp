@@ -66,6 +66,7 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const logo = useSiteImage('logo', defaultLogo);
   const { data: settings } = useQueueSettings();
   const toggleQueue = useToggleQueueActive();
 
