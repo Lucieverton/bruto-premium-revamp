@@ -53,7 +53,7 @@ const adminNavItems: NavItem[] = [
 ];
 
 // Limited nav items for barbers
-const barberNavItems = [
+const barberNavItems: NavItem[] = [
   { href: '/admin/atendimento', icon: Play, label: 'Atendimento' },
   { href: '/admin', icon: LayoutDashboard, label: 'Fila' },
   { href: '/admin/meu-financeiro', icon: DollarSign, label: 'Financeiro' },
