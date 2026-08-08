@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { History, Loader2 } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { History, Loader2, AlertTriangle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -10,7 +10,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { useBarberBreaks, reasonLabel, formatDuration } from '@/hooks/useBarberAvailability';
+import {
+  useBarberBreaks,
+  useBarberBreaksRealtime,
+  reasonLabel,
+  formatDuration,
+  PAUSE_LIMIT_MINUTES,
+} from '@/hooks/useBarberAvailability';
+
 
 interface Option {
   id: string;
