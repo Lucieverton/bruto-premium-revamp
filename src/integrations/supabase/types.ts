@@ -783,7 +783,9 @@ export type Database = {
           ended_at: string
           expected_return: string
           id: string
+          is_overrun: boolean
           note: string
+          overrun_minutes: number
           reason: string
           started_at: string
           state: string

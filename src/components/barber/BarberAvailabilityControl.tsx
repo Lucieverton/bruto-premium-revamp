@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Coffee, UserCheck, UserX, Loader2, Info, Play } from 'lucide-react';
+import { Coffee, UserCheck, UserX, Loader2, Info, Play, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
@@ -18,9 +18,12 @@ import {
   PAUSE_REASONS,
   reasonLabel,
   useSetBarberAvailability,
+  useBarberBreaksRealtime,
   minutesSince,
   formatDuration,
+  pauseOverrunMinutes,
 } from '@/hooks/useBarberAvailability';
+
 
 interface BarberLike {
   id: string;
@@ -47,10 +50,14 @@ export const BarberAvailabilityControl = ({ barber }: { barber: BarberLike }) =>
   const [note, setNote] = useState('');
   const [expected, setExpected] = useState<number>(30);
 
+  useBarberBreaksRealtime();
+
   const isInService = barber.status === 'busy';
   const isPaused = barber.status === 'paused';
   const isAvailable = barber.status === 'online' && barber.is_available;
   const elapsed = minutesSince(barber.status_changed_at);
+  const overrun = pauseOverrunMinutes(barber);
+
 
   const state = isInService ? 'busy' : isPaused ? 'paused' : isAvailable ? 'available' : 'offline';
 
@@ -117,6 +124,22 @@ export const BarberAvailabilityControl = ({ barber }: { barber: BarberLike }) =>
           </p>
         </div>
       </div>
+
+      {overrun > 0 && (
+        <p className="flex items-start gap-2 rounded-lg border border-destructive/40 bg-destructive/10 p-2 text-xs font-medium text-destructive">
+          <AlertTriangle size={14} className="mt-0.5 shrink-0" />
+          Sua pausa passou {formatDuration(overrun)} do previsto. O administrador consegue ver esse
+          atraso.
+        </p>
+      )}
+
+      {isInService && (
+        <p className="flex items-start gap-2 rounded-lg border border-border bg-background/60 p-2 text-xs text-muted-foreground">
+          <Info size={14} className="mt-0.5 shrink-0" />
+          Finalize o cliente que está atendendo para poder entrar em pausa ou encerrar o expediente.
+        </p>
+      )}
+
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
         <Button
