@@ -1,61 +1,93 @@
 import { useEffect, useRef } from 'react';
 import defaultBarbershopFront from '@/assets/barbershop-front-nobg.png';
 import defaultBarbershopInterior from '@/assets/barbershop-interior.jpg';
-import { useSiteImage } from '@/hooks/useSiteImages';
+import { useSiteImage, useSiteText } from '@/hooks/useSiteImages';
+import { ABOUT_DEFAULTS } from '@/lib/siteAboutDefaults';
 import { Card3DFlip } from './Card3DFlip';
+
 export const About = () => {
   const barbershopFront = useSiteImage('about_front', defaultBarbershopFront);
   const barbershopInterior = useSiteImage('about_interior', defaultBarbershopInterior);
+
+  const title = useSiteText('about_title', ABOUT_DEFAULTS.about_title);
+  const caption1 = useSiteText('about_caption_1', ABOUT_DEFAULTS.about_caption_1);
+  const caption2 = useSiteText('about_caption_2', ABOUT_DEFAULTS.about_caption_2);
+  const p1 = useSiteText('about_p1', ABOUT_DEFAULTS.about_p1);
+  const p2 = useSiteText('about_p2', ABOUT_DEFAULTS.about_p2);
+  const p3 = useSiteText('about_p3', ABOUT_DEFAULTS.about_p3);
+  const highlight = useSiteText('about_highlight', ABOUT_DEFAULTS.about_highlight);
+
   const sectionRef = useRef<HTMLElement>(null);
+
   useEffect(() => {
-    const observer = new IntersectionObserver(entries => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('animate-fadeInUp');
-        }
-      });
-    }, {
-      threshold: 0.1
-    });
-    if (sectionRef.current) {
-      observer.observe(sectionRef.current);
-    }
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('animate-fadeInUp');
+          }
+        });
+      },
+      { threshold: 0.1 },
+    );
+    const el = sectionRef.current;
+    if (el) observer.observe(el);
     return () => {
-      if (sectionRef.current) {
-        observer.unobserve(sectionRef.current);
-      }
+      if (el) observer.unobserve(el);
     };
   }, []);
-  return <section id="sobre" ref={sectionRef} className="py-12 md:py-16 px-5 bg-background">
+
+  return (
+    <section id="sobre" ref={sectionRef} className="py-12 md:py-16 px-5 bg-background">
       <div className="max-w-[900px] mx-auto">
         <h2 className="font-display text-3xl md:text-4xl lg:text-5xl text-center mb-16 uppercase relative inline-block left-1/2 -translate-x-1/2">
-          Sobre nós
+          {title}
           <span className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-16 h-1 bg-primary rounded" />
         </h2>
-        
-        <div className="space-y-12">
+
+        <div className="space-y-10">
           {/* Card 3D Flip */}
-          <Card3DFlip frontImage={barbershopFront} backImage={barbershopInterior} frontAlt="Fachada da Barbearia Brutos" backAlt="Interior da Barbearia Brutos" />
-          
-          {/* Texto Principal */}
+          <div className="space-y-3">
+            <Card3DFlip
+              frontImage={barbershopFront}
+              backImage={barbershopInterior}
+              frontAlt={caption1}
+              backAlt={caption2}
+            />
+            {(caption1 || caption2) && (
+              <p className="text-center text-sm text-muted-foreground break-words px-4">
+                {caption1}
+                {caption1 && caption2 && <span className="mx-2 text-primary">•</span>}
+                {caption2}
+              </p>
+            )}
+          </div>
+
+          {/* Textos configuráveis */}
           <div className="space-y-6 text-center max-w-[800px] mx-auto px-4">
-            <p className="text-muted-foreground text-lg md:text-xl leading-relaxed">
-              Na <strong className="text-foreground font-bold">Brutos Barbearia</strong>, tradição e modernidade caminham lado a lado!
-            </p>
-            
-            <p className="text-muted-foreground text-base md:text-lg leading-relaxed">
-              Nosso time é formado por dois excelentes profissionais que seguem o padrão Brutos de qualidade: <strong className="text-foreground font-bold">PAULO</strong> e <strong className="text-foreground font-bold">DG</strong>. Eles estão prontos para atender você com toda a dedicação e habilidade, garantindo um visual que reflete sua personalidade.
-            </p>
-            
-            <p className="text-muted-foreground text-base md:text-lg leading-relaxed">
-              Mas aqui não é apenas sobre cabelo. É sobre <strong className="text-foreground font-bold">atitude</strong>, <strong className="text-foreground font-bold">identidade</strong> e aquele papo descontraído que só rola na barbearia.
-            </p>
-            
-            <p className="text-lg md:text-xl font-semibold text-primary mt-8">
-              Venha pra Brutos e sinta a diferença!
-            </p>
+            {p1 && (
+              <p className="text-foreground text-lg md:text-xl leading-relaxed whitespace-pre-line break-words">
+                {p1}
+              </p>
+            )}
+            {p2 && (
+              <p className="text-muted-foreground text-base md:text-lg leading-relaxed whitespace-pre-line break-words">
+                {p2}
+              </p>
+            )}
+            {p3 && (
+              <p className="text-muted-foreground text-base md:text-lg leading-relaxed whitespace-pre-line break-words">
+                {p3}
+              </p>
+            )}
+            {highlight && (
+              <p className="text-lg md:text-xl font-semibold text-primary mt-8 break-words">
+                {highlight}
+              </p>
+            )}
           </div>
         </div>
       </div>
-    </section>;
+    </section>
+  );
 };

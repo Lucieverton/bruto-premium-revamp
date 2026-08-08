@@ -4,14 +4,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ImageSlotCard } from '@/components/admin/ImageSlotCard';
 import { GalleryManager } from '@/components/admin/GalleryManager';
+import { AboutSectionManager } from '@/components/admin/AboutSectionManager';
 
 import logo from '@/assets/logo.png';
 import menuIcon from '@/assets/menu-icon.png';
 import closeIcon from '@/assets/close-icon.png';
 import heroBg from '@/assets/hero-bg.jpg';
 import heroMobile from '@/assets/hero-mobile.jpg';
-import barbershopFront from '@/assets/barbershop-front-nobg.png';
-import barbershopInterior from '@/assets/barbershop-interior.jpg';
 import cadeiraChamando from '@/assets/cadeira-chamando.jpeg';
 
 const AdminMeuSite = () => {
@@ -96,25 +95,7 @@ const AdminMeuSite = () => {
           </TabsContent>
 
           <TabsContent value="sobre" className="mt-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <ImageSlotCard
-                slot="about_front"
-                label="Fachada da barbearia"
-                description="Frente do cartão 3D da seção Sobre nós"
-                fallback={barbershopFront}
-                aspect={4 / 3}
-                aspectLabel="4:3"
-                transparent
-              />
-              <ImageSlotCard
-                slot="about_interior"
-                label="Interior da barbearia"
-                description="Verso do cartão 3D da seção Sobre nós"
-                fallback={barbershopInterior}
-                aspect={4 / 3}
-                aspectLabel="4:3"
-              />
-            </div>
+            <AboutSectionManager />
           </TabsContent>
 
           <TabsContent value="trabalho" className="mt-4">
