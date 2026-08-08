@@ -125,6 +125,22 @@ export const BarberAvailabilityControl = ({ barber }: { barber: BarberLike }) =>
         </div>
       </div>
 
+      {overrun > 0 && (
+        <p className="flex items-start gap-2 rounded-lg border border-destructive/40 bg-destructive/10 p-2 text-xs font-medium text-destructive">
+          <AlertTriangle size={14} className="mt-0.5 shrink-0" />
+          Sua pausa passou {formatDuration(overrun)} do previsto. O administrador consegue ver esse
+          atraso.
+        </p>
+      )}
+
+      {isInService && (
+        <p className="flex items-start gap-2 rounded-lg border border-border bg-background/60 p-2 text-xs text-muted-foreground">
+          <Info size={14} className="mt-0.5 shrink-0" />
+          Finalize o cliente que está atendendo para poder entrar em pausa ou encerrar o expediente.
+        </p>
+      )}
+
+
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
         <Button
           size="sm"
