@@ -153,6 +153,56 @@ export type Database = {
         }
         Relationships: []
       }
+      barber_breaks: {
+        Row: {
+          barber_id: string
+          created_at: string
+          ended_at: string | null
+          ended_by: string | null
+          expected_return: string | null
+          id: string
+          note: string | null
+          reason: string
+          started_at: string
+          state: string
+          updated_at: string
+        }
+        Insert: {
+          barber_id: string
+          created_at?: string
+          ended_at?: string | null
+          ended_by?: string | null
+          expected_return?: string | null
+          id?: string
+          note?: string | null
+          reason?: string
+          started_at?: string
+          state?: string
+          updated_at?: string
+        }
+        Update: {
+          barber_id?: string
+          created_at?: string
+          ended_at?: string | null
+          ended_by?: string | null
+          expected_return?: string | null
+          id?: string
+          note?: string | null
+          reason?: string
+          started_at?: string
+          state?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "barber_breaks_barber_id_fkey"
+            columns: ["barber_id"]
+            isOneToOne: false
+            referencedRelation: "barbers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       barbers: {
         Row: {
           avatar_url: string | null
@@ -163,8 +213,13 @@ export type Database = {
           id: string
           is_active: boolean
           is_available: boolean
+          pause_expected_return: string | null
+          pause_note: string | null
+          pause_reason: string | null
           specialty: string | null
           status: string
+          status_before_service: string | null
+          status_changed_at: string
           user_id: string | null
           whatsapp_number: string | null
         }
@@ -177,8 +232,13 @@ export type Database = {
           id?: string
           is_active?: boolean
           is_available?: boolean
+          pause_expected_return?: string | null
+          pause_note?: string | null
+          pause_reason?: string | null
           specialty?: string | null
           status?: string
+          status_before_service?: string | null
+          status_changed_at?: string
           user_id?: string | null
           whatsapp_number?: string | null
         }
@@ -191,8 +251,13 @@ export type Database = {
           id?: string
           is_active?: boolean
           is_available?: boolean
+          pause_expected_return?: string | null
+          pause_note?: string | null
+          pause_reason?: string | null
           specialty?: string | null
           status?: string
+          status_before_service?: string | null
+          status_changed_at?: string
           user_id?: string | null
           whatsapp_number?: string | null
         }
@@ -616,6 +681,10 @@ export type Database = {
               ticket_number: string
             }[]
           }
+      admin_force_barber_status: {
+        Args: { p_barber_id: string; p_state: string }
+        Returns: boolean
+      }
       approve_queue_request: {
         Args: { p_notes?: string; p_request_id: string }
         Returns: string
@@ -660,6 +729,16 @@ export type Database = {
         }
         Returns: boolean
       }
+      barber_set_availability: {
+        Args: {
+          p_barber_id: string
+          p_expected_return?: string
+          p_note?: string
+          p_reason?: string
+          p_state: string
+        }
+        Returns: boolean
+      }
       barber_start_service: {
         Args: { p_barber_id: string; p_ticket_id: string }
         Returns: boolean
@@ -695,6 +774,21 @@ export type Database = {
           services: Json
         }[]
       }
+      get_barber_breaks: {
+        Args: { p_barber_id?: string; p_end: string; p_start: string }
+        Returns: {
+          barber_id: string
+          barber_name: string
+          duration_minutes: number
+          ended_at: string
+          expected_return: string
+          id: string
+          note: string
+          reason: string
+          started_at: string
+          state: string
+        }[]
+      }
       get_barber_queue: {
         Args: { p_barber_id: string }
         Returns: {
@@ -717,8 +811,11 @@ export type Database = {
           display_name: string
           id: string
           is_available: boolean
+          pause_expected_return: string
+          pause_reason: string
           specialty: string
           status: string
+          status_changed_at: string
         }[]
       }
       get_public_queue: {
