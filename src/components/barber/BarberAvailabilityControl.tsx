@@ -50,10 +50,14 @@ export const BarberAvailabilityControl = ({ barber }: { barber: BarberLike }) =>
   const [note, setNote] = useState('');
   const [expected, setExpected] = useState<number>(30);
 
+  useBarberBreaksRealtime();
+
   const isInService = barber.status === 'busy';
   const isPaused = barber.status === 'paused';
   const isAvailable = barber.status === 'online' && barber.is_available;
   const elapsed = minutesSince(barber.status_changed_at);
+  const overrun = pauseOverrunMinutes(barber);
+
 
   const state = isInService ? 'busy' : isPaused ? 'paused' : isAvailable ? 'available' : 'offline';
 
