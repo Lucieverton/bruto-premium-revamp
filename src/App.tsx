@@ -16,6 +16,7 @@ import AdminMeuPerfil from "./pages/admin/MeuPerfil";
 import AdminMeuFinanceiro from "./pages/admin/MeuFinanceiro";
 import AdminAtendimento from "./pages/admin/Atendimento";
 import AdminContaConfig from "./pages/admin/ContaConfig";
+import AdminMeuSite from "./pages/admin/MeuSite";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
