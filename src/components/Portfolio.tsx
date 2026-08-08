@@ -1,31 +1,15 @@
 import { useState, useEffect, useRef } from 'react';
 import { ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import portfolio1 from '@/assets/portfolio1.png';
-import portfolio2 from '@/assets/portfolio2.png';
-import portfolio3 from '@/assets/portfolio3.png';
-import portfolio4 from '@/assets/portfolio4.png';
-import portfolio5 from '@/assets/portfolio5.png';
-import portfolio6 from '@/assets/portfolio6.png';
-import portfolio7 from '@/assets/portfolio7.png';
-
 import { useSiteGallery } from '@/hooks/useSiteImages';
 
-const defaultPortfolioImages = [
-  { src: portfolio1, alt: 'Corte profissional com design' },
-  { src: portfolio2, alt: 'Trança estilizada com fade' },
-  { src: portfolio3, alt: 'Fade com design artístico' },
-  { src: portfolio4, alt: 'Corte platinado elegante' },
-  { src: portfolio5, alt: 'Corte infantil com degradê' },
-  { src: portfolio6, alt: 'Design criativo com degradê' },
-  { src: portfolio7, alt: 'Fade artístico com design' },
-];
-
 export const Portfolio = () => {
-  const { data: galleryItems } = useSiteGallery('portfolio');
-  const portfolioImages = galleryItems && galleryItems.length > 0
-    ? galleryItems.map((item) => ({ src: item.url, alt: item.title || 'Trabalho da Brutos Barbearia' }))
-    : defaultPortfolioImages;
+  const { data: galleryItems, isLoading } = useSiteGallery('portfolio');
+  const portfolioImages = (galleryItems ?? []).map((item) => ({
+    src: item.url,
+    alt: item.title || 'Trabalho da Brutos Barbearia',
+  }));
+
   const [currentIndex, setCurrentIndex] = useState(0);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxImage, setLightboxImage] = useState('');
