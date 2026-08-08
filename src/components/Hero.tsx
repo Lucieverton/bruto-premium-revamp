@@ -1,7 +1,10 @@
 import { ChevronDown } from "lucide-react";
-import heroImage from "@/assets/hero-bg.jpg";
-import heroMobileImage from "@/assets/hero-mobile.jpg";
+import defaultHeroImage from "@/assets/hero-bg.jpg";
+import defaultHeroMobileImage from "@/assets/hero-mobile.jpg";
+import { useSiteImage } from "@/hooks/useSiteImages";
 export const Hero = () => {
+  const heroImage = useSiteImage("hero_desktop", defaultHeroImage);
+  const heroMobileImage = useSiteImage("hero_mobile", defaultHeroMobileImage);
   return <header className="relative h-[100svh] md:h-[calc(100vh-100px)] w-full flex items-center justify-center overflow-hidden bg-black">
       {/* Background Mobile - Otimizado para telas pequenas */}
       <div className="absolute inset-0 md:hidden" style={{
