@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button';
 import { Scissors, Loader2 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import defaultProdutos1 from '@/assets/produtos1.png';
 import { useSiteGallery } from '@/hooks/useSiteImages';
 
 interface Service {
@@ -16,8 +15,8 @@ interface Service {
 }
 
 export const PriceTable = () => {
-  const { data: produtos } = useSiteGallery('produtos');
-  const produtos1 = produtos?.[0]?.url || defaultProdutos1;
+  const { data: produtos, isLoading: produtosLoading } = useSiteGallery('produtos');
+
   const sectionRef = useRef<HTMLElement>(null);
 
   const { data: services, isLoading } = useQuery({
