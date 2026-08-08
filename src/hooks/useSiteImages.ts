@@ -173,3 +173,44 @@ export const useReorderGalleryItem = () => {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['site-gallery'] }),
   });
 };
+
+/* ---------------------------- Site texts ---------------------------- */
+
+export const useSiteTexts = () => {
+  return useQuery({
+    queryKey: ['site-texts'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('site_texts').select('key, value');
+      if (error) throw error;
+      const map: Record<string, string> = {};
+      (data || []).forEach((row: { key: string; value: string }) => {
+        map[row.key] = row.value;
+      });
+      return map;
+    },
+    staleTime: 5 * 60_000,
+    gcTime: 30 * 60_000,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+  });
+};
+
+/** Returns the saved text for a key, or the provided fallback. */
+export const useSiteText = (key: string, fallback = '') => {
+  const { data } = useSiteTexts();
+  const value = data?.[key];
+  return value && value.trim().length > 0 ? value : fallback;
+};
+
+export const useSaveSiteTexts = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (entries: Record<string, string>) => {
+      const rows = Object.entries(entries).map(([key, value]) => ({ key, value: value ?? '' }));
+      if (rows.length === 0) return;
+      const { error } = await supabase.from('site_texts').upsert(rows, { onConflict: 'key' });
+      if (error) throw error;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['site-texts'] }),
+  });
+};
