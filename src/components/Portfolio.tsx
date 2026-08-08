@@ -190,7 +190,19 @@ export const Portfolio = () => {
           </p>
         </div>
 
+        {isLoading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="w-full aspect-[4/5] rounded-lg bg-muted animate-pulse" />
+            ))}
+          </div>
+        ) : totalSlides === 0 ? (
+          <p className="text-center text-muted-foreground py-10">
+            Em breve novas fotos dos nossos trabalhos.
+          </p>
+        ) : (
         <div className="relative">
+
           <div 
             className="overflow-hidden cursor-grab active:cursor-grabbing"
             ref={carouselRef}
