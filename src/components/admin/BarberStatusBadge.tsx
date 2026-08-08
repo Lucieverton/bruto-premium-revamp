@@ -47,7 +47,12 @@ export const BarberStatusBadge = ({ barber }: { barber: BarberStatusInfo }) => {
 
 
   return (
-    <div className={cn('rounded-lg border px-3 py-2 space-y-2', styles[state])}>
+    <div
+      className={cn(
+        'rounded-lg border px-3 py-2 space-y-2',
+        overrun > 0 ? 'bg-destructive/10 border-destructive/40 text-destructive' : styles[state]
+      )}
+    >
       <div className="flex items-start gap-2">
         {state === 'busy' && <Loader2 size={15} className="animate-spin mt-0.5 shrink-0" />}
         {state === 'paused' && <Coffee size={15} className="mt-0.5 shrink-0" />}
@@ -72,11 +77,18 @@ export const BarberStatusBadge = ({ barber }: { barber: BarberStatusInfo }) => {
         </div>
       </div>
 
-      {longPause && (
+      {overrun > 0 && (
+        <p className="flex items-center gap-1.5 text-xs font-semibold text-destructive">
+          <AlertTriangle size={13} /> Pausa estourada — atrasado há {formatDuration(overrun)}
+        </p>
+      )}
+
+      {longAbsence && (
         <p className="flex items-center gap-1.5 text-xs font-medium text-destructive">
           <AlertTriangle size={13} /> Ausente há mais de 1 hora
         </p>
       )}
+
 
       <div className="flex flex-wrap gap-2">
         {!isOnline && !isBusy && (
