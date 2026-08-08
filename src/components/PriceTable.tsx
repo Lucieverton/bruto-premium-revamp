@@ -122,41 +122,58 @@ export const PriceTable = () => {
           </div>
         )}
 
-        {/* Produtos Premium Card */}
-        <div className="mt-12 max-w-md mx-auto">
-          <article className="bg-card border border-border rounded-lg p-8 text-center transition-all duration-300 hover:-translate-y-2 hover:shadow-xl group">
-            <div className="inline-flex items-center justify-center w-32 h-32 rounded-full bg-primary/10 group-hover:bg-primary/20 transition-colors duration-300 mb-6 overflow-hidden">
-              <img 
-                src={produtos1}
-                alt="Produtos Premium"
-                className="w-full h-full object-contain p-4"
-              />
-            </div>
-            
-            <h3 className="font-display text-xl md:text-2xl mb-3 uppercase">
-              Produtos Premium
-            </h3>
-            
-            <p className="text-muted-foreground mb-4">
-              Minoxidil, Pomada modeladora e linhas exclusivas.
-            </p>
-            
-            <div className="text-primary font-bold text-lg bg-primary/10 py-2 px-4 rounded-lg inline-block mb-6">
-              A partir de R$ 25,00
-            </div>
+        {/* Produtos (gerenciados no painel Meu site) */}
+        {produtosLoading ? (
+          <div className="mt-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-4xl mx-auto">
+            {Array.from({ length: 1 }).map((_, i) => (
+              <div key={i} className="h-72 rounded-lg bg-muted animate-pulse" />
+            ))}
+          </div>
+        ) : produtos && produtos.length > 0 ? (
+          <div
+            className={`mt-12 grid gap-6 mx-auto ${
+              produtos.length === 1
+                ? 'max-w-md grid-cols-1'
+                : 'max-w-4xl grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'
+            }`}
+          >
+            {produtos.map((produto) => (
+              <article
+                key={produto.id}
+                className="bg-card border border-border rounded-lg p-8 text-center transition-all duration-300 hover:-translate-y-2 hover:shadow-xl group"
+              >
+                <div className="inline-flex items-center justify-center w-32 h-32 rounded-full bg-primary/10 group-hover:bg-primary/20 transition-colors duration-300 mb-6 overflow-hidden">
+                  <img
+                    src={produto.url}
+                    alt={produto.title || 'Produto'}
+                    className="w-full h-full object-contain p-4"
+                    loading="lazy"
+                  />
+                </div>
 
-            <Button
-              asChild
-              size="lg"
-              className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold uppercase tracking-wide w-full shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
-            >
-              <Link to="/fila">
-                <Scissors className="mr-2" size={20} />
-                Entre na fila agora
-              </Link>
-            </Button>
-          </article>
-        </div>
+                <h3 className="font-display text-xl md:text-2xl mb-3 uppercase break-words">
+                  {produto.title || 'Produto'}
+                </h3>
+
+                {produto.description && (
+                  <p className="text-muted-foreground mb-6 break-words">{produto.description}</p>
+                )}
+
+                <Button
+                  asChild
+                  size="lg"
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold uppercase tracking-wide w-full shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
+                >
+                  <Link to="/fila">
+                    <Scissors className="mr-2" size={20} />
+                    Entre na fila agora
+                  </Link>
+                </Button>
+              </article>
+            ))}
+          </div>
+        ) : null}
+
       </div>
     </section>
   );
