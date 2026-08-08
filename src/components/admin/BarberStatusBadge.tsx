@@ -6,6 +6,7 @@ import {
   useForceBarberStatus,
   minutesSince,
   formatDuration,
+  pauseOverrunMinutes,
 } from '@/hooks/useBarberAvailability';
 
 interface BarberStatusInfo {
@@ -25,7 +26,8 @@ export const BarberStatusBadge = ({ barber }: { barber: BarberStatusInfo }) => {
   const isBusy = barber.status === 'busy';
   const isPaused = barber.status === 'paused';
   const isOnline = barber.status === 'online' && barber.is_available;
-  const longPause = (isPaused || (!isOnline && !isBusy)) && elapsed > 60;
+  const overrun = pauseOverrunMinutes(barber);
+  const longAbsence = !isOnline && !isBusy && !isPaused && elapsed > 60;
 
   const state = isBusy ? 'busy' : isPaused ? 'paused' : isOnline ? 'online' : 'offline';
 
@@ -42,6 +44,7 @@ export const BarberStatusBadge = ({ barber }: { barber: BarberStatusInfo }) => {
     online: 'Disponível',
     offline: 'Fora do expediente',
   };
+
 
   return (
     <div className={cn('rounded-lg border px-3 py-2 space-y-2', styles[state])}>
