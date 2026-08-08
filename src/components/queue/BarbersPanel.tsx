@@ -24,7 +24,7 @@ export const BarbersPanel = ({ onJoinSuccess, hasActiveTicket }: BarbersPanelPro
   const getEffectiveStatus = (barber: typeof barbers[0]): BarberStatus => {
     if (barbersWithActiveService.has(barber.id)) return 'busy';
     if (barber.status === 'busy') return 'busy';
-    if (barber.status === 'away') return 'away';
+    if (barber.status === 'away' || barber.status === 'paused') return 'away';
     if (barber.is_available && barber.status === 'online') return 'online';
     return 'offline';
   };

@@ -21,7 +21,7 @@ const statusConfig: Record<BarberStatus, { label: string; color: string; dotColo
     dotColor: 'bg-destructive',
   },
   away: {
-    label: 'Ausente',
+    label: 'Em pausa',
     color: 'text-warning',
     dotColor: 'bg-warning',
   },
@@ -48,7 +48,7 @@ export const BarberCard = ({ barber, index, onJoinSuccess, hasActiveTicket }: Ba
   const getEffectiveStatus = (): BarberStatus => {
     if (isBusy) return 'busy';
     if (barber.status === 'busy') return 'busy';
-    if (barber.status === 'away') return 'away';
+    if (barber.status === 'away' || barber.status === 'paused') return 'away';
     if (barber.is_available && barber.status === 'online') return 'online';
     return 'offline';
   };

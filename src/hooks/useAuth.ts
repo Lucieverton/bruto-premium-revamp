@@ -15,17 +15,9 @@ export const useAuth = () => {
   const [isAdminLoading, setIsAdminLoading] = useState(true);
   const { toast } = useToast();
 
-  // Update barber status on login/logout
-  const updateBarberStatus = useCallback(async (userId: string, status: 'online' | 'offline') => {
-    try {
-      await supabase.rpc('update_barber_status_on_auth', {
-        p_user_id: userId,
-        p_status: status
-      });
-    } catch (error) {
-      console.error('Error updating barber status:', error);
-    }
-  }, []);
+  // NOTE: o status do barbeiro NUNCA é alterado automaticamente pelo login/sessão.
+  // Ele é controlado exclusivamente pelo painel do barbeiro (ou pelo administrador).
+
 
   const checkUserRole = useCallback(async (userId: string) => {
     setIsAdminLoading(true);
@@ -43,8 +35,7 @@ export const useAuth = () => {
         setIsAdmin(true);
         setIsBarber(false);
         setIsAdminLoading(false);
-        // Update barber status if also a barber
-        updateBarberStatus(userId, 'online');
+        
         return;
       }
 
@@ -61,8 +52,7 @@ export const useAuth = () => {
         setIsAdmin(false);
         setIsBarber(true);
         setIsAdminLoading(false);
-        // Update barber status to online
-        updateBarberStatus(userId, 'online');
+        
         return;
       }
 
@@ -78,7 +68,7 @@ export const useAuth = () => {
     } finally {
       setIsAdminLoading(false);
     }
-  }, [updateBarberStatus]);
+  }, []);
 
   useEffect(() => {
     // Set up auth state listener BEFORE checking session

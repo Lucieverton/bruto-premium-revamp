@@ -28,6 +28,9 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { BarberStatusBadge } from '@/components/admin/BarberStatusBadge';
+import { BarberBreaksHistory } from '@/components/admin/BarberBreaksHistory';
+
 
 interface Barber {
   id: string;
@@ -531,22 +534,8 @@ const AdminBarbeiros = () => {
                     </div>
                   )}
                   
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      {barber.is_available ? (
-                        <UserCheck size={16} className="text-success" />
-                      ) : (
-                        <UserX size={16} className="text-muted-foreground" />
-                      )}
-                      <span className="text-sm">Disponível</span>
-                    </div>
-                    <Switch
-                      checked={barber.is_available}
-                      onCheckedChange={(checked) =>
-                        toggleAvailability.mutate({ id: barber.id, is_available: checked })
-                      }
-                    />
-                  </div>
+                  <BarberStatusBadge barber={barber as never} />
+
                   <div className="flex items-center justify-between">
                     <span className="text-sm">Ativo</span>
                     <Switch
@@ -561,6 +550,10 @@ const AdminBarbeiros = () => {
             ))}
           </div>
         )}
+
+        <BarberBreaksHistory barbers={barbers ?? []} />
+
+
 
         <AlertDialog open={!!deleteBarber} onOpenChange={() => setDeleteBarber(null)}>
           <AlertDialogContent>
