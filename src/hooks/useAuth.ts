@@ -35,8 +35,7 @@ export const useAuth = () => {
         setIsAdmin(true);
         setIsBarber(false);
         setIsAdminLoading(false);
-        // Update barber status if also a barber
-        updateBarberStatus(userId, 'online');
+        
         return;
       }
 
@@ -53,8 +52,7 @@ export const useAuth = () => {
         setIsAdmin(false);
         setIsBarber(true);
         setIsAdminLoading(false);
-        // Update barber status to online
-        updateBarberStatus(userId, 'online');
+        
         return;
       }
 
@@ -70,7 +68,7 @@ export const useAuth = () => {
     } finally {
       setIsAdminLoading(false);
     }
-  }, [updateBarberStatus]);
+  }, []);
 
   useEffect(() => {
     // Set up auth state listener BEFORE checking session
