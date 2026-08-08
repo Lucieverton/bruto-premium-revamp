@@ -132,17 +132,28 @@ export const useAuth = () => {
     // NOTE: Logout does NOT change barber status (user preference)
     // Barber status is controlled only via the availability toggle
     try {
-      const { error } = await supabase.auth.signOut();
-      if (error) {
-        console.error('Error signing out:', error);
-        toast({
-          title: 'Erro ao sair',
-          description: 'Tente novamente.',
-          variant: 'destructive',
-        });
+      // 'local' evita erro 403 quando a sessão já expirou no servidor
+      const { error } = await supabase.auth.signOut({ scope: 'local' });
+      if (error && error.name !== 'AuthSessionMissingError') {
+        console.warn('signOut warning:', error.message);
       }
     } catch (e) {
-      console.error('Exception during signOut:', e);
+      console.warn('Exception during signOut:', e);
+    } finally {
+      // Garante que a sessão local seja sempre limpa
+      try {
+        Object.keys(localStorage)
+          .filter((k) => k.startsWith('sb-') && k.endsWith('-auth-token'))
+          .forEach((k) => localStorage.removeItem(k));
+      } catch {
+        /* ignore */
+      }
+      setSession(null);
+      setUser(null);
+      setUserRole(null);
+      setIsAdmin(false);
+      setIsBarber(false);
+      setIsAdminLoading(false);
     }
   };
 
