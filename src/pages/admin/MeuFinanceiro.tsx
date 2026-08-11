@@ -23,6 +23,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { BarberEarningsCard } from '@/components/admin/BarberEarningsCard';
+import { BarberDailyEvolutionCard } from '@/components/admin/BarberDailyEvolutionCard';
 import {
   Table,
   TableBody,
