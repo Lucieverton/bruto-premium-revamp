@@ -893,6 +893,33 @@ export type Database = {
         }[]
       }
       get_client_ticket_id: { Args: never; Returns: string }
+      get_financial_by_barber: {
+        Args: { p_end: string; p_start: string }
+        Returns: {
+          attendances: number
+          barber_id: string
+          barber_name: string
+          commission: number
+          commission_percentage: number
+          revenue: number
+          shop_profit: number
+        }[]
+      }
+      get_financial_series: {
+        Args: {
+          p_barber_id?: string
+          p_bucket?: string
+          p_end: string
+          p_start: string
+        }
+        Returns: {
+          attendances: number
+          bucket_start: string
+          commission: number
+          revenue: number
+          shop_profit: number
+        }[]
+      }
       get_public_barbers: {
         Args: never
         Returns: {

@@ -23,6 +23,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { BarberEarningsCard } from '@/components/admin/BarberEarningsCard';
+import { BarberDailyEvolutionCard } from '@/components/admin/BarberDailyEvolutionCard';
 import {
   Table,
   TableBody,
@@ -527,6 +528,9 @@ Gerado em: ${format(new Date(), "dd/MM/yyyy 'às' HH:mm")}
             )}
           </CardContent>
         </Card>
+
+        {/* Daily evolution (last 30 days) */}
+        <BarberDailyEvolutionCard barberId={barber.id} />
 
         {/* Annual Earnings Section (moved from MeuPerfil) */}
         <BarberEarningsCard 

@@ -18,80 +18,94 @@ export interface BarberTotalEarnings {
   monthlyData: BarberEarning[];
 }
 
+export interface FinancialSeriesPoint {
+  bucketStart: string;
+  revenue: number;
+  commission: number;
+  shopProfit: number;
+  attendances: number;
+}
+
 const MONTHS = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
 
+type Bucket = 'hour' | 'day' | 'month';
+
+/** Aggregated series straight from the database (no 1000-row limit). */
+export const fetchFinancialSeries = async (
+  start: Date,
+  end: Date,
+  bucket: Bucket,
+  barberId?: string | null
+): Promise<FinancialSeriesPoint[]> => {
+  const { data, error } = await supabase.rpc('get_financial_series', {
+    p_start: start.toISOString(),
+    p_end: end.toISOString(),
+    p_bucket: bucket,
+    p_barber_id: barberId ?? null,
+  });
+
+  if (error) throw error;
+
+  return (data || []).map((r: any) => ({
+    bucketStart: r.bucket_start as string,
+    revenue: Number(r.revenue) || 0,
+    commission: Number(r.commission) || 0,
+    shopProfit: Number(r.shop_profit) || 0,
+    attendances: Number(r.attendances) || 0,
+  }));
+};
+
+const startOfYear = (year: number) => new Date(year, 0, 1, 0, 0, 0, 0);
+const endOfYear = (year: number) => new Date(year, 11, 31, 23, 59, 59, 999);
+
+/** Barber's own yearly earnings, aggregated in the database. */
 export const useBarberEarnings = (barberId?: string) => {
   const { user } = useAuth();
-  
+
   return useQuery({
     queryKey: ['barber-earnings', barberId || user?.id],
     queryFn: async () => {
       if (!barberId && !user?.id) return null;
-      
-      // First get the barber ID if we only have user ID
+
       let targetBarberId = barberId;
       if (!targetBarberId && user?.id) {
         const { data: barberData } = await supabase
           .from('barbers')
-          .select('id, commission_percentage')
+          .select('id')
           .eq('user_id', user.id)
-          .single();
-        
+          .maybeSingle();
+
         if (!barberData) return null;
         targetBarberId = barberData.id;
       }
-      
-      // Get barber commission percentage
-      const { data: barber } = await supabase
-        .from('barbers')
-        .select('commission_percentage')
-        .eq('id', targetBarberId)
-        .single();
-      
-      const commissionPct = barber?.commission_percentage || 50;
-      
-      // Get current year's data
+
       const currentYear = new Date().getFullYear();
-      const startOfYear = new Date(currentYear, 0, 1).toISOString();
-      const endOfYear = new Date(currentYear, 11, 31, 23, 59, 59).toISOString();
-      
-      const { data: records, error } = await supabase
-        .from('attendance_records')
-        .select('*')
-        .eq('barber_id', targetBarberId)
-        .gte('completed_at', startOfYear)
-        .lte('completed_at', endOfYear)
-        .order('completed_at', { ascending: true });
-      
-      if (error) throw error;
-      
-      // Group by month
+      const series = await fetchFinancialSeries(
+        startOfYear(currentYear),
+        endOfYear(currentYear),
+        'month',
+        targetBarberId
+      );
+
       const monthlyMap: Record<number, { revenue: number; commission: number; attendances: number }> = {};
-      
-      // Initialize all months
-      for (let i = 0; i < 12; i++) {
-        monthlyMap[i] = { revenue: 0, commission: 0, attendances: 0 };
-      }
-      
+      for (let i = 0; i < 12; i++) monthlyMap[i] = { revenue: 0, commission: 0, attendances: 0 };
+
       let totalRevenue = 0;
       let totalCommission = 0;
       let totalAttendances = 0;
-      
-      records?.forEach((record) => {
-        const date = new Date(record.completed_at);
-        const month = date.getMonth();
-        const price = Number(record.price_charged);
-        const commission = (price * commissionPct) / 100;
-        
-        monthlyMap[month].revenue += price;
-        monthlyMap[month].commission += commission;
-        monthlyMap[month].attendances += 1;
-        
-        totalRevenue += price;
-        totalCommission += commission;
-        totalAttendances += 1;
+
+      series.forEach((point) => {
+        const month = new Date(point.bucketStart).getMonth();
+        if (monthlyMap[month]) {
+          monthlyMap[month].revenue += point.revenue;
+          monthlyMap[month].commission += point.commission;
+          monthlyMap[month].attendances += point.attendances;
+        }
+        totalRevenue += point.revenue;
+        totalCommission += point.commission;
+        totalAttendances += point.attendances;
       });
-      
+
       const monthlyData: BarberEarning[] = Object.entries(monthlyMap).map(([monthIndex, data]) => ({
         month: String(parseInt(monthIndex) + 1).padStart(2, '0'),
         monthLabel: MONTHS[parseInt(monthIndex)],
@@ -99,7 +113,7 @@ export const useBarberEarnings = (barberId?: string) => {
         commission: data.commission,
         attendances: data.attendances,
       }));
-      
+
       return {
         totalRevenue,
         totalCommission,
@@ -112,64 +126,37 @@ export const useBarberEarnings = (barberId?: string) => {
   });
 };
 
-// Hook for admin to get all barbers annual data
+/** Admin: annual totals per month across the whole shop. */
 export const useAllBarbersAnnualData = () => {
   return useQuery({
     queryKey: ['all-barbers-annual'],
     queryFn: async () => {
       const currentYear = new Date().getFullYear();
-      const startOfYear = new Date(currentYear, 0, 1).toISOString();
-      const endOfYear = new Date(currentYear, 11, 31, 23, 59, 59).toISOString();
-      
-      const { data: records, error } = await supabase
-        .from('attendance_records')
-        .select('*')
-        .gte('completed_at', startOfYear)
-        .lte('completed_at', endOfYear)
-        .order('completed_at', { ascending: true });
-      
-      if (error) throw error;
-      
-      const { data: barbers } = await supabase
-        .from('barbers')
-        .select('id, display_name, commission_percentage');
-      
-      const barberMap = new Map(barbers?.map(b => [b.id, b]) || []);
-      
-      const monthlyData: { 
-        month: string; 
-        monthLabel: string;
-        revenue: number; 
-        commission: number;
-        shopProfit: number;
-        attendances: number;
-      }[] = [];
-      
-      for (let i = 0; i < 12; i++) {
-        monthlyData.push({
-          month: String(i + 1).padStart(2, '0'),
-          monthLabel: MONTHS[i],
-          revenue: 0,
-          commission: 0,
-          shopProfit: 0,
-          attendances: 0,
-        });
-      }
-      
-      records?.forEach((record) => {
-        const date = new Date(record.completed_at);
-        const month = date.getMonth();
-        const price = Number(record.price_charged);
-        const barber = barberMap.get(record.barber_id || '');
-        const commissionPct = barber?.commission_percentage || 50;
-        const commission = (price * commissionPct) / 100;
-        
-        monthlyData[month].revenue += price;
-        monthlyData[month].commission += commission;
-        monthlyData[month].shopProfit += price - commission;
-        monthlyData[month].attendances += 1;
+      const series = await fetchFinancialSeries(
+        startOfYear(currentYear),
+        endOfYear(currentYear),
+        'month',
+        null
+      );
+
+      const monthlyData = Array.from({ length: 12 }, (_, i) => ({
+        month: String(i + 1).padStart(2, '0'),
+        monthLabel: MONTHS[i],
+        revenue: 0,
+        commission: 0,
+        shopProfit: 0,
+        attendances: 0,
+      }));
+
+      series.forEach((point) => {
+        const month = new Date(point.bucketStart).getMonth();
+        if (!monthlyData[month]) return;
+        monthlyData[month].revenue += point.revenue;
+        monthlyData[month].commission += point.commission;
+        monthlyData[month].shopProfit += point.shopProfit;
+        monthlyData[month].attendances += point.attendances;
       });
-      
+
       return monthlyData;
     },
   });
@@ -186,182 +173,162 @@ export interface EvolutionDataPoint {
   barberBreakdown: Record<string, { name: string; revenue: number; commission: number; attendances: number }>;
 }
 
-const WEEKDAYS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+const rangeBounds = (dateRange: DateRangeType, now: Date) => {
+  switch (dateRange) {
+    case 'today':
+      return {
+        startDate: new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0),
+        endDate: new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59),
+        bucket: 'hour' as Bucket,
+      };
+    case 'week': {
+      const dayOfWeek = now.getDay();
+      const monday = new Date(now);
+      monday.setDate(now.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
+      const saturday = new Date(monday);
+      saturday.setDate(monday.getDate() + 5);
+      return {
+        startDate: new Date(monday.getFullYear(), monday.getMonth(), monday.getDate(), 0, 0, 0),
+        endDate: new Date(saturday.getFullYear(), saturday.getMonth(), saturday.getDate(), 23, 59, 59),
+        bucket: 'day' as Bucket,
+      };
+    }
+    case 'month':
+      return {
+        startDate: new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0),
+        endDate: new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59),
+        bucket: 'day' as Bucket,
+      };
+    case 'year':
+    default:
+      return {
+        startDate: startOfYear(now.getFullYear()),
+        endDate: endOfYear(now.getFullYear()),
+        bucket: 'month' as Bucket,
+      };
+  }
+};
 
+const WEEKDAY_LABELS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+
+const pointLabel = (date: Date, dateRange: DateRangeType) => {
+  switch (dateRange) {
+    case 'today':
+      return `${date.getHours()}h`;
+    case 'week':
+      return WEEKDAY_LABELS[date.getDay()];
+    case 'month':
+      return String(date.getDate()).padStart(2, '0');
+    default:
+      return MONTHS[date.getMonth()];
+  }
+};
+
+/**
+ * Evolution chart data. Aggregated server-side per bucket, plus a per-barber
+ * breakdown built from one aggregated series per barber.
+ */
 export const useEvolutionChartData = (dateRange: DateRangeType, customDate?: Date) => {
   return useQuery({
     queryKey: ['evolution-chart', dateRange, customDate?.toISOString()],
     queryFn: async () => {
       const now = customDate || new Date();
-      let startDate: Date;
-      let endDate: Date;
-
-      switch (dateRange) {
-        case 'today':
-          startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
-          endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
-          break;
-        case 'week': {
-          const dayOfWeek = now.getDay();
-          const monday = new Date(now);
-          monday.setDate(now.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
-          startDate = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate(), 0, 0, 0);
-          const saturday = new Date(monday);
-          saturday.setDate(monday.getDate() + 5);
-          endDate = new Date(saturday.getFullYear(), saturday.getMonth(), saturday.getDate(), 23, 59, 59);
-          break;
-        }
-        case 'month':
-          startDate = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0);
-          endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
-          break;
-        case 'year':
-        default:
-          startDate = new Date(now.getFullYear(), 0, 1, 0, 0, 0);
-          endDate = new Date(now.getFullYear(), 11, 31, 23, 59, 59);
-          break;
-      }
-
-      const { data: records, error } = await supabase
-        .from('attendance_records')
-        .select('*')
-        .gte('completed_at', startDate.toISOString())
-        .lte('completed_at', endDate.toISOString())
-        .order('completed_at', { ascending: true });
-
-      if (error) throw error;
+      const { startDate, endDate, bucket } = rangeBounds(dateRange, now);
 
       const { data: barbers } = await supabase
         .from('barbers')
-        .select('id, display_name, commission_percentage');
+        .select('id, display_name');
 
-      const barberMap = new Map(barbers?.map(b => [b.id, b]) || []);
+      const barberList = barbers || [];
 
-      // Build data points based on mode
-      let dataPoints: EvolutionDataPoint[] = [];
+      const [totalSeries, ...barberSeries] = await Promise.all([
+        fetchFinancialSeries(startDate, endDate, bucket, null),
+        ...barberList.map((b) => fetchFinancialSeries(startDate, endDate, bucket, b.id)),
+      ]);
 
-      if (dateRange === 'today') {
-        // Group by hour (8h - 20h)
-        for (let h = 8; h <= 20; h++) {
-          dataPoints.push({
-            label: `${h}h`,
-            revenue: 0, commission: 0, shopProfit: 0, attendances: 0,
-            barberBreakdown: {},
-          });
-        }
-        records?.forEach((r) => {
-          const hour = new Date(r.completed_at).getHours();
-          const idx = hour - 8;
-          if (idx >= 0 && idx < dataPoints.length) {
-            const price = Number(r.price_charged);
-            const barber = barberMap.get(r.barber_id || '');
-            const commPct = barber?.commission_percentage || 50;
-            const comm = (price * commPct) / 100;
-            dataPoints[idx].revenue += price;
-            dataPoints[idx].commission += comm;
-            dataPoints[idx].shopProfit += price - comm;
-            dataPoints[idx].attendances += 1;
-            // Barber breakdown
-            const bid = r.barber_id || 'unknown';
-            if (!dataPoints[idx].barberBreakdown[bid]) {
-              dataPoints[idx].barberBreakdown[bid] = { name: barber?.display_name || 'Desc.', revenue: 0, commission: 0, attendances: 0 };
-            }
-            dataPoints[idx].barberBreakdown[bid].revenue += price;
-            dataPoints[idx].barberBreakdown[bid].commission += comm;
-            dataPoints[idx].barberBreakdown[bid].attendances += 1;
-          }
+      const dataPoints: EvolutionDataPoint[] = totalSeries.map((point) => ({
+        label: pointLabel(new Date(point.bucketStart), dateRange),
+        revenue: point.revenue,
+        commission: point.commission,
+        shopProfit: point.shopProfit,
+        attendances: point.attendances,
+        barberBreakdown: {},
+      }));
+
+      barberSeries.forEach((series, barberIdx) => {
+        const barber = barberList[barberIdx];
+        series.forEach((point, i) => {
+          if (!dataPoints[i] || point.attendances === 0) return;
+          dataPoints[i].barberBreakdown[barber.id] = {
+            name: barber.display_name || 'Desc.',
+            revenue: point.revenue,
+            commission: point.commission,
+            attendances: point.attendances,
+          };
         });
-      } else if (dateRange === 'week') {
-        // Mon-Sat (indexes 1-6 in JS weekday)
-        const weekLabels = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
-        for (let i = 0; i < 6; i++) {
-          dataPoints.push({
-            label: weekLabels[i],
-            revenue: 0, commission: 0, shopProfit: 0, attendances: 0,
-            barberBreakdown: {},
-          });
-        }
-        records?.forEach((r) => {
-          const d = new Date(r.completed_at);
-          let dayIdx = d.getDay() - 1; // Mon=0, Tue=1...Sat=5
-          if (dayIdx < 0) dayIdx = 6; // Sunday -> skip or map
-          if (dayIdx >= 0 && dayIdx < 6) {
-            const price = Number(r.price_charged);
-            const barber = barberMap.get(r.barber_id || '');
-            const commPct = barber?.commission_percentage || 50;
-            const comm = (price * commPct) / 100;
-            dataPoints[dayIdx].revenue += price;
-            dataPoints[dayIdx].commission += comm;
-            dataPoints[dayIdx].shopProfit += price - comm;
-            dataPoints[dayIdx].attendances += 1;
-            const bid = r.barber_id || 'unknown';
-            if (!dataPoints[dayIdx].barberBreakdown[bid]) {
-              dataPoints[dayIdx].barberBreakdown[bid] = { name: barber?.display_name || 'Desc.', revenue: 0, commission: 0, attendances: 0 };
-            }
-            dataPoints[dayIdx].barberBreakdown[bid].revenue += price;
-            dataPoints[dayIdx].barberBreakdown[bid].commission += comm;
-            dataPoints[dayIdx].barberBreakdown[bid].attendances += 1;
-          }
-        });
-      } else if (dateRange === 'month') {
-        const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-        for (let d = 1; d <= daysInMonth; d++) {
-          dataPoints.push({
-            label: String(d).padStart(2, '0'),
-            revenue: 0, commission: 0, shopProfit: 0, attendances: 0,
-            barberBreakdown: {},
-          });
-        }
-        records?.forEach((r) => {
-          const day = new Date(r.completed_at).getDate() - 1;
-          if (day >= 0 && day < dataPoints.length) {
-            const price = Number(r.price_charged);
-            const barber = barberMap.get(r.barber_id || '');
-            const commPct = barber?.commission_percentage || 50;
-            const comm = (price * commPct) / 100;
-            dataPoints[day].revenue += price;
-            dataPoints[day].commission += comm;
-            dataPoints[day].shopProfit += price - comm;
-            dataPoints[day].attendances += 1;
-            const bid = r.barber_id || 'unknown';
-            if (!dataPoints[day].barberBreakdown[bid]) {
-              dataPoints[day].barberBreakdown[bid] = { name: barber?.display_name || 'Desc.', revenue: 0, commission: 0, attendances: 0 };
-            }
-            dataPoints[day].barberBreakdown[bid].revenue += price;
-            dataPoints[day].barberBreakdown[bid].commission += comm;
-            dataPoints[day].barberBreakdown[bid].attendances += 1;
-          }
-        });
-      } else {
-        // Year - group by month
-        for (let i = 0; i < 12; i++) {
-          dataPoints.push({
-            label: MONTHS[i],
-            revenue: 0, commission: 0, shopProfit: 0, attendances: 0,
-            barberBreakdown: {},
-          });
-        }
-        records?.forEach((r) => {
-          const month = new Date(r.completed_at).getMonth();
-          const price = Number(r.price_charged);
-          const barber = barberMap.get(r.barber_id || '');
-          const commPct = barber?.commission_percentage || 50;
-          const comm = (price * commPct) / 100;
-          dataPoints[month].revenue += price;
-          dataPoints[month].commission += comm;
-          dataPoints[month].shopProfit += price - comm;
-          dataPoints[month].attendances += 1;
-          const bid = r.barber_id || 'unknown';
-          if (!dataPoints[month].barberBreakdown[bid]) {
-            dataPoints[month].barberBreakdown[bid] = { name: barber?.display_name || 'Desc.', revenue: 0, commission: 0, attendances: 0 };
-          }
-          dataPoints[month].barberBreakdown[bid].revenue += price;
-          dataPoints[month].barberBreakdown[bid].commission += comm;
-          dataPoints[month].barberBreakdown[bid].attendances += 1;
-        });
-      }
+      });
 
       return dataPoints;
     },
+  });
+};
+
+/** Per-day evolution for a single barber over an arbitrary window. */
+export const useBarberDailyEvolution = (barberId?: string, days: number = 30) => {
+  return useQuery({
+    queryKey: ['barber-daily-evolution', barberId, days],
+    queryFn: async () => {
+      if (!barberId) return [];
+      const end = new Date();
+      end.setHours(23, 59, 59, 999);
+      const start = new Date(end);
+      start.setDate(end.getDate() - (days - 1));
+      start.setHours(0, 0, 0, 0);
+
+      const series = await fetchFinancialSeries(start, end, 'day', barberId);
+
+      return series.map((point) => {
+        const d = new Date(point.bucketStart);
+        return {
+          ...point,
+          label: `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`,
+          date: d,
+        };
+      });
+    },
+    enabled: !!barberId,
+  });
+};
+
+/** Month totals for a barber (current month and previous month). */
+export const useBarberMonthComparison = (barberId?: string) => {
+  return useQuery({
+    queryKey: ['barber-month-comparison', barberId],
+    queryFn: async () => {
+      if (!barberId) return null;
+      const now = new Date();
+      const start = new Date(now.getFullYear(), now.getMonth() - 1, 1, 0, 0, 0);
+      const end = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+
+      const series = await fetchFinancialSeries(start, end, 'month', barberId);
+
+      const empty = { revenue: 0, commission: 0, attendances: 0 };
+      const bucketFor = (year: number, month: number) => {
+        const found = series.find((p) => {
+          const d = new Date(p.bucketStart);
+          return d.getFullYear() === year && d.getMonth() === month;
+        });
+        return found
+          ? { revenue: found.revenue, commission: found.commission, attendances: found.attendances }
+          : empty;
+      };
+
+      const current = bucketFor(now.getFullYear(), now.getMonth());
+      const prevDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      const previous = bucketFor(prevDate.getFullYear(), prevDate.getMonth());
+
+      return { current, previous };
+    },
+    enabled: !!barberId,
   });
 };
