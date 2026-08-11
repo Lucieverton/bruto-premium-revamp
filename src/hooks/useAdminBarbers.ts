@@ -32,6 +32,25 @@ export const useAdminBarbers = () => {
   });
 };
 
+// Fetch ALL barbers (including inactive ones) — used by financial reports so
+// historical data from deactivated barbers is still attributed correctly.
+export const useAllBarbers = () => {
+  return useQuery({
+    queryKey: ['all-barbers-any-status'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('barbers')
+        .select('*')
+        .order('is_active', { ascending: false })
+        .order('display_name');
+
+      if (error) throw error;
+      return data as AdminBarber[];
+    },
+    staleTime: 30000,
+  });
+};
+
 // Fetch available barbers for admin dropdown (only those who can receive clients)
 export const useAvailableBarbers = () => {
   return useQuery({

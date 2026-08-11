@@ -2,9 +2,11 @@ import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { useAuth } from '@/contexts/AuthContext';
-import { useFinancialMetrics, useBarbersWithCommission } from '@/hooks/useFinancial';
+import { useFinancialMetrics, useBarbersWithCommission, useFinancialTotalsByBarber } from '@/hooks/useFinancial';
 import { useServices } from '@/hooks/useQueue';
-import { useAdminBarbers } from '@/hooks/useAdminBarbers';
+import { useAllBarbers } from '@/hooks/useAdminBarbers';
+import { BarberFinanceCard, BarberFinanceRow } from '@/components/admin/BarberFinanceCard';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { AnnualChart } from '@/components/admin/AnnualChart';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
@@ -127,7 +129,8 @@ const AdminFinanceiro = () => {
   });
   
   const metrics = useFinancialMetrics(dateRange, selectedBarber === 'all' ? undefined : selectedBarber);
-  const { data: barbers } = useAdminBarbers();
+  const { data: barbers } = useAllBarbers();
+  const { data: byBarberTotals } = useFinancialTotalsByBarber(dateRange);
   const { data: barbersWithCommission } = useBarbersWithCommission();
   const { data: services } = useServices();
   
@@ -170,16 +173,41 @@ const AdminFinanceiro = () => {
   };
   
   // Prepare chart data with commission info
-  const barberChartData = Object.entries(metrics.attendancesByBarber).map(([barberId, data]) => {
-    const barber = barbers?.find(b => b.id === barberId);
-    return {
-      name: barber?.display_name || 'Desc.',
-      atendimentos: data.count,
-      faturamento: data.revenue,
-      comissao: data.commission,
-      lucro: data.revenue - data.commission,
-    };
-  });
+  // One row per registered barber (including inactive ones), name coming from
+  // the financial query so historical data is never labelled "Desc."
+  const barberRows: BarberFinanceRow[] = useMemo(() => {
+    const rows = (byBarberTotals || [])
+      .filter((r) => selectedBarber === 'all' || r.barber_id === selectedBarber)
+      .map((r) => {
+        const barber = barbers?.find((b) => b.id === r.barber_id);
+        return {
+          barberId: r.barber_id,
+          name: r.barber_name || barber?.display_name || 'Sem nome',
+          avatarUrl: barber?.avatar_url,
+          isActive: barber?.is_active,
+          commissionPercentage: r.commission_percentage,
+          attendances: r.attendances,
+          revenue: r.revenue,
+          commission: r.commission,
+          profit: r.shop_profit,
+        };
+      });
+
+    return rows.sort((a, b) => b.revenue - a.revenue || a.name.localeCompare(b.name));
+  }, [byBarberTotals, barbers, selectedBarber]);
+
+  // Prepare chart data with commission info
+  const barberChartData = barberRows.map((row) => ({
+    name: row.name,
+    atendimentos: row.attendances,
+    faturamento: row.revenue,
+    comissao: row.commission,
+    lucro: row.profit,
+    avatarUrl: row.avatarUrl,
+    barberId: row.barberId,
+  }));
+  
+
   
   const serviceChartData = metrics.popularServices.slice(0, 5).map(({ serviceId, count }) => {
     const service = services?.find(s => s.id === serviceId);
@@ -266,7 +294,7 @@ const AdminFinanceiro = () => {
                 <SelectItem value="all">Todos</SelectItem>
                 {barbers?.map((barber) => (
                   <SelectItem key={barber.id} value={barber.id}>
-                    {barber.display_name}
+                    {barber.display_name}{barber.is_active === false ? ' (inativo)' : ''}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -378,6 +406,22 @@ const AdminFinanceiro = () => {
             ) : (
               <div className="flex items-center justify-center h-[200px] text-muted-foreground text-sm">
                 Sem dados
+              </div>
+            )}
+
+            {barberChartData.length > 0 && (
+              <div className="flex flex-wrap gap-3 mt-3 relative z-10">
+                {barberChartData.map((b) => (
+                  <div key={b.barberId} className="flex items-center gap-2 min-w-0">
+                    <Avatar className="h-7 w-7 border border-border/60">
+                      <AvatarImage src={b.avatarUrl || undefined} alt={`Foto de ${b.name}`} />
+                      <AvatarFallback className="bg-primary/10 text-primary text-[10px] font-bold">
+                        {b.name.slice(0, 2).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="text-xs text-muted-foreground break-words">{b.name}</span>
+                  </div>
+                ))}
               </div>
             )}
           </div>
@@ -493,69 +537,42 @@ const AdminFinanceiro = () => {
             </h3>
           </div>
           
-          <div className="overflow-x-auto relative z-10">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-border/50 bg-muted/20">
-                  <th className="p-3 text-left text-xs font-medium text-muted-foreground">Barbeiro</th>
-                  <th className="p-3 text-center text-xs font-medium text-muted-foreground">%</th>
-                  <th className="p-3 text-center text-xs font-medium text-muted-foreground">Atend.</th>
-                  <th className="p-3 text-right text-xs font-medium text-muted-foreground">Faturado</th>
-                  <th className="p-3 text-right text-xs font-medium text-muted-foreground">Comissão</th>
-                  <th className="p-3 text-right text-xs font-medium text-muted-foreground">Lucro</th>
-                </tr>
-              </thead>
-              <tbody>
-                {Object.entries(metrics.attendancesByBarber).length === 0 ? (
-                  <tr>
-                    <td colSpan={6} className="p-8 text-center text-muted-foreground text-sm">
-                      Nenhum atendimento no período
-                    </td>
-                  </tr>
-                ) : (
-                  Object.entries(metrics.attendancesByBarber).map(([barberId, data]) => {
-                    const barber = barbers?.find(b => b.id === barberId);
-                    const profit = data.revenue - data.commission;
-                    
-                    return (
-                      <tr key={barberId} className="border-b border-border/30 hover:bg-muted/20 transition-colors">
-                        <td className="p-3 text-sm font-medium">{barber?.display_name || 'Desc.'}</td>
-                        <td className="p-3 text-sm text-center text-muted-foreground">{data.commissionPercentage}%</td>
-                        <td className="p-3 text-sm text-center">{data.count}</td>
-                        <td className="p-3 text-sm text-right text-green-400 font-medium">
-                          R$ {data.revenue.toFixed(0)}
-                        </td>
-                        <td className="p-3 text-sm text-right text-orange-400 font-medium">
-                          R$ {data.commission.toFixed(0)}
-                        </td>
-                        <td className="p-3 text-sm text-right text-primary font-bold">
-                          R$ {profit.toFixed(0)}
-                        </td>
-                      </tr>
-                    );
-                  })
-                )}
-              </tbody>
-              {Object.entries(metrics.attendancesByBarber).length > 0 && (
-                <tfoot>
-                  <tr className="bg-primary/10">
-                    <td className="p-3 text-sm font-bold">TOTAL</td>
-                    <td className="p-3"></td>
-                    <td className="p-3 text-sm text-center font-bold">{metrics.totalAttendances}</td>
-                    <td className="p-3 text-sm text-right text-green-400 font-bold">
-                      R$ {metrics.totalRevenue.toFixed(0)}
-                    </td>
-                    <td className="p-3 text-sm text-right text-orange-400 font-bold">
-                      R$ {metrics.totalCommissions.toFixed(0)}
-                    </td>
-                    <td className="p-3 text-sm text-right text-primary font-bold">
-                      R$ {metrics.shopProfit.toFixed(0)}
-                    </td>
-                  </tr>
-                </tfoot>
-              )}
-            </table>
+          <div className="p-3 sm:p-4 space-y-3 relative z-10">
+            {barberRows.length === 0 ? (
+              <p className="p-6 text-center text-muted-foreground text-sm">
+                Nenhum barbeiro cadastrado
+              </p>
+            ) : (
+              <>
+                {barberRows.map((row) => (
+                  <BarberFinanceCard key={row.barberId} row={row} />
+                ))}
+
+                <div className="flex flex-col sm:flex-row sm:items-center gap-3 rounded-xl bg-primary/10 border border-primary/30 p-3">
+                  <p className="text-sm font-bold sm:w-52">TOTAL</p>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 flex-1">
+                    <div>
+                      <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Atend.</p>
+                      <p className="text-sm font-bold">{metrics.totalAttendances}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Faturado</p>
+                      <p className="text-sm font-bold text-green-400">R$ {metrics.totalRevenue.toFixed(0)}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Comissão</p>
+                      <p className="text-sm font-bold text-orange-400">R$ {metrics.totalCommissions.toFixed(0)}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Lucro loja</p>
+                      <p className="text-sm font-bold text-primary">R$ {metrics.shopProfit.toFixed(0)}</p>
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
+
         </div>
         
         {/* Attendance History */}
