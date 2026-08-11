@@ -129,7 +129,8 @@ const AdminFinanceiro = () => {
   });
   
   const metrics = useFinancialMetrics(dateRange, selectedBarber === 'all' ? undefined : selectedBarber);
-  const { data: barbers } = useAdminBarbers();
+  const { data: barbers } = useAllBarbers();
+  const { data: byBarberTotals } = useFinancialTotalsByBarber(dateRange);
   const { data: barbersWithCommission } = useBarbersWithCommission();
   const { data: services } = useServices();
   
