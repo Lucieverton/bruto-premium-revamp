@@ -294,7 +294,7 @@ const AdminFinanceiro = () => {
                 <SelectItem value="all">Todos</SelectItem>
                 {barbers?.map((barber) => (
                   <SelectItem key={barber.id} value={barber.id}>
-                    {barber.display_name}
+                    {barber.display_name}{barber.is_active === false ? ' (inativo)' : ''}
                   </SelectItem>
                 ))}
               </SelectContent>
