@@ -173,16 +173,41 @@ const AdminFinanceiro = () => {
   };
   
   // Prepare chart data with commission info
-  const barberChartData = Object.entries(metrics.attendancesByBarber).map(([barberId, data]) => {
-    const barber = barbers?.find(b => b.id === barberId);
-    return {
-      name: barber?.display_name || 'Desc.',
-      atendimentos: data.count,
-      faturamento: data.revenue,
-      comissao: data.commission,
-      lucro: data.revenue - data.commission,
-    };
-  });
+  // One row per registered barber (including inactive ones), name coming from
+  // the financial query so historical data is never labelled "Desc."
+  const barberRows: BarberFinanceRow[] = useMemo(() => {
+    const rows = (byBarberTotals || [])
+      .filter((r) => selectedBarber === 'all' || r.barber_id === selectedBarber)
+      .map((r) => {
+        const barber = barbers?.find((b) => b.id === r.barber_id);
+        return {
+          barberId: r.barber_id,
+          name: r.barber_name || barber?.display_name || 'Sem nome',
+          avatarUrl: barber?.avatar_url,
+          isActive: barber?.is_active,
+          commissionPercentage: r.commission_percentage,
+          attendances: r.attendances,
+          revenue: r.revenue,
+          commission: r.commission,
+          profit: r.shop_profit,
+        };
+      });
+
+    return rows.sort((a, b) => b.revenue - a.revenue || a.name.localeCompare(b.name));
+  }, [byBarberTotals, barbers, selectedBarber]);
+
+  // Prepare chart data with commission info
+  const barberChartData = barberRows.map((row) => ({
+    name: row.name,
+    atendimentos: row.attendances,
+    faturamento: row.revenue,
+    comissao: row.commission,
+    lucro: row.profit,
+    avatarUrl: row.avatarUrl,
+    barberId: row.barberId,
+  }));
+  
+
   
   const serviceChartData = metrics.popularServices.slice(0, 5).map(({ serviceId, count }) => {
     const service = services?.find(s => s.id === serviceId);
