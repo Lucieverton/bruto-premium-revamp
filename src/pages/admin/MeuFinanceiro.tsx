@@ -528,6 +528,9 @@ Gerado em: ${format(new Date(), "dd/MM/yyyy 'às' HH:mm")}
           </CardContent>
         </Card>
 
+        {/* Daily evolution (last 30 days) */}
+        <BarberDailyEvolutionCard barberId={barber.id} />
+
         {/* Annual Earnings Section (moved from MeuPerfil) */}
         <BarberEarningsCard 
           barberId={barber.id} 
