@@ -4,7 +4,7 @@ import { AdminLayout } from '@/components/admin/AdminLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { useFinancialMetrics, useBarbersWithCommission, useFinancialTotalsByBarber } from '@/hooks/useFinancial';
 import { useServices } from '@/hooks/useQueue';
-import { useAdminBarbers, useAllBarbers } from '@/hooks/useAdminBarbers';
+import { useAllBarbers } from '@/hooks/useAdminBarbers';
 import { BarberFinanceCard, BarberFinanceRow } from '@/components/admin/BarberFinanceCard';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { AnnualChart } from '@/components/admin/AnnualChart';
