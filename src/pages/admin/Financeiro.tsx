@@ -424,11 +424,6 @@ const AdminFinanceiro = () => {
                 ))}
               </div>
             )}
-            ) : (
-              <div className="flex items-center justify-center h-[200px] text-muted-foreground text-sm">
-                Sem dados
-              </div>
-            )}
           </div>
           
           {/* Profit Distribution */}
