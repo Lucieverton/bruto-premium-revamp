@@ -73,6 +73,12 @@ const getDateRange = (range: DateRange, customStart?: string, customEnd?: string
   return { start: start.toISOString(), end: end.toISOString() };
 };
 
+const PAGE_SIZE = 1000;
+
+/**
+ * Detailed attendance records. Paginated so long periods are never silently
+ * truncated by the API's 1000-row cap.
+ */
 export const useAttendanceRecords = (
   range: DateRange = 'today',
   barberId?: string,
@@ -84,20 +90,32 @@ export const useAttendanceRecords = (
   return useQuery({
     queryKey: ['attendance-records', range, barberId, customStart, customEnd],
     queryFn: async () => {
-      let query = supabase
-        .from('attendance_records')
-        .select('*')
-        .gte('completed_at', start)
-        .lte('completed_at', end)
-        .order('completed_at', { ascending: false });
-      
-      if (barberId) {
-        query = query.eq('barber_id', barberId);
+      const all: AttendanceRecord[] = [];
+      let from = 0;
+
+      // eslint-disable-next-line no-constant-condition
+      while (true) {
+        let query = supabase
+          .from('attendance_records')
+          .select('*')
+          .gte('completed_at', start)
+          .lte('completed_at', end)
+          .order('completed_at', { ascending: false })
+          .range(from, from + PAGE_SIZE - 1);
+
+        if (barberId) {
+          query = query.eq('barber_id', barberId);
+        }
+
+        const { data, error } = await query;
+        if (error) throw error;
+
+        all.push(...((data || []) as AttendanceRecord[]));
+        if (!data || data.length < PAGE_SIZE) break;
+        from += PAGE_SIZE;
       }
-      
-      const { data, error } = await query;
-      if (error) throw error;
-      return data as AttendanceRecord[];
+
+      return all;
     },
   });
 };
@@ -117,14 +135,55 @@ export const useBarbersWithCommission = () => {
   });
 };
 
+interface BarberTotalsRow {
+  barber_id: string;
+  barber_name: string;
+  commission_percentage: number;
+  revenue: number;
+  commission: number;
+  shop_profit: number;
+  attendances: number;
+}
+
+/** Totals per barber for a period, aggregated in the database. */
+export const useFinancialTotalsByBarber = (
+  range: DateRange = 'today',
+  customStart?: string,
+  customEnd?: string
+) => {
+  const { start, end } = getDateRange(range, customStart, customEnd);
+
+  return useQuery({
+    queryKey: ['financial-by-barber', range, customStart, customEnd],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc('get_financial_by_barber', {
+        p_start: start,
+        p_end: end,
+      });
+
+      if (error) throw error;
+
+      return (data || []).map((r: any) => ({
+        barber_id: r.barber_id,
+        barber_name: r.barber_name,
+        commission_percentage: Number(r.commission_percentage) || 0,
+        revenue: Number(r.revenue) || 0,
+        commission: Number(r.commission) || 0,
+        shop_profit: Number(r.shop_profit) || 0,
+        attendances: Number(r.attendances) || 0,
+      })) as BarberTotalsRow[];
+    },
+  });
+};
+
 export const useFinancialMetrics = (
   range: DateRange = 'today',
   barberId?: string,
   customStart?: string,
   customEnd?: string
 ) => {
+  const { data: byBarber } = useFinancialTotalsByBarber(range, customStart, customEnd);
   const { data: records } = useAttendanceRecords(range, barberId, customStart, customEnd);
-  const { data: barbers } = useBarbersWithCommission();
   
   const metrics: FinancialMetrics = {
     totalAttendances: 0,
@@ -136,39 +195,29 @@ export const useFinancialMetrics = (
     popularServices: [],
   };
   
-  if (records && barbers) {
-    metrics.totalAttendances = records.length;
-    metrics.totalRevenue = records.reduce((sum, r) => sum + Number(r.price_charged), 0);
-    metrics.averageTicket = metrics.totalAttendances > 0 
-      ? metrics.totalRevenue / metrics.totalAttendances 
-      : 0;
-    
-    // Group by barber and calculate commissions
-    records.forEach((record) => {
-      const barberId = record.barber_id || 'unknown';
-      const barber = barbers.find(b => b.id === barberId);
-      const commissionPct = barber?.commission_percentage || 50;
-      const priceCharged = Number(record.price_charged);
-      const commission = (priceCharged * commissionPct) / 100;
-      
-      if (!metrics.attendancesByBarber[barberId]) {
-        metrics.attendancesByBarber[barberId] = { 
-          count: 0, 
-          revenue: 0, 
-          commission: 0,
-          commissionPercentage: commissionPct,
-        };
-      }
-      metrics.attendancesByBarber[barberId].count++;
-      metrics.attendancesByBarber[barberId].revenue += priceCharged;
-      metrics.attendancesByBarber[barberId].commission += commission;
-      
-      metrics.totalCommissions += commission;
+  if (byBarber) {
+    const rows = barberId ? byBarber.filter((b) => b.barber_id === barberId) : byBarber;
+
+    rows.forEach((row) => {
+      metrics.attendancesByBarber[row.barber_id] = {
+        count: row.attendances,
+        revenue: row.revenue,
+        commission: row.commission,
+        commissionPercentage: row.commission_percentage,
+      };
+      metrics.totalAttendances += row.attendances;
+      metrics.totalRevenue += row.revenue;
+      metrics.totalCommissions += row.commission;
     });
-    
+
+    metrics.averageTicket = metrics.totalAttendances > 0
+      ? metrics.totalRevenue / metrics.totalAttendances
+      : 0;
     metrics.shopProfit = metrics.totalRevenue - metrics.totalCommissions;
-    
-    // Group by service
+  }
+
+  if (records) {
+    // Group by service (uses the detailed list, already paginated)
     const serviceCounts: Record<string, number> = {};
     records.forEach((record) => {
       if (record.service_id) {
