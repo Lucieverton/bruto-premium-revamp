@@ -537,69 +537,42 @@ const AdminFinanceiro = () => {
             </h3>
           </div>
           
-          <div className="overflow-x-auto relative z-10">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-border/50 bg-muted/20">
-                  <th className="p-3 text-left text-xs font-medium text-muted-foreground">Barbeiro</th>
-                  <th className="p-3 text-center text-xs font-medium text-muted-foreground">%</th>
-                  <th className="p-3 text-center text-xs font-medium text-muted-foreground">Atend.</th>
-                  <th className="p-3 text-right text-xs font-medium text-muted-foreground">Faturado</th>
-                  <th className="p-3 text-right text-xs font-medium text-muted-foreground">Comissão</th>
-                  <th className="p-3 text-right text-xs font-medium text-muted-foreground">Lucro</th>
-                </tr>
-              </thead>
-              <tbody>
-                {Object.entries(metrics.attendancesByBarber).length === 0 ? (
-                  <tr>
-                    <td colSpan={6} className="p-8 text-center text-muted-foreground text-sm">
-                      Nenhum atendimento no período
-                    </td>
-                  </tr>
-                ) : (
-                  Object.entries(metrics.attendancesByBarber).map(([barberId, data]) => {
-                    const barber = barbers?.find(b => b.id === barberId);
-                    const profit = data.revenue - data.commission;
-                    
-                    return (
-                      <tr key={barberId} className="border-b border-border/30 hover:bg-muted/20 transition-colors">
-                        <td className="p-3 text-sm font-medium">{barber?.display_name || 'Desc.'}</td>
-                        <td className="p-3 text-sm text-center text-muted-foreground">{data.commissionPercentage}%</td>
-                        <td className="p-3 text-sm text-center">{data.count}</td>
-                        <td className="p-3 text-sm text-right text-green-400 font-medium">
-                          R$ {data.revenue.toFixed(0)}
-                        </td>
-                        <td className="p-3 text-sm text-right text-orange-400 font-medium">
-                          R$ {data.commission.toFixed(0)}
-                        </td>
-                        <td className="p-3 text-sm text-right text-primary font-bold">
-                          R$ {profit.toFixed(0)}
-                        </td>
-                      </tr>
-                    );
-                  })
-                )}
-              </tbody>
-              {Object.entries(metrics.attendancesByBarber).length > 0 && (
-                <tfoot>
-                  <tr className="bg-primary/10">
-                    <td className="p-3 text-sm font-bold">TOTAL</td>
-                    <td className="p-3"></td>
-                    <td className="p-3 text-sm text-center font-bold">{metrics.totalAttendances}</td>
-                    <td className="p-3 text-sm text-right text-green-400 font-bold">
-                      R$ {metrics.totalRevenue.toFixed(0)}
-                    </td>
-                    <td className="p-3 text-sm text-right text-orange-400 font-bold">
-                      R$ {metrics.totalCommissions.toFixed(0)}
-                    </td>
-                    <td className="p-3 text-sm text-right text-primary font-bold">
-                      R$ {metrics.shopProfit.toFixed(0)}
-                    </td>
-                  </tr>
-                </tfoot>
-              )}
-            </table>
+          <div className="p-3 sm:p-4 space-y-3 relative z-10">
+            {barberRows.length === 0 ? (
+              <p className="p-6 text-center text-muted-foreground text-sm">
+                Nenhum barbeiro cadastrado
+              </p>
+            ) : (
+              <>
+                {barberRows.map((row) => (
+                  <BarberFinanceCard key={row.barberId} row={row} />
+                ))}
+
+                <div className="flex flex-col sm:flex-row sm:items-center gap-3 rounded-xl bg-primary/10 border border-primary/30 p-3">
+                  <p className="text-sm font-bold sm:w-52">TOTAL</p>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 flex-1">
+                    <div>
+                      <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Atend.</p>
+                      <p className="text-sm font-bold">{metrics.totalAttendances}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Faturado</p>
+                      <p className="text-sm font-bold text-green-400">R$ {metrics.totalRevenue.toFixed(0)}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Comissão</p>
+                      <p className="text-sm font-bold text-orange-400">R$ {metrics.totalCommissions.toFixed(0)}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Lucro loja</p>
+                      <p className="text-sm font-bold text-primary">R$ {metrics.shopProfit.toFixed(0)}</p>
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
+
         </div>
         
         {/* Attendance History */}
