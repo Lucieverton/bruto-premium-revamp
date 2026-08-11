@@ -408,6 +408,27 @@ const AdminFinanceiro = () => {
                 Sem dados
               </div>
             )}
+
+            {barberChartData.length > 0 && (
+              <div className="flex flex-wrap gap-3 mt-3 relative z-10">
+                {barberChartData.map((b) => (
+                  <div key={b.barberId} className="flex items-center gap-2 min-w-0">
+                    <Avatar className="h-7 w-7 border border-border/60">
+                      <AvatarImage src={b.avatarUrl || undefined} alt={`Foto de ${b.name}`} />
+                      <AvatarFallback className="bg-primary/10 text-primary text-[10px] font-bold">
+                        {b.name.slice(0, 2).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="text-xs text-muted-foreground break-words">{b.name}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+            ) : (
+              <div className="flex items-center justify-center h-[200px] text-muted-foreground text-sm">
+                Sem dados
+              </div>
+            )}
           </div>
           
           {/* Profit Distribution */}
