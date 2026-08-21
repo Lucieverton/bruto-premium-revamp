@@ -4,12 +4,13 @@ import { Button } from '@/components/ui/button';
 import defaultLogo from '@/assets/logo.png';
 import defaultMenuIcon from '@/assets/menu-icon.png';
 import defaultCloseIcon from '@/assets/close-icon.png';
-import { useSiteImage } from '@/hooks/useSiteImages';
+import { useSiteImageSlot } from '@/hooks/useSiteImages';
 
 export const Navbar = () => {
-  const logo = useSiteImage('logo', defaultLogo);
-  const menuIcon = useSiteImage('menu_icon', defaultMenuIcon);
-  const closeIcon = useSiteImage('close_icon', defaultCloseIcon);
+  const { src: logo, resolved: logoResolved } = useSiteImageSlot('logo', defaultLogo);
+  const { src: menuIcon } = useSiteImageSlot('menu_icon', defaultMenuIcon);
+  const { src: closeIcon } = useSiteImageSlot('close_icon', defaultCloseIcon);
+
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [displayedText, setDisplayedText] = useState('');
