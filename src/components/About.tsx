@@ -1,13 +1,17 @@
 import { useEffect, useRef } from 'react';
 import defaultBarbershopFront from '@/assets/barbershop-front-nobg.png';
 import defaultBarbershopInterior from '@/assets/barbershop-interior.jpg';
-import { useSiteImage, useSiteText } from '@/hooks/useSiteImages';
+import { useSiteImageSlot, useSiteText } from '@/hooks/useSiteImages';
 import { ABOUT_DEFAULTS } from '@/lib/siteAboutDefaults';
 import { Card3DFlip } from './Card3DFlip';
 
 export const About = () => {
-  const barbershopFront = useSiteImage('about_front', defaultBarbershopFront);
-  const barbershopInterior = useSiteImage('about_interior', defaultBarbershopInterior);
+  const front = useSiteImageSlot('about_front', defaultBarbershopFront);
+  const interior = useSiteImageSlot('about_interior', defaultBarbershopInterior);
+  const barbershopFront = front.src;
+  const barbershopInterior = interior.src;
+  const imagesResolved = front.resolved && interior.resolved;
+
 
   const title = useSiteText('about_title', ABOUT_DEFAULTS.about_title);
   const caption1 = useSiteText('about_caption_1', ABOUT_DEFAULTS.about_caption_1);
@@ -48,12 +52,15 @@ export const About = () => {
         <div className="space-y-10">
           {/* Card 3D Flip */}
           <div className="space-y-3">
-            <Card3DFlip
-              frontImage={barbershopFront}
-              backImage={barbershopInterior}
-              frontAlt={caption1}
-              backAlt={caption2}
-            />
+            <div className={imagesResolved ? 'opacity-100 transition-opacity duration-300' : 'opacity-0'}>
+              <Card3DFlip
+                frontImage={barbershopFront}
+                backImage={barbershopInterior}
+                frontAlt={caption1}
+                backAlt={caption2}
+              />
+            </div>
+
             {(caption1 || caption2) && (
               <p className="text-center text-sm text-muted-foreground break-words px-4">
                 {caption1}

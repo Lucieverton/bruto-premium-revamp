@@ -4,12 +4,13 @@ import { Button } from '@/components/ui/button';
 import defaultLogo from '@/assets/logo.png';
 import defaultMenuIcon from '@/assets/menu-icon.png';
 import defaultCloseIcon from '@/assets/close-icon.png';
-import { useSiteImage } from '@/hooks/useSiteImages';
+import { useSiteImageSlot } from '@/hooks/useSiteImages';
 
 export const Navbar = () => {
-  const logo = useSiteImage('logo', defaultLogo);
-  const menuIcon = useSiteImage('menu_icon', defaultMenuIcon);
-  const closeIcon = useSiteImage('close_icon', defaultCloseIcon);
+  const { src: logo, resolved: logoResolved } = useSiteImageSlot('logo', defaultLogo);
+  const { src: menuIcon } = useSiteImageSlot('menu_icon', defaultMenuIcon);
+  const { src: closeIcon } = useSiteImageSlot('close_icon', defaultCloseIcon);
+
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [displayedText, setDisplayedText] = useState('');
@@ -140,7 +141,8 @@ export const Navbar = () => {
                 alt="Logo Barbearia Brutos" 
                 className={`h-14 md:h-16 lg:h-20 w-auto transition-all duration-500 hover:scale-110 animate-breathe hover:drop-shadow-[0_0_15px_rgba(212,175,55,0.6)] ${
                   showHint ? 'scale-95 opacity-70' : ''
-                }`}
+                } ${logoResolved ? 'opacity-100' : 'opacity-0'}`}
+
               />
             </button>
 
