@@ -52,12 +52,15 @@ export const About = () => {
         <div className="space-y-10">
           {/* Card 3D Flip */}
           <div className="space-y-3">
-            <Card3DFlip
-              frontImage={barbershopFront}
-              backImage={barbershopInterior}
-              frontAlt={caption1}
-              backAlt={caption2}
-            />
+            <div className={imagesResolved ? 'opacity-100 transition-opacity duration-300' : 'opacity-0'}>
+              <Card3DFlip
+                frontImage={barbershopFront}
+                backImage={barbershopInterior}
+                frontAlt={caption1}
+                backAlt={caption2}
+              />
+            </div>
+
             {(caption1 || caption2) && (
               <p className="text-center text-sm text-muted-foreground break-words px-4">
                 {caption1}
