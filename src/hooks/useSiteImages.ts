@@ -199,12 +199,14 @@ export const useSaveSiteImage = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ slot, url, alt }: { slot: SiteImageSlot; url: string; alt?: string }) => {
+      const previous = queryClient.getQueryData<Record<string, SiteImage>>(['site-images'])?.[slot]?.url;
       const { error } = await supabase
         .from('site_images')
         .upsert({ slot, url, alt: alt ?? null }, { onConflict: 'slot' });
       if (error) throw error;
+      if (previous && previous !== url) await removeSiteImageFile(previous);
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['site-images'] }),
+    onSuccess: () => queryClient.refetchQueries({ queryKey: ['site-images'] }),
   });
 };
 
@@ -212,10 +214,12 @@ export const useResetSiteImage = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (slot: SiteImageSlot) => {
+      const previous = queryClient.getQueryData<Record<string, SiteImage>>(['site-images'])?.[slot]?.url;
       const { error } = await supabase.from('site_images').delete().eq('slot', slot);
       if (error) throw error;
+      await removeSiteImageFile(previous);
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['site-images'] }),
+    onSuccess: () => queryClient.refetchQueries({ queryKey: ['site-images'] }),
   });
 };
 
@@ -224,6 +228,11 @@ export const useSaveGalleryItem = () => {
   return useMutation({
     mutationFn: async (item: Partial<GalleryItem> & { gallery: string; url: string }) => {
       if (item.id) {
+        const { data: prev } = await supabase
+          .from('site_gallery_items')
+          .select('url')
+          .eq('id', item.id)
+          .maybeSingle();
         const { error } = await supabase
           .from('site_gallery_items')
           .update({
@@ -235,6 +244,7 @@ export const useSaveGalleryItem = () => {
           })
           .eq('id', item.id);
         if (error) throw error;
+        if (prev?.url && prev.url !== item.url) await removeSiteImageFile(prev.url);
       } else {
         const { error } = await supabase.from('site_gallery_items').insert({
           gallery: item.gallery,
@@ -247,7 +257,7 @@ export const useSaveGalleryItem = () => {
         if (error) throw error;
       }
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['site-gallery'] }),
+    onSuccess: () => queryClient.refetchQueries({ queryKey: ['site-gallery'] }),
   });
 };
 
@@ -255,9 +265,16 @@ export const useDeleteGalleryItem = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
+      const { data: prev } = await supabase
+        .from('site_gallery_items')
+        .select('url')
+        .eq('id', id)
+        .maybeSingle();
       const { error } = await supabase.from('site_gallery_items').delete().eq('id', id);
       if (error) throw error;
+      await removeSiteImageFile(prev?.url);
     },
+
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['site-gallery'] }),
   });
 };
