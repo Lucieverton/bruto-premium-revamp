@@ -141,7 +141,8 @@ export const Navbar = () => {
                 alt="Logo Barbearia Brutos" 
                 className={`h-14 md:h-16 lg:h-20 w-auto transition-all duration-500 hover:scale-110 animate-breathe hover:drop-shadow-[0_0_15px_rgba(212,175,55,0.6)] ${
                   showHint ? 'scale-95 opacity-70' : ''
-                }`}
+                } ${logoResolved ? 'opacity-100' : 'opacity-0'}`}
+
               />
             </button>
 
