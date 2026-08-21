@@ -307,9 +307,13 @@ export const useSiteTexts = () => {
       (data || []).forEach((row: { key: string; value: string }) => {
         map[row.key] = row.value;
       });
+      writeCache('site-texts', map);
       return map;
     },
+    initialData: () => readCache<Record<string, string>>('site-texts'),
+    initialDataUpdatedAt: 0,
     staleTime: 5 * 60_000,
+
     gcTime: 30 * 60_000,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
