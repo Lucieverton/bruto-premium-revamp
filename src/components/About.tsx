@@ -1,13 +1,17 @@
 import { useEffect, useRef } from 'react';
 import defaultBarbershopFront from '@/assets/barbershop-front-nobg.png';
 import defaultBarbershopInterior from '@/assets/barbershop-interior.jpg';
-import { useSiteImage, useSiteText } from '@/hooks/useSiteImages';
+import { useSiteImageSlot, useSiteText } from '@/hooks/useSiteImages';
 import { ABOUT_DEFAULTS } from '@/lib/siteAboutDefaults';
 import { Card3DFlip } from './Card3DFlip';
 
 export const About = () => {
-  const barbershopFront = useSiteImage('about_front', defaultBarbershopFront);
-  const barbershopInterior = useSiteImage('about_interior', defaultBarbershopInterior);
+  const front = useSiteImageSlot('about_front', defaultBarbershopFront);
+  const interior = useSiteImageSlot('about_interior', defaultBarbershopInterior);
+  const barbershopFront = front.src;
+  const barbershopInterior = interior.src;
+  const imagesResolved = front.resolved && interior.resolved;
+
 
   const title = useSiteText('about_title', ABOUT_DEFAULTS.about_title);
   const caption1 = useSiteText('about_caption_1', ABOUT_DEFAULTS.about_caption_1);
