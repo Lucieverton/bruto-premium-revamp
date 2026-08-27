@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AdminLayout } from '@/components/admin/AdminLayout';
+import { shopDayStart, shopDayEnd } from '@/lib/businessDay';
 import { useAuth } from '@/contexts/AuthContext';
 import { useFinancialMetrics, useBarbersWithCommission, useFinancialTotalsByBarber } from '@/hooks/useFinancial';
 import { useServices } from '@/hooks/useQueue';
@@ -53,13 +54,11 @@ type DateRange = 'today' | 'week' | 'month' | 'year';
 const getDateRange = (range: DateRange) => {
   const now = new Date();
   let start: Date;
-  const end = new Date(now);
-  end.setHours(23, 59, 59, 999);
+  const end = shopDayEnd(now);
   
   switch (range) {
     case 'today':
-      start = new Date(now);
-      start.setHours(0, 0, 0, 0);
+      start = shopDayStart(now);
       break;
     case 'week':
       start = new Date(now);
@@ -77,8 +76,7 @@ const getDateRange = (range: DateRange) => {
       start.setHours(0, 0, 0, 0);
       break;
     default:
-      start = new Date(now);
-      start.setHours(0, 0, 0, 0);
+      start = shopDayStart(now);
   }
   
   return { start: start.toISOString(), end: end.toISOString() };

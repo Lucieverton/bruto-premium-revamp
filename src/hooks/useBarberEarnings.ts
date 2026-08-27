@@ -1,3 +1,4 @@
+import { shopDayStart, shopDayEnd } from '@/lib/businessDay';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -177,8 +178,8 @@ const rangeBounds = (dateRange: DateRangeType, now: Date) => {
   switch (dateRange) {
     case 'today':
       return {
-        startDate: new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0),
-        endDate: new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59),
+        startDate: shopDayStart(now),
+        endDate: shopDayEnd(now),
         bucket: 'hour' as Bucket,
       };
     case 'week': {
@@ -279,11 +280,8 @@ export const useBarberDailyEvolution = (barberId?: string, days: number = 30) =>
     queryKey: ['barber-daily-evolution', barberId, days],
     queryFn: async () => {
       if (!barberId) return [];
-      const end = new Date();
-      end.setHours(23, 59, 59, 999);
-      const start = new Date(end);
-      start.setDate(end.getDate() - (days - 1));
-      start.setHours(0, 0, 0, 0);
+      const end = shopDayEnd();
+      const start = shopDayStart(new Date(end.getTime() - (days - 1) * 86400000));
 
       const series = await fetchFinancialSeries(start, end, 'day', barberId);
 

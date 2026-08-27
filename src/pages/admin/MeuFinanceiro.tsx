@@ -1,3 +1,4 @@
+import { shopDayStart, shopDayEnd } from '@/lib/businessDay';
 import { useState, useMemo } from 'react';
 import { 
   DollarSign, 
@@ -95,11 +96,8 @@ const MeuFinanceiro = () => {
     queryFn: async () => {
       if (!barber?.id) return [];
       
-      const startOfDay = new Date(selectedDate);
-      startOfDay.setHours(0, 0, 0, 0);
-      
-      const endOfDay = new Date(selectedDate);
-      endOfDay.setHours(23, 59, 59, 999);
+      const startOfDay = shopDayStart(selectedDate);
+      const endOfDay = shopDayEnd(selectedDate);
       
       // Use RPC to get attendance with all services
       const { data: records, error } = await supabase
