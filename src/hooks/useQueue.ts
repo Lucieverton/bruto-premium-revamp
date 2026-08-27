@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { saveMyTicket } from '@/lib/antiAbuse';
 import { sendPushNotification } from '@/lib/pushNotify';
+import { shopDayStart, shopDayEnd } from '@/lib/businessDay';
 
 export interface QueueItem {
   id: string;
