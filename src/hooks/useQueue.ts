@@ -121,11 +121,14 @@ export const useTodayQueue = () => {
   return useQuery({
     queryKey: ['today-queue'],
     queryFn: async () => {
-      const today = new Date().toISOString().split('T')[0];
+      // Usa o dia local da barbearia (UTC-3), não o dia UTC
+      const start = shopDayStart().toISOString();
+      const end = shopDayEnd().toISOString();
       const { data, error } = await supabase
         .from('queue_items')
         .select('*')
-        .gte('created_at', `${today}T00:00:00`)
+        .gte('created_at', start)
+        .lte('created_at', end)
         .order('created_at', { ascending: true });
       
       if (error) throw error;
