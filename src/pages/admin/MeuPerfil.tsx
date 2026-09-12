@@ -277,17 +277,79 @@ const MeuPerfil = () => {
                 </div>
               </div>
 
-              {/* Test notification button */}
+              {/* Diagnóstico do aparelho */}
+              <div className="rounded-xl border bg-muted/20 p-3 space-y-2 text-sm">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-muted-foreground">Permissão do navegador</span>
+                  <span className="font-medium break-words text-right">
+                    {typeof Notification === 'undefined'
+                      ? 'Não suportado'
+                      : Notification.permission === 'granted'
+                        ? 'Permitida'
+                        : Notification.permission === 'denied'
+                          ? 'Bloqueada'
+                          : 'Não definida'}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-muted-foreground">Este celular registrado</span>
+                  <span className="font-medium break-words text-right">
+                    {pushStatus.state === 'registered'
+                      ? 'Sim'
+                      : pushStatus.state === 'denied'
+                        ? 'Não (permissão negada)'
+                        : pushStatus.state === 'unsupported'
+                          ? 'Não suportado neste navegador'
+                          : pushStatus.state === 'error'
+                            ? `Falhou: ${pushStatus.detail ?? ''}`
+                            : 'Verificando...'}
+                  </span>
+                </div>
+                {pushStatus.registeredAt && (
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-muted-foreground">Última confirmação</span>
+                    <span className="font-medium">
+                      {pushStatus.registeredAt.toLocaleTimeString('pt-BR')}
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {needsIOSInstall && (
+                <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-3 text-sm">
+                  No iPhone, os avisos só chegam com o app instalado: toque em{' '}
+                  <strong>Compartilhar</strong> e depois em{' '}
+                  <strong>Adicionar à Tela de Início</strong>, abra por esse ícone e ative as
+                  notificações novamente.
+                </div>
+              )}
+
+              {/* Test notification buttons */}
               {(notificationStatus === 'granted' || (typeof Notification !== 'undefined' && Notification.permission === 'granted')) && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleTestNotification}
-                  className="w-full border-primary/20 hover:bg-primary/10"
-                >
-                  <Bell size={16} className="mr-2" />
-                  Enviar Notificação de Teste
-                </Button>
+                <div className="grid gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleTestNotification}
+                    className="w-full border-primary/20 hover:bg-primary/10"
+                  >
+                    <Bell size={16} className="mr-2" />
+                    Testar Aviso Nesta Tela
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={handleRealTestPush}
+                    disabled={testingPush}
+                    className="w-full"
+                  >
+                    {testingPush ? (
+                      <Loader2 size={16} className="mr-2 animate-spin" />
+                    ) : (
+                      <BellRing size={16} className="mr-2" />
+                    )}
+                    Testar com o Celular Bloqueado
+                  </Button>
+                </div>
               )}
             </motion.div>
 
