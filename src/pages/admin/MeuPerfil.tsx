@@ -24,6 +24,7 @@ const MeuPerfil = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [notificationStatus, setNotificationStatus] = useState<'idle' | 'granted' | 'denied'>('idle');
+  const [testingPush, setTestingPush] = useState(false);
 
   const { data: barber, isLoading } = useQuery({
     queryKey: ['my-barber-profile', user?.id],
