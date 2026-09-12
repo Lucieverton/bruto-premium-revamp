@@ -43,6 +43,16 @@ const MeuPerfil = () => {
     enabled: !!user?.id,
   });
 
+  // Registro deste aparelho para receber avisos com a tela bloqueada
+  const { status: pushStatus, register: registerPush } = usePushSubscription(barber?.id ?? null);
+
+  const isIOS = typeof navigator !== 'undefined' && /iPad|iPhone|iPod/.test(navigator.userAgent);
+  const isStandalone =
+    typeof window !== 'undefined' &&
+    (window.matchMedia?.('(display-mode: standalone)').matches ||
+      (navigator as unknown as { standalone?: boolean }).standalone === true);
+  const needsIOSInstall = isIOS && !isStandalone;
+
   // Disponibilidade/pausas são controladas em BarberAvailabilityControl (RPC barber_set_availability)
 
 
