@@ -54,26 +54,37 @@ const MeuPerfil = () => {
 
   // Queue alerts now handled globally in AdminLayout
 
-  // Request notification permission via PWA
+  // Request notification permission + register this device for background alerts
   const requestNotifications = async () => {
     const permission = await requestPushPermission();
-    if (permission === 'granted') {
-      setNotificationStatus('granted');
-      toast({
-        title: '🔔 Notificações ativadas!',
-        description: 'Você receberá alertas mesmo em segundo plano quando novos clientes entrarem na sua fila.',
-      });
-    } else {
+    if (permission !== 'granted') {
       setNotificationStatus('denied');
       toast({
         title: '⚠️ Notificações bloqueadas',
         description: 'Habilite as notificações nas configurações do navegador.',
         variant: 'destructive',
       });
+      return;
+    }
+
+    setNotificationStatus('granted');
+    const result = await registerPush(true);
+
+    if (result.state === 'registered') {
+      toast({
+        title: '🔔 Notificações ativadas!',
+        description: 'Este celular receberá o aviso mesmo com a tela bloqueada.',
+      });
+    } else {
+      toast({
+        title: '⚠️ Não foi possível registrar este celular',
+        description: result.detail || 'Tente novamente em alguns segundos.',
+        variant: 'destructive',
+      });
     }
   };
 
-  // Send a test notification
+  // Local test (only shows a notification on this device)
   const handleTestNotification = async () => {
     const sent = await sendTestNotification();
     if (sent) {
@@ -87,6 +98,44 @@ const MeuPerfil = () => {
         description: 'Verifique se as notificações estão permitidas nas configurações do navegador.',
         variant: 'destructive',
       });
+    }
+  };
+
+  // Real test: server → device (works with the screen locked / app closed)
+  const handleRealTestPush = async () => {
+    if (!barber?.id) return;
+    setTestingPush(true);
+    try {
+      let current = pushStatus;
+      if (current.state !== 'registered') {
+        current = await registerPush(true);
+      }
+      if (current.state !== 'registered') {
+        toast({
+          title: '⚠️ Celular não registrado',
+          description: current.detail || 'Ative as notificações neste aparelho primeiro.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      const { data: { session } } = await supabase.auth.getSession();
+      const result = await sendTestPush(barber.id, session?.access_token ?? '');
+
+      if (result.ok) {
+        toast({
+          title: '📲 Teste enviado!',
+          description: 'Bloqueie a tela do celular: a notificação deve aparecer em alguns segundos.',
+        });
+      } else {
+        toast({
+          title: '❌ O envio não chegou ao celular',
+          description: result.detail?.slice(0, 160) || 'Nenhum aparelho registrado.',
+          variant: 'destructive',
+        });
+      }
+    } finally {
+      setTestingPush(false);
     }
   };
 
