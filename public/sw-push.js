@@ -5,47 +5,50 @@
 self.addEventListener("push", (event) => {
   console.log("[SW Push] Push event received");
 
-  // Default notification (since we send TTL-only pushes without encrypted payload)
-  const title = "💈 Novo Cliente na Fila!";
-  const options = {
+  const fallback = {
+    title: "💈 Novo Cliente na Fila!",
     body: "Um novo cliente está aguardando atendimento.",
-    icon: "/favicon.png",
-    badge: "/favicon.png",
     tag: "novo-cliente-push",
-    vibrate: [500, 200, 500, 200, 500],
-    renotify: true,
-    requireInteraction: true,
-    data: {
-      url: "/admin",
-      timestamp: Date.now(),
-    },
-    actions: [
-      {
-        action: "open",
-        title: "Ver Fila",
-      },
-    ],
+    url: "/admin/atendimento",
   };
 
-  // Try to parse push data if available
+  let data = { ...fallback };
+
   if (event.data) {
     try {
-      const data = event.data.json();
-      if (data.title) options.body = data.body || options.body;
-      event.waitUntil(self.registration.showNotification(data.title || title, options));
-      return;
+      const parsed = event.data.json();
+      data = {
+        title: parsed.title || fallback.title,
+        body: parsed.body || fallback.body,
+        tag: parsed.tag || fallback.tag,
+        url: parsed.url || fallback.url,
+      };
     } catch (e) {
-      // Try as text
       try {
         const text = event.data.text();
-        if (text) options.body = text;
+        if (text) data.body = text;
       } catch (e2) {
-        // Use defaults
+        // keep fallback
       }
     }
   }
 
-  event.waitUntil(self.registration.showNotification(title, options));
+  const options = {
+    body: data.body,
+    icon: "/favicon.png",
+    badge: "/favicon.png",
+    tag: data.tag,
+    vibrate: [500, 200, 500, 200, 500],
+    renotify: true,
+    requireInteraction: true,
+    data: {
+      url: data.url,
+      timestamp: Date.now(),
+    },
+    actions: [{ action: "open", title: "Ver Fila" }],
+  };
+
+  event.waitUntil(self.registration.showNotification(data.title, options));
 });
 
 // ── Notification Click Handler ─────────────────────────────────────────────
@@ -54,17 +57,15 @@ self.addEventListener("notificationclick", (event) => {
   console.log("[SW Push] Notification clicked");
   event.notification.close();
 
-  const urlPath = event.notification.data?.url || "/admin";
+  const urlPath = event.notification.data?.url || "/admin/atendimento";
 
   event.waitUntil(
     clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientList) => {
-      // Try to focus an existing window
       for (const client of clientList) {
         if (client.url.includes("/admin") && "focus" in client) {
           return client.focus();
         }
       }
-      // Open new window
       return clients.openWindow(urlPath);
     }),
   );
