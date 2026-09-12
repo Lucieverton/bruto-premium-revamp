@@ -15,6 +15,8 @@ import { BarberAvailabilityControl } from '@/components/barber/BarberAvailabilit
 
 
 import { requestPushPermission, sendTestNotification } from '@/lib/pwa';
+import { usePushSubscription } from '@/hooks/usePushSubscription';
+import { sendTestPush } from '@/lib/pushNotify';
 import { motion } from 'framer-motion';
 
 const MeuPerfil = () => {
