@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX IF NOT EXISTS vapid_keys_singleton ON public.vapid_keys ((true));
