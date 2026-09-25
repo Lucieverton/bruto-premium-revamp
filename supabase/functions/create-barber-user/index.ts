@@ -116,13 +116,18 @@ Deno.serve(async (req) => {
     const { error: roleErr } = await admin.from('user_roles').insert({ user_id: userId, role: 'barber' });
     if (roleErr) {
       console.error('[create-barber-user] role insert error', roleErr);
-      await admin.from('barbers').delete().eq('id', barber.id);
+      if (existingBarberId) {
+        await admin.from('barbers').update({ user_id: null }).eq('id', barber.id);
+      } else {
+        await admin.from('barbers').delete().eq('id', barber.id);
+      }
       await admin.auth.admin.deleteUser(userId);
       return json({ error: 'Erro ao liberar acesso: ' + roleErr.message }, 500);
     }
 
     await admin.from('audit_logs').insert({
-      actor_id: callerId, action: 'create_barber_user', target_type: 'barber', target_id: barber.id,
+      actor_id: callerId, action: existingBarberId ? 'enable_barber_login' : 'create_barber_user',
+      target_type: 'barber', target_id: barber.id,
       details: { email, display_name, user_id: userId },
     });
 
