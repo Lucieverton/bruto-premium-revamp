@@ -52,27 +52,27 @@ Deno.serve(async (req) => {
     }
 
     let body: any;
-    try { body = await req.json(); } catch { return json({ error: 'Dados inválidos' }, 400); }
+    try { body = await req.json(); } catch { return json({ error: 'Dados inválidos'  , success: false }, 200); }
     const email = String(body?.email ?? '').trim().toLowerCase();
     const password = String(body?.password ?? '');
     let display_name = String(body?.display_name ?? '').trim();
     const existingBarberId: string | null = body?.barber_id ? String(body.barber_id) : null;
     if (existingBarberId) {
-      if (!/^[0-9a-f-]{36}$/i.test(existingBarberId)) return json({ error: 'Barbeiro inválido' }, 400);
+      if (!/^[0-9a-f-]{36}$/i.test(existingBarberId)) return json({ error: 'Barbeiro inválido'  , success: false }, 200);
       const { data: eb } = await admin.from('barbers').select('id, display_name, user_id').eq('id', existingBarberId).maybeSingle();
-      if (!eb) return json({ error: 'Barbeiro não encontrado' }, 404);
-      if (eb.user_id) return json({ error: 'Este barbeiro já possui login' }, 400);
+      if (!eb) return json({ error: 'Barbeiro não encontrado'  , success: false }, 200);
+      if (eb.user_id) return json({ error: 'Este barbeiro já possui login'  , success: false }, 200);
       display_name = eb.display_name;
     }
     const specialty = body?.specialty ? String(body.specialty).trim().slice(0, 100) : null;
     const commissionRaw = Number(body?.commission_percentage);
     const commission_percentage = Number.isFinite(commissionRaw) ? Math.min(100, Math.max(0, commissionRaw)) : 50;
 
-    if (!email || !password || !display_name) return json({ error: 'Email, senha e nome são obrigatórios' }, 400);
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 255) return json({ error: 'Email inválido' }, 400);
-    if (display_name.length > 100) return json({ error: 'Nome muito longo' }, 400);
+    if (!email || !password || !display_name) return json({ error: 'Email, senha e nome são obrigatórios'  , success: false }, 200);
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 255) return json({ error: 'Email inválido'  , success: false }, 200);
+    if (display_name.length > 100) return json({ error: 'Nome muito longo'  , success: false }, 200);
     if (password.length < 8 || !/\d/.test(password)) {
-      return json({ error: 'A senha deve ter pelo menos 8 caracteres e incluir pelo menos 1 número' }, 400);
+      return json({ error: 'A senha deve ter pelo menos 8 caracteres e incluir pelo menos 1 número'  , success: false }, 200);
     }
 
     const { data: newUser, error: createErr } = await admin.auth.admin.createUser({
@@ -82,9 +82,9 @@ Deno.serve(async (req) => {
       console.error('[create-barber-user] createUser error', createErr);
       const msg = (createErr?.message || '').toLowerCase();
       if ((createErr as any)?.code === 'email_exists' || msg.includes('already') || msg.includes('registered')) {
-        return json({ error: 'Este email já está cadastrado' }, 400);
+        return json({ error: 'Este email já está cadastrado'  , success: false }, 200);
       }
-      if (msg.includes('password')) return json({ error: 'Senha fraca ou comum demais. Escolha outra senha.' }, 400);
+      if (msg.includes('password')) return json({ error: 'Senha fraca ou comum demais. Escolha outra senha.'  , success: false }, 200);
       return json({ error: 'Erro ao criar login: ' + (createErr?.message || 'desconhecido') }, 500);
     }
     const userId = newUser.user.id;
