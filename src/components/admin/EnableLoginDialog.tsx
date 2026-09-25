@@ -15,6 +15,14 @@ interface Props {
   onClose: () => void;
 }
 
+const generateStrongPassword = () => {
+  const words = ['Navalha', 'Tesoura', 'Pente', 'Barba', 'Degrade', 'Brutos', 'Cromo', 'Neon'];
+  const rnd = new Uint32Array(3);
+  crypto.getRandomValues(rnd);
+  const symbols = '#@!$%&*';
+  return `${words[rnd[0] % words.length]}${symbols[rnd[1] % symbols.length]}${1000 + (rnd[2] % 9000)}${words[(rnd[0] >> 8) % words.length].toLowerCase()}`;
+};
+
 export const EnableLoginDialog = ({ barber, onClose }: Props) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -92,6 +100,10 @@ export const EnableLoginDialog = ({ barber, onClose }: Props) => {
             <p className="text-xs text-muted-foreground">
               Mínimo 8 caracteres e 1 número. Senhas muito comuns (ex.: "Teste12345") são recusadas.
             </p>
+            <Button type="button" variant="outline" size="sm" className="w-full"
+              onClick={() => { setPassword(generateStrongPassword()); setShow(true); }}>
+              Gerar senha forte
+            </Button>
           </div>
           <Button type="submit" className="w-full" disabled={mutation.isPending}>
             {mutation.isPending && <Loader2 className="animate-spin mr-2" size={18} />}
