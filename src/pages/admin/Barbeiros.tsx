@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Plus, Pencil, Trash2, Loader2, UserCheck, UserX, Mail, Lock, Users } from 'lucide-react';
+import { Plus, Pencil, Trash2, Loader2, UserCheck, UserX, Mail, Lock, Users, KeyRound } from 'lucide-react';
+import { EnableLoginDialog } from '@/components/admin/EnableLoginDialog';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -49,6 +50,7 @@ const AdminBarbeiros = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingBarber, setEditingBarber] = useState<Barber | null>(null);
   const [deleteBarber, setDeleteBarber] = useState<Barber | null>(null);
+  const [loginBarber, setLoginBarber] = useState<Barber | null>(null);
   const [createMode, setCreateMode] = useState<'simple' | 'with-login'>('simple');
   const [formData, setFormData] = useState({
     display_name: '',
@@ -469,7 +471,19 @@ const AdminBarbeiros = () => {
                       </div>
                     </div>
                   )}
-                  
+
+                  {editingBarber && !editingBarber.user_id && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="w-full border-primary text-primary"
+                      onClick={() => { const b = editingBarber; setIsDialogOpen(false); setLoginBarber(b); }}
+                    >
+                      <KeyRound size={16} className="mr-2" />
+                      Ativar login para este barbeiro
+                    </Button>
+                  )}
+
                   <Button type="submit" className="w-full" disabled={isPending}>
                     {isPending && <Loader2 className="animate-spin mr-2" size={18} />}
                     Salvar Alterações
@@ -537,6 +551,17 @@ const AdminBarbeiros = () => {
                   
                   <BarberStatusBadge barber={barber as never} />
 
+                  {!barber.user_id && (
+                    <Button
+                      variant="outline"
+                      className="w-full border-primary text-primary"
+                      onClick={() => setLoginBarber(barber)}
+                    >
+                      <KeyRound size={16} className="mr-2" />
+                      Ativar login
+                    </Button>
+                  )}
+
                   <div className="flex items-center justify-between">
                     <span className="text-sm">Ativo</span>
                     <Switch
@@ -553,6 +578,8 @@ const AdminBarbeiros = () => {
         )}
 
         <BarberBreaksHistory barbers={barbers ?? []} />
+
+        <EnableLoginDialog barber={loginBarber} onClose={() => setLoginBarber(null)} />
 
 
 
