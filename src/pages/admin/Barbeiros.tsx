@@ -96,30 +96,31 @@ const AdminBarbeiros = () => {
   const createWithLoginMutation = useMutation({
     mutationFn: async (data: { display_name: string; specialty: string; email: string; password: string; commission_percentage: string }) => {
       const { data: session } = await supabase.auth.getSession();
-      if (!session.session) throw new Error('Não autenticado');
+      if (!session.session) throw new Error('Sessão expirada. Entre novamente.');
 
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-barber-user`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${session.session.access_token}`,
-          },
-          body: JSON.stringify({
-            email: data.email,
-            password: data.password,
-            display_name: data.display_name,
-            specialty: data.specialty || null,
-            commission_percentage: parseFloat(data.commission_percentage) || 50,
-          }),
+      const { data: result, error } = await supabase.functions.invoke('create-barber-user', {
+        body: {
+          email: data.email,
+          password: data.password,
+          display_name: data.display_name,
+          specialty: data.specialty || null,
+          commission_percentage: parseFloat(data.commission_percentage) || 50,
+        },
+      });
+
+      if (error) {
+        let message = 'Erro ao criar funcionário';
+        try {
+          const ctx: any = (error as any).context;
+          const body = ctx && typeof ctx.json === 'function' ? await ctx.json() : null;
+          if (body?.error) message = body.error;
+        } catch { /* ignore */ }
+        if (message === 'Erro ao criar funcionário' && error.message?.includes('Failed to send')) {
+          message = 'Sem conexão com o servidor. Verifique a internet e tente novamente.';
         }
-      );
-
-      const result = await response.json();
-      if (!response.ok) {
-        throw new Error(result.error || 'Erro ao criar funcionário');
+        throw new Error(message);
       }
+      if (result?.error) throw new Error(result.error);
       return result;
     },
     onSuccess: () => {

@@ -1,249 +1,112 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-
-// Allowed origins for CORS - restrict to production domain and preview URLs
-const ALLOWED_ORIGINS = [
-  'https://barbeariabrutos.lovable.app',
-  'https://id-preview--db9a0e4b-44e5-4af7-b1f0-8924af68e6d6.lovable.app',
-];
+import { createClient } from 'npm:@supabase/supabase-js@2';
 
 function getCorsHeaders(origin: string | null): Record<string, string> {
-  // Check if origin is allowed
-  const allowedOrigin = origin && ALLOWED_ORIGINS.some(allowed => 
-    origin === allowed || origin.endsWith('.lovable.app')
-  ) ? origin : ALLOWED_ORIGINS[0];
-  
+  // Security is enforced by JWT + admin role check below, so echo the caller origin
+  // (site runs on lovable.app and on a custom HostGator domain).
   return {
-    'Access-Control-Allow-Origin': allowedOrigin,
-    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    'Access-Control-Allow-Origin': origin || '*',
+    'Access-Control-Allow-Headers':
+      'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Vary': 'Origin',
   };
 }
 
-interface CreateBarberRequest {
-  email: string;
-  password: string;
-  display_name: string;
-  specialty?: string;
-  commission_percentage?: number;
-}
-
-// Rate limiting: max 10 barber creations per admin per hour
-const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1 hour
+const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000;
 const RATE_LIMIT_MAX = 10;
 
 Deno.serve(async (req) => {
-  const origin = req.headers.get('Origin');
-  const corsHeaders = getCorsHeaders(origin);
+  const corsHeaders = getCorsHeaders(req.headers.get('Origin'));
+  const json = (body: unknown, status = 200) =>
+    new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
+  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
+  if (req.method !== 'POST') return json({ error: 'Método não permitido' }, 405);
 
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
+    const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const admin = createClient(supabaseUrl, serviceKey, { auth: { persistSession: false } });
 
-    // Verify the caller is authenticated and is an admin
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader?.startsWith('Bearer ')) {
-      return new Response(
-        JSON.stringify({ error: 'Não autorizado' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
+    const authHeader = req.headers.get('Authorization') || '';
+    const jwt = authHeader.replace(/^Bearer\s+/i, '');
+    if (!jwt) return json({ error: 'Não autorizado. Faça login novamente.' }, 401);
 
-    // Create client with user's token to verify they're authenticated
-    const userClient = createClient(supabaseUrl, supabaseAnonKey, {
-      global: { headers: { Authorization: authHeader } }
-    });
-
-    // FIXED: Use getUser() instead of getClaims() which doesn't exist
-    const { data: userData, error: userError } = await userClient.auth.getUser();
-    
+    const { data: userData, error: userError } = await admin.auth.getUser(jwt);
     if (userError || !userData?.user) {
-      console.error('[create-barber-user] Auth error:', userError?.message);
-      return new Response(
-        JSON.stringify({ error: 'Token inválido ou expirado' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      console.error('[create-barber-user] auth error', userError?.message);
+      return json({ error: 'Sessão expirada. Saia e entre novamente no painel.' }, 401);
     }
-
     const callerId = userData.user.id;
 
-    // Check if caller is admin using service role
-    const adminClient = createClient(supabaseUrl, supabaseServiceKey);
-    
-    const { data: roleData } = await adminClient
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', callerId)
-      .eq('role', 'admin')
-      .maybeSingle();
+    const { data: roleData } = await admin
+      .from('user_roles').select('role').eq('user_id', callerId).eq('role', 'admin').maybeSingle();
+    if (!roleData) return json({ error: 'Apenas administradores podem criar funcionários' }, 403);
 
-    if (!roleData) {
-      return new Response(
-        JSON.stringify({ error: 'Apenas administradores podem criar funcionários' }),
-        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+    const since = new Date(Date.now() - RATE_LIMIT_WINDOW_MS).toISOString();
+    const { count } = await admin
+      .from('audit_logs').select('id', { count: 'exact', head: true })
+      .eq('actor_id', callerId).eq('action', 'create_barber_user').gte('created_at', since);
+    if ((count ?? 0) >= RATE_LIMIT_MAX) {
+      return json({ error: 'Limite de cadastros por hora atingido. Tente mais tarde.' }, 429);
     }
 
-    // RATE LIMITING: Check recent barber creations by this admin
-    const oneHourAgo = new Date(Date.now() - RATE_LIMIT_WINDOW_MS).toISOString();
-    const { data: recentCreations, error: rateLimitError } = await adminClient
-      .from('audit_logs')
-      .select('id')
-      .eq('actor_id', callerId)
-      .eq('action', 'create_barber_user')
-      .gte('created_at', oneHourAgo);
+    let body: any;
+    try { body = await req.json(); } catch { return json({ error: 'Dados inválidos' }, 400); }
+    const email = String(body?.email ?? '').trim().toLowerCase();
+    const password = String(body?.password ?? '');
+    const display_name = String(body?.display_name ?? '').trim();
+    const specialty = body?.specialty ? String(body.specialty).trim().slice(0, 100) : null;
+    const commissionRaw = Number(body?.commission_percentage);
+    const commission_percentage = Number.isFinite(commissionRaw) ? Math.min(100, Math.max(0, commissionRaw)) : 50;
 
-    if (rateLimitError) {
-      console.error('[create-barber-user] Rate limit check failed:', rateLimitError);
+    if (!email || !password || !display_name) return json({ error: 'Email, senha e nome são obrigatórios' }, 400);
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 255) return json({ error: 'Email inválido' }, 400);
+    if (display_name.length > 100) return json({ error: 'Nome muito longo' }, 400);
+    if (password.length < 8 || !/\d/.test(password)) {
+      return json({ error: 'A senha deve ter pelo menos 8 caracteres e incluir pelo menos 1 número' }, 400);
     }
 
-    if (recentCreations && recentCreations.length >= RATE_LIMIT_MAX) {
-      console.log(`[create-barber-user] Rate limit exceeded for admin ${callerId}`);
-      return new Response(
-        JSON.stringify({ error: 'Limite de criações excedido. Tente novamente mais tarde.' }),
-        { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Parse request body
-    const { email, password, display_name, specialty, commission_percentage }: CreateBarberRequest = await req.json();
-
-    console.log(`[create-barber-user] Admin ${callerId} attempting to create barber with email: ${email}`);
-
-    if (!email || !password || !display_name) {
-      console.log(`[create-barber-user] Validation failed: missing required fields`);
-      return new Response(
-        JSON.stringify({ error: 'Email, senha e nome são obrigatórios' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Enhanced password validation: minimum 8 characters, at least 1 number
-    const hasNumber = /\d/.test(password);
-    if (password.length < 8 || !hasNumber) {
-      console.log(`[create-barber-user] Password validation failed for ${email}`);
-      return new Response(
-        JSON.stringify({ error: 'A senha deve ter pelo menos 8 caracteres e incluir pelo menos 1 número' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Check if email already exists
-    const { data: existingUsers } = await adminClient.auth.admin.listUsers();
-    const emailExists = existingUsers?.users?.some(u => u.email?.toLowerCase() === email.toLowerCase());
-    
-    if (emailExists) {
-      return new Response(
-        JSON.stringify({ error: 'Este email já está cadastrado' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Create the user
-    const { data: newUser, error: createUserError } = await adminClient.auth.admin.createUser({
-      email,
-      password,
-      email_confirm: true,
-      user_metadata: {
-        display_name,
+    const { data: newUser, error: createErr } = await admin.auth.admin.createUser({
+      email, password, email_confirm: true, user_metadata: { display_name },
+    });
+    if (createErr || !newUser?.user) {
+      console.error('[create-barber-user] createUser error', createErr);
+      const msg = (createErr?.message || '').toLowerCase();
+      if ((createErr as any)?.code === 'email_exists' || msg.includes('already') || msg.includes('registered')) {
+        return json({ error: 'Este email já está cadastrado' }, 400);
       }
+      if (msg.includes('password')) return json({ error: 'Senha fraca ou comum demais. Escolha outra senha.' }, 400);
+      return json({ error: 'Erro ao criar login: ' + (createErr?.message || 'desconhecido') }, 500);
+    }
+    const userId = newUser.user.id;
+
+    const { data: barber, error: barberErr } = await admin
+      .from('barbers')
+      .insert({ user_id: userId, display_name, specialty, commission_percentage })
+      .select().single();
+    if (barberErr) {
+      console.error('[create-barber-user] barber insert error', barberErr);
+      await admin.auth.admin.deleteUser(userId);
+      return json({ error: 'Erro ao criar barbeiro: ' + barberErr.message }, 500);
+    }
+
+    const { error: roleErr } = await admin.from('user_roles').insert({ user_id: userId, role: 'barber' });
+    if (roleErr) {
+      console.error('[create-barber-user] role insert error', roleErr);
+      await admin.from('barbers').delete().eq('id', barber.id);
+      await admin.auth.admin.deleteUser(userId);
+      return json({ error: 'Erro ao liberar acesso: ' + roleErr.message }, 500);
+    }
+
+    await admin.from('audit_logs').insert({
+      actor_id: callerId, action: 'create_barber_user', target_type: 'barber', target_id: barber.id,
+      details: { email, display_name, user_id: userId },
     });
 
-    if (createUserError || !newUser.user) {
-      console.error(`[create-barber-user] Error creating user ${email}:`, createUserError);
-      return new Response(
-        JSON.stringify({ error: 'Erro ao criar usuário: ' + (createUserError?.message || 'Erro desconhecido') }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    console.log(`[create-barber-user] User created successfully: ${newUser.user.id}`);
-
-    // Create barber record linked to the user
-    const { data: barberData, error: barberError } = await adminClient
-      .from('barbers')
-      .insert({
-        user_id: newUser.user.id,
-        display_name,
-        specialty: specialty || null,
-        commission_percentage: commission_percentage ?? 50,
-      })
-      .select()
-      .single();
-
-    if (barberError) {
-      console.error(`[create-barber-user] Error creating barber record for ${email}:`, barberError);
-      // Rollback: delete the created user
-      await adminClient.auth.admin.deleteUser(newUser.user.id);
-      return new Response(
-        JSON.stringify({ error: 'Erro ao criar barbeiro: ' + barberError.message }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    console.log(`[create-barber-user] Barber record created: ${barberData.id}`);
-
-    // Assign barber role
-    const { error: roleError } = await adminClient
-      .from('user_roles')
-      .insert({
-        user_id: newUser.user.id,
-        role: 'barber',
-      });
-
-    if (roleError) {
-      console.error(`[create-barber-user] Error assigning role for ${email}:`, roleError);
-      // Rollback
-      await adminClient.from('barbers').delete().eq('id', barberData.id);
-      await adminClient.auth.admin.deleteUser(newUser.user.id);
-      return new Response(
-        JSON.stringify({ error: 'Erro ao atribuir role: ' + roleError.message }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // AUDIT LOGGING: Record this admin action
-    const { error: auditError } = await adminClient
-      .from('audit_logs')
-      .insert({
-        actor_id: callerId,
-        action: 'create_barber_user',
-        target_type: 'barber',
-        target_id: barberData.id,
-        details: {
-          email: email,
-          display_name: display_name,
-          user_id: newUser.user.id,
-        },
-      });
-
-    if (auditError) {
-      console.error(`[create-barber-user] Failed to create audit log:`, auditError);
-      // Don't fail the request for audit log errors, just log it
-    }
-
-    console.log(`[create-barber-user] SUCCESS - Barber created: ${display_name} (${email}) by admin ${callerId}`);
-
-    return new Response(
-      JSON.stringify({ 
-        success: true, 
-        barber: barberData,
-        message: 'Funcionário criado com sucesso'
-      }),
-      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
-
+    return json({ success: true, barber, message: 'Funcionário criado com sucesso' });
   } catch (error) {
-    console.error('Unexpected error:', error);
-    const origin = req.headers.get('Origin');
-    const corsHeaders = getCorsHeaders(origin);
-    return new Response(
-      JSON.stringify({ error: 'Erro interno do servidor' }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    console.error('[create-barber-user] unexpected', error);
+    return json({ error: 'Erro interno do servidor' }, 500);
   }
 });
