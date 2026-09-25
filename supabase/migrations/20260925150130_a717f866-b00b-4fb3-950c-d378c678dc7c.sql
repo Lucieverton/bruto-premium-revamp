@@ -1,0 +1,1 @@
+INSERT INTO public.barbers (id, display_name, is_active) VALUES ('11111111-2222-4333-8444-555555555555','Temp Sem Login', false);
