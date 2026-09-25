@@ -55,7 +55,15 @@ Deno.serve(async (req) => {
     try { body = await req.json(); } catch { return json({ error: 'Dados inválidos' }, 400); }
     const email = String(body?.email ?? '').trim().toLowerCase();
     const password = String(body?.password ?? '');
-    const display_name = String(body?.display_name ?? '').trim();
+    let display_name = String(body?.display_name ?? '').trim();
+    const existingBarberId: string | null = body?.barber_id ? String(body.barber_id) : null;
+    if (existingBarberId) {
+      if (!/^[0-9a-f-]{36}$/i.test(existingBarberId)) return json({ error: 'Barbeiro inválido' }, 400);
+      const { data: eb } = await admin.from('barbers').select('id, display_name, user_id').eq('id', existingBarberId).maybeSingle();
+      if (!eb) return json({ error: 'Barbeiro não encontrado' }, 404);
+      if (eb.user_id) return json({ error: 'Este barbeiro já possui login' }, 400);
+      display_name = eb.display_name;
+    }
     const specialty = body?.specialty ? String(body.specialty).trim().slice(0, 100) : null;
     const commissionRaw = Number(body?.commission_percentage);
     const commission_percentage = Number.isFinite(commissionRaw) ? Math.min(100, Math.max(0, commissionRaw)) : 50;
@@ -81,14 +89,28 @@ Deno.serve(async (req) => {
     }
     const userId = newUser.user.id;
 
-    const { data: barber, error: barberErr } = await admin
-      .from('barbers')
-      .insert({ user_id: userId, display_name, specialty, commission_percentage })
-      .select().single();
-    if (barberErr) {
-      console.error('[create-barber-user] barber insert error', barberErr);
-      await admin.auth.admin.deleteUser(userId);
-      return json({ error: 'Erro ao criar barbeiro: ' + barberErr.message }, 500);
+    let barber: any;
+    if (existingBarberId) {
+      const { data: upd, error: updErr } = await admin
+        .from('barbers').update({ user_id: userId, is_active: true })
+        .eq('id', existingBarberId).is('user_id', null).select().maybeSingle();
+      if (updErr || !upd) {
+        console.error('[create-barber-user] barber link error', updErr);
+        await admin.auth.admin.deleteUser(userId);
+        return json({ error: 'Erro ao vincular login ao barbeiro' }, 500);
+      }
+      barber = upd;
+    } else {
+      const { data: ins, error: barberErr } = await admin
+        .from('barbers')
+        .insert({ user_id: userId, display_name, specialty, commission_percentage })
+        .select().single();
+      if (barberErr) {
+        console.error('[create-barber-user] barber insert error', barberErr);
+        await admin.auth.admin.deleteUser(userId);
+        return json({ error: 'Erro ao criar barbeiro: ' + barberErr.message }, 500);
+      }
+      barber = ins;
     }
 
     const { error: roleErr } = await admin.from('user_roles').insert({ user_id: userId, role: 'barber' });
