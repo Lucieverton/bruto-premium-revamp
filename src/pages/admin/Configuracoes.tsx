@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { Clock, Users, Save, Loader2, Settings } from 'lucide-react';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { Button } from '@/components/ui/button';
@@ -92,30 +93,13 @@ const AdminConfiguracoes = () => {
                 Horário de Funcionamento
               </CardTitle>
               <CardDescription>
-                Define quando a fila virtual aceita novos clientes
+                O horário agora é editado em um só lugar e aparece igual no site e na fila.
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="opening">Abertura</Label>
-                  <Input
-                    id="opening"
-                    type="time"
-                    value={formData.opening_time}
-                    onChange={(e) => setFormData({ ...formData, opening_time: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="closing">Fechamento</Label>
-                  <Input
-                    id="closing"
-                    type="time"
-                    value={formData.closing_time}
-                    onChange={(e) => setFormData({ ...formData, closing_time: e.target.value })}
-                  />
-                </div>
-              </div>
+            <CardContent>
+              <Button asChild variant="outline" className="w-full">
+                <Link to="/admin/site">Editar em Meu site → Horário</Link>
+              </Button>
             </CardContent>
           </Card>
 
