@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { Loader2, Save, RotateCcw, Info } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { Loader2, Save, RotateCcw, Info, Undo2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -34,21 +34,27 @@ export const AboutSectionManager = () => {
   const saveTexts = useSaveSiteTexts();
   const { toast } = useToast();
   const [form, setForm] = useState<Record<string, string>>({});
+  const [saved, setSaved] = useState<Record<string, string>>({});
+  const initialized = useRef(false);
 
   useEffect(() => {
-    if (!texts) return;
+    if (!texts || initialized.current) return;
     const next: Record<string, string> = {};
     (Object.keys(ABOUT_DEFAULTS) as AboutTextKey[]).forEach((k) => {
-      next[k] = texts[k] ?? '';
+      next[k] = texts[k]?.trim() ? texts[k] : ABOUT_DEFAULTS[k];
     });
     setForm(next);
+    setSaved(next);
+    initialized.current = true;
   }, [texts]);
 
   const set = (key: string, value: string) => setForm((f) => ({ ...f, [key]: value }));
+  const dirty = Object.keys(saved).some((k) => form[k] !== saved[k]);
 
   const handleSave = async () => {
     try {
       await saveTexts.mutateAsync(form);
+      setSaved(form);
       toast({ title: 'Seção "Sobre nós" atualizada' });
     } catch (e) {
       toast({ title: 'Erro ao salvar', description: (e as Error).message, variant: 'destructive' });
@@ -59,9 +65,11 @@ export const AboutSectionManager = () => {
     const defaults = Object.fromEntries(
       Object.entries(ABOUT_DEFAULTS).map(([k, v]) => [k, v as string]),
     );
+    if (!window.confirm('Restaurar todos os textos para o padrão? O texto atual será substituído.')) return;
     setForm(defaults);
     try {
       await saveTexts.mutateAsync(defaults);
+      setSaved(defaults);
       toast({ title: 'Textos restaurados para o padrão' });
     } catch (e) {
       toast({ title: 'Erro ao restaurar', description: (e as Error).message, variant: 'destructive' });
@@ -160,11 +168,15 @@ export const AboutSectionManager = () => {
                   onChange={(e) => set(f.key, e.target.value)}
                 />
               )}
-              {f.hint && <p className="text-xs text-muted-foreground">{f.hint}</p>}
+              <div className="flex justify-between gap-2 text-xs text-muted-foreground">
+                <span>{f.hint}</span>
+                <span>{(form[f.key] ?? '').length} caracteres</span>
+              </div>
             </div>
           ))}
 
           <Separator />
+          {dirty && <p className="text-xs text-primary">Alterações não salvas</p>}
 
           <div className="flex flex-col sm:flex-row gap-2">
             <Button onClick={handleSave} disabled={saveTexts.isPending || isLoading} className="flex-1">
@@ -174,6 +186,10 @@ export const AboutSectionManager = () => {
                 <Save size={16} />
               )}
               Salvar textos
+            </Button>
+            <Button variant="outline" onClick={() => setForm(saved)} disabled={!dirty}>
+              <Undo2 size={16} />
+              Desfazer alterações
             </Button>
             <Button variant="outline" onClick={handleResetTexts} disabled={saveTexts.isPending}>
               <RotateCcw size={16} />
