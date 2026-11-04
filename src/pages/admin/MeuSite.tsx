@@ -5,6 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ImageSlotCard } from '@/components/admin/ImageSlotCard';
 import { GalleryManager } from '@/components/admin/GalleryManager';
 import { AboutSectionManager } from '@/components/admin/AboutSectionManager';
+import { ContactSectionManager } from '@/components/admin/ContactSectionManager';
 
 import logo from '@/assets/logo.png';
 import menuIcon from '@/assets/menu-icon.png';
@@ -33,11 +34,16 @@ const AdminMeuSite = () => {
               <TabsTrigger value="identidade">Identidade</TabsTrigger>
               <TabsTrigger value="hero">Hero</TabsTrigger>
               <TabsTrigger value="sobre">Sobre nós</TabsTrigger>
+              <TabsTrigger value="contato">Contato e endereço</TabsTrigger>
               <TabsTrigger value="trabalho">Nosso trabalho</TabsTrigger>
               <TabsTrigger value="produtos">Produtos</TabsTrigger>
               <TabsTrigger value="fila">Fila</TabsTrigger>
             </TabsList>
           </div>
+
+          <TabsContent value="contato" className="mt-4">
+            <ContactSectionManager />
+          </TabsContent>
 
           <TabsContent value="identidade" className="mt-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

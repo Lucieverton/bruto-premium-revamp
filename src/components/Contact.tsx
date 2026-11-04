@@ -2,9 +2,13 @@ import { useEffect, useRef } from "react";
 import { MapPin, Clock, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FaWhatsapp, FaInstagram } from "react-icons/fa";
+import { useSiteTexts } from "@/hooks/useSiteImages";
+import { resolveContact, formatAddress, mapsUrl } from "@/lib/siteContactDefaults";
 
 export const Contact = () => {
   const sectionRef = useRef<HTMLElement>(null);
+  const { data: texts } = useSiteTexts();
+  const contact = resolveContact(texts);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -50,7 +54,12 @@ export const Contact = () => {
               </div>
               <div>
                 <h4 className="font-display text-lg mb-1">Endereço</h4>
-                <p className="text-muted-foreground">Rua da Codeal, 144 Salvador Lyra, Maceió – AL</p>
+                <a href={mapsUrl(contact)} target="_blank" rel="noopener noreferrer" className="text-muted-foreground break-words hover:text-primary transition-colors">
+                  {formatAddress(contact)}
+                </a>
+                {contact.contact_reference && (
+                  <p className="text-muted-foreground text-sm mt-1">{contact.contact_reference}</p>
+                )}
               </div>
             </div>
 
