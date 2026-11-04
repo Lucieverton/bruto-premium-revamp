@@ -3,6 +3,7 @@ import { Clock, Users, Timer, Scissors } from 'lucide-react';
 import { useQueueSettings, useQueueStats } from '@/hooks/useQueue';
 
 export const QueueStatus = () => {
+  const todayHours = useTodayHoursLabel();
   const { data: settings } = useQueueSettings();
   const { data: stats } = useQueueStats();
   

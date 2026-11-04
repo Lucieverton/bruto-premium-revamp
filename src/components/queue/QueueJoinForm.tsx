@@ -26,6 +26,7 @@ interface QueueJoinFormProps {
 }
 
 export const QueueJoinForm = ({ onSuccess }: QueueJoinFormProps) => {
+  const todayHours = useTodayHoursLabel();
   const [showPreferencial, setShowPreferencial] = useState(false);
   const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]);
   const { data: services } = useServices();

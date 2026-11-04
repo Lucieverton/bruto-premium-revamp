@@ -32,6 +32,7 @@ interface BarberQueueFormProps {
 }
 
 export const BarberQueueForm = ({ barberId, barberName, onSuccess }: BarberQueueFormProps) => {
+  const todayHours = useTodayHoursLabel();
   const [showPreferencial, setShowPreferencial] = useState(false);
   const [selectedServices, setSelectedServices] = useState<Service[]>([]);
   const [hasCompanions, setHasCompanions] = useState(false);

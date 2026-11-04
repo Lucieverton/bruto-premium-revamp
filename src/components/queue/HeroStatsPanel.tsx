@@ -5,6 +5,7 @@ import { useQueueSettings, useQueueStats } from '@/hooks/useQueue';
 import { cn } from '@/lib/utils';
 
 export const HeroStatsPanel = () => {
+  const todayHours = useTodayHoursLabel();
   const { data: settings } = useQueueSettings();
   const { data: stats } = useQueueStats();
   
