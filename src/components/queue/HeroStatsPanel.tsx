@@ -1,3 +1,4 @@
+import { useTodayHoursLabel } from '@/hooks/useBusinessHours';
 import { motion } from 'framer-motion';
 import { Clock, Users, Timer, Scissors } from 'lucide-react';
 import { useQueueSettings, useQueueStats } from '@/hooks/useQueue';
@@ -84,7 +85,7 @@ export const HeroStatsPanel = () => {
         {settings && (
           <div className="flex items-center justify-center gap-2 text-[10px] text-muted-foreground">
             <Clock size={10} />
-            <span>{settings.opening_time} - {settings.closing_time}</span>
+            <span>{todayHours}</span>
             <span className="text-border">•</span>
             <span>Agora: {currentTime}</span>
           </div>

@@ -4,11 +4,14 @@ import { Button } from "@/components/ui/button";
 import { FaWhatsapp, FaInstagram } from "react-icons/fa";
 import { useSiteTexts } from "@/hooks/useSiteImages";
 import { resolveContact, formatAddress, mapsUrl } from "@/lib/siteContactDefaults";
+import { formatWeeklyHours } from "@/lib/siteHoursDefaults";
+import { useBusinessHours } from "@/hooks/useBusinessHours";
 
 export const Contact = () => {
   const sectionRef = useRef<HTMLElement>(null);
   const { data: texts } = useSiteTexts();
   const contact = resolveContact(texts);
+  const { week } = useBusinessHours();
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -69,8 +72,9 @@ export const Contact = () => {
               </div>
               <div>
                 <h4 className="font-display text-lg mb-1">Horário</h4>
-                <p className="text-muted-foreground">Segunda a Sábado, das 8h às 19h</p>
-                <p className="text-muted-foreground">Domingo 1º, 2º domingo do mês: 9h as 12h</p>
+                {formatWeeklyHours(week).map((l) => (
+                  <p key={l} className="text-muted-foreground">{l}</p>
+                ))}
               </div>
             </div>
 

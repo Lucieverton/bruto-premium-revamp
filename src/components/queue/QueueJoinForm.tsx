@@ -1,3 +1,4 @@
+import { useTodayHoursLabel } from '@/hooks/useBusinessHours';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -86,7 +87,7 @@ export const QueueJoinForm = ({ onSuccess }: QueueJoinFormProps) => {
           A fila está temporariamente fechada.
         </p>
         <p className="text-sm text-muted-foreground">
-          Horário de funcionamento: {settings?.opening_time || '09:00'} - {settings?.closing_time || '19:00'}
+          Horário de funcionamento — {todayHours}
         </p>
       </div>
     );

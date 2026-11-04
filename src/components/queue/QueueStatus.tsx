@@ -1,3 +1,4 @@
+import { useTodayHoursLabel } from '@/hooks/useBusinessHours';
 import { Clock, Users, Timer, Scissors } from 'lucide-react';
 import { useQueueSettings, useQueueStats } from '@/hooks/useQueue';
 
@@ -31,7 +32,7 @@ export const QueueStatus = () => {
           <div className="flex flex-wrap items-center gap-2 text-muted-foreground text-xs sm:text-sm">
             <div className="flex items-center gap-1.5 sm:gap-2">
               <Clock size={14} />
-              <span>{settings.opening_time} - {settings.closing_time}</span>
+              <span>{todayHours}</span>
             </div>
             <span className="hidden sm:inline">•</span>
             <span className="text-[10px] sm:text-xs bg-muted px-2 py-0.5 rounded">Agora: {currentTime}</span>
