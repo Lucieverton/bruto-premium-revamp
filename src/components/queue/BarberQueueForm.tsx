@@ -1,3 +1,4 @@
+import { useTodayHoursLabel } from '@/hooks/useBusinessHours';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -31,6 +32,7 @@ interface BarberQueueFormProps {
 }
 
 export const BarberQueueForm = ({ barberId, barberName, onSuccess }: BarberQueueFormProps) => {
+  const todayHours = useTodayHoursLabel();
   const [showPreferencial, setShowPreferencial] = useState(false);
   const [selectedServices, setSelectedServices] = useState<Service[]>([]);
   const [hasCompanions, setHasCompanions] = useState(false);
@@ -163,7 +165,7 @@ export const BarberQueueForm = ({ barberId, barberName, onSuccess }: BarberQueue
         <h3 className="text-xl font-bold text-destructive mb-2">Fila Fechada</h3>
         <p className="text-muted-foreground mb-4">A fila está temporariamente fechada.</p>
         <p className="text-sm text-muted-foreground">
-          Horário: {settings?.opening_time || '09:00'} - {settings?.closing_time || '19:00'}
+          Horário — {todayHours}
         </p>
       </div>
     );

@@ -6,6 +6,7 @@ import { ImageSlotCard } from '@/components/admin/ImageSlotCard';
 import { GalleryManager } from '@/components/admin/GalleryManager';
 import { AboutSectionManager } from '@/components/admin/AboutSectionManager';
 import { ContactSectionManager } from '@/components/admin/ContactSectionManager';
+import { BusinessHoursManager } from '@/components/admin/BusinessHoursManager';
 
 import logo from '@/assets/logo.png';
 import menuIcon from '@/assets/menu-icon.png';
@@ -35,6 +36,7 @@ const AdminMeuSite = () => {
               <TabsTrigger value="hero">Hero</TabsTrigger>
               <TabsTrigger value="sobre">Sobre nós</TabsTrigger>
               <TabsTrigger value="contato">Contato e endereço</TabsTrigger>
+              <TabsTrigger value="horario">Horário</TabsTrigger>
               <TabsTrigger value="trabalho">Nosso trabalho</TabsTrigger>
               <TabsTrigger value="produtos">Produtos</TabsTrigger>
               <TabsTrigger value="fila">Fila</TabsTrigger>
@@ -43,6 +45,10 @@ const AdminMeuSite = () => {
 
           <TabsContent value="contato" className="mt-4">
             <ContactSectionManager />
+          </TabsContent>
+
+          <TabsContent value="horario" className="mt-4">
+            <BusinessHoursManager />
           </TabsContent>
 
           <TabsContent value="identidade" className="mt-4">
