@@ -140,6 +140,19 @@ export const BarberAvailabilityControl = ({ barber }: { barber: BarberLike }) =>
         </p>
       )}
 
+      {isInService && (
+        <Button
+          size="sm"
+          variant="outline"
+          className="w-full"
+          disabled={setAvailability.isPending}
+          onClick={() => setAvailability.mutate({ barberId: barber.id, state: 'available' })}
+        >
+          <AlertTriangle size={15} className="mr-2" />
+          Sem cliente na cadeira? Destravar status
+        </Button>
+      )}
+
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
         <Button

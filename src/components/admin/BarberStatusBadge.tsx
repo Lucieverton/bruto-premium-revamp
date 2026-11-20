@@ -101,14 +101,14 @@ export const BarberStatusBadge = ({ barber }: { barber: BarberStatusInfo }) => {
             Forçar retorno
           </Button>
         )}
-        {isOnline && (
+        {(isOnline || isBusy) && (
           <Button
             size="sm"
             variant="outline"
             disabled={force.isPending}
             onClick={() => force.mutate({ barberId: barber.id, state: 'offline' })}
           >
-            Tirar da fila
+            {isBusy ? 'Destravar (sem cliente)' : 'Tirar da fila'}
           </Button>
         )}
       </div>

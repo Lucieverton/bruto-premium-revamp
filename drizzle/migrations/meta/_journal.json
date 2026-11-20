@@ -1,0 +1,13 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1795178912660,
+      "tag": "0000_fix_stuck_busy_barbers",
+      "breakpoints": true
+    }
+  ]
+}
