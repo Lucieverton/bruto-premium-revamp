@@ -220,15 +220,11 @@ export const useQueueSettings = () => {
   return useQuery({
     queryKey: ['queue-settings'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('queue_settings')
-        .select('*')
-        .limit(1)
-        .single();
-      
-      if (error && error.code !== 'PGRST116') throw error;
-      return data as QueueSettings | null;
+      const { data, error } = await supabase.rpc('get_queue_settings_public');
+      if (error) throw error;
+      return ((data as unknown as QueueSettings[]) ?? [])[0] ?? null;
     },
+    refetchInterval: 30000,
   });
 };
 

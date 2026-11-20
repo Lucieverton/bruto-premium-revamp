@@ -978,6 +978,17 @@ export type Database = {
           total_waiting: number
         }[]
       }
+      get_queue_settings_public: {
+        Args: never
+        Returns: {
+          closing_time: string
+          id: string
+          is_active: boolean
+          max_queue_size: number
+          opening_time: string
+          updated_at: string
+        }[]
+      }
       get_queue_stats: {
         Args: never
         Returns: {
